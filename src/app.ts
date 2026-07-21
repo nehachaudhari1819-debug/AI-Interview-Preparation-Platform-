@@ -23,7 +23,7 @@ export type CreateAppOptions = {
 
 export function createApp(options: CreateAppOptions): Express {
   const app = express();
-  const apiRouter = options.apiRouter ?? createApiV1Router();
+  const apiRouter = options.apiRouter ?? createApiV1Router(options.config);
 
   app.disable("x-powered-by");
 

@@ -21,6 +21,9 @@ export type SafeConfigSummary = {
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
   hstsEnabled: boolean;
+  authRefreshCookieMaxAgeSeconds: number;
+  authRateLimitWindowMs: number;
+  authRateLimitMaxRequests: number;
 };
 
 export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): SafeConfigSummary {
@@ -46,5 +49,8 @@ export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): Sa
     rateLimitWindowMs: config.security.rateLimit.windowMs,
     rateLimitMaxRequests: config.security.rateLimit.maxRequests,
     hstsEnabled: config.security.helmet.enableHsts,
+    authRefreshCookieMaxAgeSeconds: config.authSession.refreshCookieMaxAgeSeconds,
+    authRateLimitWindowMs: config.authSession.rateLimit.windowMs,
+    authRateLimitMaxRequests: config.authSession.rateLimit.maxRequests,
   };
 }

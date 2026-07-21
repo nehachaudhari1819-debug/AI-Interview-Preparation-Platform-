@@ -61,6 +61,20 @@ const environmentBaseSchema = z.object({
   COOKIE_SECURE: z.preprocess(parseBoolean, z.boolean().default(false)),
   COOKIE_SAME_SITE: z.enum(COOKIE_SAME_SITE_VALUES).default("lax"),
 
+  // Authentication
+  AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS: z.preprocess(
+    parseInteger,
+    z.number().int().min(3600).max(34560000).default(31536000),
+  ),
+  AUTH_RATE_LIMIT_WINDOW_MS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1000).max(3600000).default(900000),
+  ),
+  AUTH_RATE_LIMIT_MAX_REQUESTS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1).max(1000).default(10),
+  ),
+
   // Logging
   LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
 

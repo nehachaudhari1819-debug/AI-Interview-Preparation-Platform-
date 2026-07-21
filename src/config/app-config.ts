@@ -34,6 +34,17 @@ export type SecurityConfig = {
   };
 };
 
+export type AuthSessionConfig = {
+  refreshCookieMaxAgeSeconds: number;
+
+  rateLimit: {
+    windowMs: number;
+    maxRequests: number;
+  };
+
+  emailConfirmationRedirectUrl: string;
+};
+
 export type ApplicationConfig = {
   runtime: {
     nodeEnv: NodeEnvironment;
@@ -63,6 +74,7 @@ export type ApplicationConfig = {
     level: LogLevel;
   };
   security: SecurityConfig;
+  authSession: AuthSessionConfig;
 };
 
 export function createApplicationConfig(environment: ValidatedEnvironment): ApplicationConfig {
@@ -133,6 +145,14 @@ export function createApplicationConfig(environment: ValidatedEnvironment): Appl
       helmet: {
         enableHsts: environment.NODE_ENV === "production",
       },
+    },
+    authSession: {
+      refreshCookieMaxAgeSeconds: environment.AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS,
+      rateLimit: {
+        windowMs: environment.AUTH_RATE_LIMIT_WINDOW_MS,
+        maxRequests: environment.AUTH_RATE_LIMIT_MAX_REQUESTS,
+      },
+      emailConfirmationRedirectUrl: new URL("/auth/callback", environment.FRONTEND_URL).toString(),
     },
   };
 }

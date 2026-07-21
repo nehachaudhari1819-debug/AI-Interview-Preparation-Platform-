@@ -41,6 +41,8 @@ Detailed documentation on the environment configuration rules and secret classif
 - [03. Environment Configuration](./docs/backend/phase-2/03-environment-configuration.md)
 - [04. Supabase Client Foundation](./docs/backend/phase-2/04-supabase-client-foundation.md)
 - [05. Security Middleware Foundation](./docs/backend/phase-2/05-security-middleware-foundation.md).
+- [06. Authentication Domain Foundation](./docs/backend/phase-2/06-authentication-domain-foundation.md).
+- [07. Authentication API & Session Lifecycle](./docs/backend/phase-2/07-authentication-api-session-lifecycle.md).
 
 - **Phase 2: Core Platform Infrastructure** _(In Progress)_
   - Express.js Setup (Completed)
@@ -49,6 +51,7 @@ Detailed documentation on the environment configuration rules and secret classif
   - Database Client Setup (Completed)
   - Base Security Middleware (Completed)
   - Authentication Domain Foundation (Completed)
+  - Authentication API & Session Lifecycle (Completed)
 
 **4. Run Validation Pipeline:**
 
