@@ -1,16 +1,20 @@
 # Phase 2.5: Security Middleware Foundation
 
 ## Overview
+
 This phase establishes a robust, configuration-driven Express middleware foundation tailored for the AI Interview Preparation Platform API.
 
 ## Core Principles
+
 1. **Configuration-Driven:** All security settings (CORS, Rate Limiting, Proxy Hops) are read dynamically from the validated `ApplicationConfig` object rather than `process.env`.
 2. **Deterministic Pipeline:** Security middlewares run in a strict, predefined order immediately after app initialization.
 3. **Exact Matching:** CORS strictly compares origins using full string equality (`===`). Regex, wildcards, and partial matches are forbidden.
 4. **Standardized Errors:** All security rejections result in a standardized JSON error envelope containing a request ID for observability.
 
 ## Middleware Pipeline
+
 The middleware is registered in `src/app.ts` in the following strict order:
+
 1. Express Application Settings (`app.disable("x-powered-by")`, `trust proxy`)
 2. Helmet (CSP, HSTS, cross-origin resource policies)
 3. Request ID (`requestIdMiddleware`)
@@ -24,9 +28,11 @@ The middleware is registered in `src/app.ts` in the following strict order:
 11. Not Found & Error Handlers
 
 ## Key Decisions
+
 - **URL-Encoded Parser Removed:** Since the API exclusively consumes JSON, `express.urlencoded` has been entirely removed to minimize the attack surface.
 - **CSRF Origin Guarding:** `sec-fetch-site` and `origin` headers are validated on unsafe methods (POST, PUT, DELETE, PATCH). If `sec-fetch-site` is `cross-site` or the origin does not match the configured CORS allowlist, the request is rejected with `CSRF_ORIGIN_DENIED`.
 - **HSTS:** HSTS is dynamically enabled via Helmet only in the `production` environment.
 
 ## Validation & Testing
+
 Comprehensive unit and integration tests have been written under `tests/unit/security` and `tests/security`. They verify the correct behavior of the middleware blocks, error handling, and proxy trust logic.

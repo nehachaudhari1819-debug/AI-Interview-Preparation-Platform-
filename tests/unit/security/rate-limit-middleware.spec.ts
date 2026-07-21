@@ -1,4 +1,5 @@
-import type { Request, Response, NextFunction } from "express";
+import { jest } from "@jest/globals";
+import type { Request, Response } from "express";
 import { createApiRateLimitMiddleware } from "../../../src/security/create-rate-limit-middleware.js";
 import { createTestApplicationConfig } from "../../setup/test-helpers.js";
 
@@ -10,7 +11,7 @@ describe("createApiRateLimitMiddleware", () => {
         rateLimit: { enabled: false, windowMs: 1000, maxRequests: 10 },
       },
     });
-    
+
     const middleware = createApiRateLimitMiddleware(config);
     const next = jest.fn();
     middleware({} as Request, {} as Response, next);

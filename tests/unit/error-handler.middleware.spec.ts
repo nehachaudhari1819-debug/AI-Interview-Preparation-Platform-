@@ -13,7 +13,7 @@ describe("errorHandlerMiddleware", () => {
   let originalConsoleError: typeof console.error;
 
   beforeEach(() => {
-    mockRequest = { context: { requestId: "req-123" } };
+    mockRequest = { context: { requestId: "req-123" } as unknown as Request["context"] };
     mockResponse = {
       headersSent: false,
       status: jest.fn().mockReturnThis() as unknown as Response["status"],

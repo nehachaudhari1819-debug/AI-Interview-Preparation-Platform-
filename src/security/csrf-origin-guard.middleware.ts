@@ -7,14 +7,16 @@ import { isTrustedOrigin, normalizeOrigin } from "./trusted-origin.js";
 export function createCsrfOriginGuard(config: Readonly<ApplicationConfig>): RequestHandler {
   return (req, res, next) => {
     if (SAFE_HTTP_METHODS.has(req.method)) {
-      return next();
+      next();
+      return;
     }
 
-    if (req.context?.security?.fetchSite === "cross-site") {
-      return next(new CsrfOriginError());
+    if (req.context.security.fetchSite === "cross-site") {
+      next(new CsrfOriginError());
+      return;
     }
 
-    let originToCheck = req.context?.security?.origin;
+    let originToCheck = req.context.security.origin;
 
     if (!originToCheck && req.headers.referer) {
       try {
@@ -25,13 +27,15 @@ export function createCsrfOriginGuard(config: Readonly<ApplicationConfig>): Requ
     }
 
     if (!originToCheck) {
-      return next(new CsrfOriginError());
+      next(new CsrfOriginError());
+      return;
     }
 
-    if (!isTrustedOrigin(originToCheck, config.security.cors.allowedOrigins)) {
-      return next(new CsrfOriginError());
+    if (isTrustedOrigin(originToCheck, config.security.cors.allowedOrigins)) {
+      next();
+      return;
     }
 
-    next();
+    next(new CsrfOriginError());
   };
 }

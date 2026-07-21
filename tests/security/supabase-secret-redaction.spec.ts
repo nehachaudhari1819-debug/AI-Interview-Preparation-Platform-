@@ -13,12 +13,29 @@ describe("Supabase Secret Redaction", () => {
   const FAKE_USER_TOKEN = "fake-user-access-token-to-redact";
 
   const configSecret = {
-    runtime: { nodeEnv: "development", port: 5000, shutdownTimeoutMs: 10000 },
+    runtime: {
+      nodeEnv: "development",
+      isDevelopment: true,
+      isTest: false,
+      isProduction: false,
+      port: 5000,
+      shutdownTimeoutMs: 10000,
+    },
     frontend: { origin: "http://localhost:5173" },
     ai: { provider: "gemini" },
     storage: { resumeBucket: "resumes" },
     cookies: { secure: false, sameSite: "lax" },
     logging: { level: "info" },
+    security: {
+      trustProxyHops: 1,
+      cors: {
+        allowedOrigins: ["http://localhost:5173"],
+        credentials: true,
+        preflightMaxAgeSeconds: 86400,
+      },
+      rateLimit: { enabled: true, windowMs: 900000, maxRequests: 100 },
+      helmet: { enableHsts: true },
+    },
     supabase: {
       configured: true,
       url: "https://example.supabase.co",

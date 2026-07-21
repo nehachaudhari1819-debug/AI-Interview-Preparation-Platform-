@@ -5,7 +5,9 @@ import { RateLimitExceededError } from "../errors/rate-limit-exceeded.error.js";
 
 export function createApiRateLimitMiddleware(config: Readonly<ApplicationConfig>): RequestHandler {
   if (!config.security.rateLimit.enabled) {
-    return (req, res, next) => next();
+    return (req, res, next) => {
+      next();
+    };
   }
 
   return rateLimit({

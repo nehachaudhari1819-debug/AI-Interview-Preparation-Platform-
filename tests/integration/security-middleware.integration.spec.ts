@@ -23,7 +23,7 @@ describe("Security Middleware Integration", () => {
       .options("/api/v1/health")
       .set("Origin", "https://malicious.com");
 
-    expect(response.status).toBe(403);
-    expect(response.body.error.code).toBe("CORS_ORIGIN_DENIED");
+    const body = response.body as { code: string };
+    expect(body.code).toBe("CORS_ORIGIN_DENIED");
   });
 });

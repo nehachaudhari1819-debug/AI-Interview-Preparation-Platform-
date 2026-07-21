@@ -26,6 +26,16 @@ describe("Safe Config Summary", () => {
         openAiApiKey: "openai_super_secret",
       },
       storage: { resumeBucket: "resumes" },
+      security: {
+        trustProxyHops: 1,
+        cors: {
+          allowedOrigins: ["http://localhost:5173"],
+          credentials: true,
+          preflightMaxAgeSeconds: 86400,
+        },
+        rateLimit: { enabled: true, windowMs: 900000, maxRequests: 100 },
+        helmet: { enableHsts: true },
+      },
       cookies: { secure: false, sameSite: "lax" },
       logging: { level: "info" },
     };

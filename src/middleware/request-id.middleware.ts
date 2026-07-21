@@ -17,6 +17,7 @@ export function requestIdMiddleware(
       : createRequestId();
 
   request.context = {
+    ...request.context,
     requestId,
   };
 

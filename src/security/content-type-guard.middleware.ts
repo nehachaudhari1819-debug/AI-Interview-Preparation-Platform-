@@ -5,7 +5,8 @@ import { SAFE_HTTP_METHODS, JSON_MEDIA_TYPES } from "./security.constants.js";
 export function createJsonContentTypeGuard(): RequestHandler {
   return (req, res, next) => {
     if (SAFE_HTTP_METHODS.has(req.method)) {
-      return next();
+      next();
+      return;
     }
 
     const contentLength = req.headers["content-length"];
@@ -14,17 +15,22 @@ export function createJsonContentTypeGuard(): RequestHandler {
     const hasBody = hasContentLength || hasTransferEncoding;
 
     if (!hasBody) {
-      return next();
+      next();
+      return;
     }
 
     const contentType = req.headers["content-type"];
     if (!contentType) {
-      return next(new UnsupportedMediaTypeError());
+      next(
+        new UnsupportedMediaTypeError("Content-Type header is required for requests with a body."),
+      );
+      return;
     }
 
     const isJson = JSON_MEDIA_TYPES.some((type) => contentType.includes(type));
     if (!isJson) {
-      return next(new UnsupportedMediaTypeError());
+      next(new UnsupportedMediaTypeError("Only application/json is supported."));
+      return;
     }
 
     next();

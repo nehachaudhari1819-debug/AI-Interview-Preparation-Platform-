@@ -1,10 +1,6 @@
 import express, { type Express, type Router } from "express";
 
-import {
-  API_PREFIX,
-  DEFAULT_JSON_BODY_LIMIT,
-  DEFAULT_URL_ENCODED_BODY_LIMIT,
-} from "./constants/application.constants.js";
+import { API_PREFIX, DEFAULT_JSON_BODY_LIMIT } from "./constants/application.constants.js";
 import { errorHandlerMiddleware } from "./middleware/error-handler.middleware.js";
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
@@ -18,6 +14,7 @@ import {
   createJsonContentTypeGuard,
   cookieParserMiddleware,
   requestSecurityContextMiddleware,
+  createCsrfOriginGuard,
 } from "./security/index.js";
 
 export type CreateAppOptions = {
@@ -40,6 +37,7 @@ export function createApp(options: CreateAppOptions): Express {
   app.use(requestIdMiddleware);
   app.use(requestSecurityContextMiddleware);
   app.use(createCorsMiddleware(options.config));
+  app.use(createCsrfOriginGuard(options.config));
   app.use(createApiRateLimitMiddleware(options.config));
   app.use(API_PREFIX, createJsonContentTypeGuard());
 

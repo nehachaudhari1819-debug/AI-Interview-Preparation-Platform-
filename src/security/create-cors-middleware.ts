@@ -11,16 +11,21 @@ import { isTrustedOrigin } from "./trusted-origin.js";
 
 export function createCorsMiddleware(config: Readonly<ApplicationConfig>): RequestHandler {
   return cors({
-    origin: (requestOrigin: string | undefined, callback: (err: Error | null, origin?: string | boolean) => void) => {
+    origin: (
+      requestOrigin: string | undefined,
+      callback: (err: Error | null, origin?: string | boolean) => void,
+    ) => {
       if (!requestOrigin) {
-        return callback(null, true);
+        callback(null, true);
+        return;
       }
 
       if (isTrustedOrigin(requestOrigin, config.security.cors.allowedOrigins)) {
-        return callback(null, requestOrigin);
+        callback(null, true);
+        return;
       }
 
-      return callback(new CorsOriginError());
+      callback(new CorsOriginError(requestOrigin));
     },
     credentials: config.security.cors.credentials,
     methods: CORS_ALLOWED_METHODS as unknown as string[],

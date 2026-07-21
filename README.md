@@ -37,9 +37,10 @@ This project uses a strict, typed configuration system. Raw environment variable
 6. **Fail-fast**: If any required configuration is missing or invalid, the server will intentionally fail to start.
 
 Detailed documentation on the environment configuration rules and secret classification can be found in:
-  - [03. Environment Configuration](./docs/backend/phase-2/03-environment-configuration.md)
-  - [04. Supabase Client Foundation](./docs/backend/phase-2/04-supabase-client-foundation.md)
-  - [05. Security Middleware Foundation](./docs/backend/phase-2/05-security-middleware-foundation.md).
+
+- [03. Environment Configuration](./docs/backend/phase-2/03-environment-configuration.md)
+- [04. Supabase Client Foundation](./docs/backend/phase-2/04-supabase-client-foundation.md)
+- [05. Security Middleware Foundation](./docs/backend/phase-2/05-security-middleware-foundation.md).
 
 **4. Run Validation Pipeline:**
 

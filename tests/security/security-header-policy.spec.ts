@@ -8,7 +8,7 @@ describe("Security Header Policy", () => {
     const app = createApp({ config });
 
     const response = await request(app).get("/api/v1/health");
-    
+
     expect(response.headers["x-frame-options"]).toBe("DENY");
     expect(response.headers["content-security-policy"]).toBeDefined();
     expect(response.headers["x-powered-by"]).toBeUndefined();

@@ -7,7 +7,7 @@ export const requestSecurityContextMiddleware: RequestHandler = (req, res, next)
   let origin: string | undefined;
   if (req.headers.origin) {
     try {
-      origin = normalizeOrigin(req.headers.origin as string);
+      origin = normalizeOrigin(req.headers.origin);
     } catch {
       // Invalid origin is omitted
     }
@@ -25,8 +25,8 @@ export const requestSecurityContextMiddleware: RequestHandler = (req, res, next)
       clientIp: req.ip ?? "unknown",
       protocol: req.protocol === "https" ? "https" : "http",
       isSecure: req.secure,
-      origin,
-      fetchSite,
+      ...(origin ? { origin } : {}),
+      ...(fetchSite ? { fetchSite } : {}),
     },
   };
 

@@ -11,9 +11,9 @@ export function normalizeOrigin(value: string): string {
     }
     return parsed.origin;
   } catch (error: unknown) {
-    throw new ConfigurationError("Invalid allowed origin configuration", [
+    throw new ConfigurationError([
       {
-        path: ["allowedOrigin"],
+        variable: "allowedOrigin",
         message: error instanceof Error ? error.message : "Malformed origin URL",
       },
     ]);

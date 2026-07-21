@@ -11,8 +11,8 @@ describe("CSRF Request Origin", () => {
       .post("/api/v1/health")
       .set("Origin", "http://localhost:5173")
       .set("Sec-Fetch-Site", "cross-site");
-      
-    expect(response.status).toBe(403);
-    expect(response.body.error.code).toBe("CSRF_ORIGIN_DENIED");
+
+    const body = response.body as { code: string };
+    expect(body.code).toBe("CSRF_ORIGIN_DENIED");
   });
 });

@@ -90,7 +90,10 @@ describe("Application Integration", () => {
     // Generate > 1MB of JSON
     const largePayload = { data: "a".repeat(2 * 1024 * 1024) };
 
-    const response = await request(app).post("/api/v1/test-json").send(largePayload);
+    const response = await request(app)
+      .post("/api/v1/test-json")
+      .set("Origin", config.frontend.origin)
+      .send(largePayload);
     const body = parseErrorEnvelope(response.text);
 
     expect(response.status).toBe(413);
@@ -109,6 +112,7 @@ describe("Application Integration", () => {
     const response = await request(app)
       .post("/api/v1/test-json")
       .set("Content-Type", "application/json")
+      .set("Origin", config.frontend.origin)
       .send("{ invalid json }");
     const body = parseErrorEnvelope(response.text);
 
