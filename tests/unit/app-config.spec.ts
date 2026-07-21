@@ -43,7 +43,7 @@ describe("Application Config", () => {
     if (config.supabase.configured) {
       expect(config.supabase.url).toBe("https://example.supabase.co");
       expect(config.supabase.publishableKey).toBe("pk_test");
-      expect(config.supabase.serviceRoleKey).toBe("sr_test");
+      expect(config.supabase.privilegedKey).toBe("sr_test");
     }
   });
 

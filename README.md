@@ -29,13 +29,14 @@ This project uses a strict, typed configuration system. Raw environment variable
    ```
 2. **Values**: Fill in only the local development values in your `.env` file.
 3. **Security**: Never commit the `.env` file to version control.
-4. **Startup**: Run the development server:
+4. **Supabase**: Provide `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and exactly one privileged key (either `SUPABASE_SECRET_KEY` [preferred] or `SUPABASE_SERVICE_ROLE_KEY` [legacy]). User operations use the publishable key + user token. Missing Supabase configuration does not prevent unrelated startup, but dependent operations will fail safely.
+5. **Startup**: Run the development server:
    ```powershell
    npm run dev
    ```
-5. **Fail-fast**: If any required configuration is missing or invalid, the server will intentionally fail to start.
+6. **Fail-fast**: If any required configuration is missing or invalid, the server will intentionally fail to start.
 
-Detailed documentation on the environment configuration rules and secret classification can be found in [docs/backend/phase-2/03-environment-configuration.md](./docs/backend/phase-2/03-environment-configuration.md).
+Detailed documentation on the environment configuration rules and secret classification can be found in [docs/backend/phase-2/03-environment-configuration.md](./docs/backend/phase-2/03-environment-configuration.md) and [docs/backend/phase-2/04-supabase-client-foundation.md](./docs/backend/phase-2/04-supabase-client-foundation.md).
 
 **4. Run Validation Pipeline:**
 

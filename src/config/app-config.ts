@@ -2,7 +2,20 @@ import type { ValidatedEnvironment } from "./environment-schema.js";
 import type { AiProvider, CookieSameSite, LogLevel, NodeEnvironment } from "./environment.types.js";
 import { loadEnvironment, type LoadEnvironmentOptions } from "./environment-loader.js";
 import { deepFreeze } from "../utils/deep-freeze.js";
-import { ConfigurationError } from "../errors/configuration.error.js";
+
+export type UnconfiguredSupabaseConfig = {
+  configured: false;
+};
+
+export type ConfiguredSupabaseConfig = {
+  configured: true;
+  url: string;
+  publishableKey: string;
+  privilegedKey: string;
+  privilegedKeyType: "secret" | "legacy_service_role";
+};
+
+export type SupabaseConfig = UnconfiguredSupabaseConfig | ConfiguredSupabaseConfig;
 
 export type ApplicationConfig = {
   runtime: {
@@ -16,12 +29,7 @@ export type ApplicationConfig = {
   frontend: {
     origin: string;
   };
-  supabase: {
-    configured: boolean;
-    url?: string;
-    publishableKey?: string;
-    serviceRoleKey?: string;
-  };
+  supabase: SupabaseConfig;
   ai: {
     provider: AiProvider;
     geminiApiKey?: string;
@@ -40,17 +48,25 @@ export type ApplicationConfig = {
 };
 
 export function createApplicationConfig(environment: ValidatedEnvironment): ApplicationConfig {
-  const supabase =
-    environment.SUPABASE_URL === undefined ||
-    environment.SUPABASE_PUBLISHABLE_KEY === undefined ||
-    environment.SUPABASE_SERVICE_ROLE_KEY === undefined
-      ? { configured: false as const }
-      : {
-          configured: true as const,
-          url: environment.SUPABASE_URL,
-          publishableKey: environment.SUPABASE_PUBLISHABLE_KEY,
-          serviceRoleKey: environment.SUPABASE_SERVICE_ROLE_KEY,
-        };
+  const isConfigured =
+    environment.SUPABASE_URL !== undefined &&
+    environment.SUPABASE_PUBLISHABLE_KEY !== undefined &&
+    (environment.SUPABASE_SECRET_KEY !== undefined ||
+      environment.SUPABASE_SERVICE_ROLE_KEY !== undefined);
+
+  let supabase: SupabaseConfig = { configured: false as const };
+  if (isConfigured) {
+    const isSecret = environment.SUPABASE_SECRET_KEY !== undefined;
+    supabase = {
+      configured: true as const,
+      url: environment.SUPABASE_URL as string,
+      publishableKey: environment.SUPABASE_PUBLISHABLE_KEY as string,
+      privilegedKey: isSecret
+        ? (environment.SUPABASE_SECRET_KEY as string)
+        : (environment.SUPABASE_SERVICE_ROLE_KEY as string),
+      privilegedKeyType: isSecret ? "secret" : "legacy_service_role",
+    };
+  }
 
   return {
     runtime: {
@@ -93,23 +109,4 @@ export function loadApplicationConfig(
   const validEnvironment = loadEnvironment(options);
   const config = createApplicationConfig(validEnvironment);
   return deepFreeze(config);
-}
-
-export function requireSupabaseConfig(config: Readonly<ApplicationConfig>) {
-  if (
-    !config.supabase.configured ||
-    !config.supabase.url ||
-    !config.supabase.publishableKey ||
-    !config.supabase.serviceRoleKey
-  ) {
-    throw new ConfigurationError([
-      { variable: "supabase", message: "Supabase configuration is required for this module." },
-    ]);
-  }
-
-  return {
-    url: config.supabase.url,
-    publishableKey: config.supabase.publishableKey,
-    serviceRoleKey: config.supabase.serviceRoleKey,
-  };
 }

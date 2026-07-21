@@ -1,8 +1,4 @@
-export {
-  createApplicationConfig,
-  loadApplicationConfig,
-  requireSupabaseConfig,
-} from "./app-config.js";
+export { createApplicationConfig, loadApplicationConfig } from "./app-config.js";
 export { loadEnvironment, parseEnvironment } from "./environment-loader.js";
 export type { ApplicationConfig } from "./app-config.js";
 export type { ValidatedEnvironment } from "./environment-schema.js";

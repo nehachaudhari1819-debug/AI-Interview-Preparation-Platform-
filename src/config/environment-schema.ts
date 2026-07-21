@@ -37,6 +37,7 @@ export const environmentSchema = z
     // Supabase
     SUPABASE_URL: z.preprocess(emptyStringToUndefined, urlSchema.optional()),
     SUPABASE_PUBLISHABLE_KEY: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+    SUPABASE_SECRET_KEY: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
     SUPABASE_SERVICE_ROLE_KEY: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
 
     // AI
@@ -80,22 +81,36 @@ export const environmentSchema = z
       });
     }
 
-    // Supabase completeness
+    // Supabase completeness and exact key combination
     const hasUrl = val.SUPABASE_URL !== undefined;
     const hasPublishable = val.SUPABASE_PUBLISHABLE_KEY !== undefined;
+    const hasSecret = val.SUPABASE_SECRET_KEY !== undefined;
     const hasServiceRole = val.SUPABASE_SERVICE_ROLE_KEY !== undefined;
 
-    if (hasUrl || hasPublishable || hasServiceRole) {
-      if (!hasUrl || !hasPublishable || !hasServiceRole) {
-        const path = !hasUrl
-          ? "SUPABASE_URL"
-          : !hasPublishable
-            ? "SUPABASE_PUBLISHABLE_KEY"
-            : "SUPABASE_SERVICE_ROLE_KEY";
+    const hasAnySupabase = hasUrl || hasPublishable || hasSecret || hasServiceRole;
+
+    if (hasAnySupabase) {
+      if (!hasUrl || !hasPublishable) {
         ctx.addIssue({
           code: "custom",
-          path: [path],
+          path: [!hasUrl ? "SUPABASE_URL" : "SUPABASE_PUBLISHABLE_KEY"],
           message: "Supabase configuration must be fully provided or entirely absent.",
+        });
+      }
+
+      if (hasSecret && hasServiceRole) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["SUPABASE_SERVICE_ROLE_KEY"],
+          message:
+            "Provide exactly one privileged key: either SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY.",
+        });
+      } else if (!hasSecret && !hasServiceRole) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["SUPABASE_SECRET_KEY"],
+          message:
+            "A privileged key is required. Provide exactly one of SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY.",
         });
       }
     }

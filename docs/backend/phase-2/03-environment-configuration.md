@@ -47,7 +47,8 @@ Raw environment variables are untrusted strings that can lead to subtle bugs and
 | FRONTEND_URL              | Required          | N/A           | `string`          | Public                |
 | SUPABASE_URL              | Optional          | N/A           | `string`          | Server Config         |
 | SUPABASE_PUBLISHABLE_KEY  | Optional          | N/A           | `string`          | Server Config         |
-| SUPABASE_SERVICE_ROLE_KEY | Optional          | N/A           | `string`          | Server-Only Secret    |
+| SUPABASE_SECRET_KEY       | Optional          | N/A           | `string`          | Server-Only Secret    |
+| SUPABASE_SERVICE_ROLE_KEY | Optional (Legacy) | N/A           | `string`          | Server-Only Secret    |
 | AI_PROVIDER               | Optional          | `gemini`      | `AiProvider`      | Server Config         |
 | GEMINI_API_KEY            | Optional          | N/A           | `string`          | Server-Only Secret    |
 | OPENAI_API_KEY            | Optional          | N/A           | `string`          | Server-Only Secret    |
@@ -64,7 +65,9 @@ Raw environment variables are untrusted strings that can lead to subtle bugs and
 
 ## 8. Immutability & Safe Logging
 
-The configuration object is deeply frozen at startup. The safe summary explicitly omits all secrets and prints only boolean flags (e.g., `geminiConfigured: true`) for auditing.
+The configuration object is deeply frozen at startup. The safe summary explicitly omits all secrets and prints only safe properties and boolean flags (e.g., `supabasePrivilegedKeyType: "secret"`, `geminiConfigured: true`) for auditing.
+
+**Supabase completeness**: Either Supabase is absent, or fully configured with exactly ONE privileged key (`SUPABASE_SECRET_KEY` [preferred] or `SUPABASE_SERVICE_ROLE_KEY` [legacy]). Partial configuration or providing both privileged keys fails validation.
 
 ## 9. Security Posture
 

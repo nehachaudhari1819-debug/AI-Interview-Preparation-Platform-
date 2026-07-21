@@ -17,7 +17,8 @@ describe("Safe Config Summary", () => {
         configured: true,
         url: "https://example.supabase.co",
         publishableKey: "pk_test_fake",
-        serviceRoleKey: "sr_test_super_secret",
+        privilegedKey: "sr_test_super_secret",
+        privilegedKeyType: "secret",
       },
       ai: {
         provider: "gemini",

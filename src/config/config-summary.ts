@@ -7,6 +7,7 @@ export type SafeConfigSummary = {
   shutdownTimeoutMs: number;
   frontendOrigin: string;
   supabaseConfigured: boolean;
+  supabasePrivilegedKeyType: "secret" | "legacy_service_role" | null;
   aiProvider: AiProvider;
   geminiConfigured: boolean;
   openAiConfigured: boolean;
@@ -23,6 +24,9 @@ export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): Sa
     shutdownTimeoutMs: config.runtime.shutdownTimeoutMs,
     frontendOrigin: config.frontend.origin,
     supabaseConfigured: config.supabase.configured,
+    supabasePrivilegedKeyType: config.supabase.configured
+      ? config.supabase.privilegedKeyType
+      : null,
     aiProvider: config.ai.provider,
     geminiConfigured: config.ai.geminiApiKey !== undefined,
     openAiConfigured: config.ai.openAiApiKey !== undefined,

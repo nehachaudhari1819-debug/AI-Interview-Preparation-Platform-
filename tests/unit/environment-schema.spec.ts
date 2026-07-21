@@ -63,7 +63,19 @@ describe("Environment Schema", () => {
     ).toThrow();
   });
 
-  it("accepts complete Supabase configuration", () => {
+  it("accepts preferred Supabase configuration (secret key)", () => {
+    const result = environmentSchema.parse({
+      ...baseValidEnv,
+      SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_PUBLISHABLE_KEY: "pk_test",
+      SUPABASE_SECRET_KEY: "sk_test",
+    });
+    expect(result.SUPABASE_URL).toBeDefined();
+    expect(result.SUPABASE_SECRET_KEY).toBeDefined();
+    expect(result.SUPABASE_SERVICE_ROLE_KEY).toBeUndefined();
+  });
+
+  it("accepts legacy Supabase configuration (service role key)", () => {
     const result = environmentSchema.parse({
       ...baseValidEnv,
       SUPABASE_URL: "https://example.supabase.co",
@@ -71,6 +83,30 @@ describe("Environment Schema", () => {
       SUPABASE_SERVICE_ROLE_KEY: "sr_test",
     });
     expect(result.SUPABASE_URL).toBeDefined();
+    expect(result.SUPABASE_SERVICE_ROLE_KEY).toBeDefined();
+    expect(result.SUPABASE_SECRET_KEY).toBeUndefined();
+  });
+
+  it("rejects providing both privileged keys", () => {
+    expect(() =>
+      environmentSchema.parse({
+        ...baseValidEnv,
+        SUPABASE_URL: "https://example.supabase.co",
+        SUPABASE_PUBLISHABLE_KEY: "pk_test",
+        SUPABASE_SECRET_KEY: "sk_test",
+        SUPABASE_SERVICE_ROLE_KEY: "sr_test",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects missing privileged key when configured", () => {
+    expect(() =>
+      environmentSchema.parse({
+        ...baseValidEnv,
+        SUPABASE_URL: "https://example.supabase.co",
+        SUPABASE_PUBLISHABLE_KEY: "pk_test",
+      }),
+    ).toThrow();
   });
 
   it("rejects partial Supabase configuration", () => {
@@ -106,7 +142,7 @@ describe("Environment Schema", () => {
         SUPABASE_URL: "https://example.supabase.co",
         SUPABASE_PUBLISHABLE_KEY: "secret_value_123",
       });
-      fail("Should have thrown due to missing SERVICE_ROLE_KEY");
+      fail("Should have thrown due to missing privileged keys");
     } catch (error: unknown) {
       const errorString = JSON.stringify(error);
       expect(errorString).not.toContain("secret_value_123");
