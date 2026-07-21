@@ -29,7 +29,7 @@ This document establishes the production-oriented Node.js, Express, and TypeScri
 
 ## 3. Runtime decision
 
-- **Node.js:** `24.18.0 LTS`
+- **Node.js:** `24.11.0 LTS`
 - **Package manager:** `npm`
 - **Detected npm version:** _(Execute `npm --version` to record locally)_
 
@@ -131,7 +131,7 @@ _Note: All internal relative ESM imports must use `.js` extensions in the TypeSc
 - [x] Correct `backend` branch confirmed
 - [x] Phase 1 acceptance commit confirmed
 - [x] Existing repository inspected
-- [x] Node.js 24.18.0 pinned
+- [x] Node.js 24.11.0 pinned
 - [x] `.nvmrc` created
 - [x] npm selected
 - [x] npm version recorded
