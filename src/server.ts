@@ -37,11 +37,6 @@ function shutdown(signal: NodeJS.Signals): void {
 
   console.log(`${signal} received. Starting graceful shutdown.`);
 
-  if (!server) {
-    process.exitCode = 0;
-    return;
-  }
-
   const forceShutdownTimer = setTimeout(() => {
     console.error("Graceful shutdown timed out.");
     process.exitCode = 1;

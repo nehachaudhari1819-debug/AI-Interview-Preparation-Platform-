@@ -4,8 +4,38 @@ import request from "supertest";
 import { createApp } from "../../src/app.js";
 import { ERROR_CODES } from "../../src/constants/error-codes.constants.js";
 
-function parseJsonResponse(responseText: string): any {
-  return JSON.parse(responseText);
+type ErrorEnvelope = {
+  success: false;
+  code: string;
+  meta: {
+    requestId: string;
+  };
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function parseErrorEnvelope(text: string): ErrorEnvelope {
+  const parsed = JSON.parse(text) as unknown;
+
+  if (
+    !isRecord(parsed) ||
+    parsed.success !== false ||
+    typeof parsed.code !== "string" ||
+    !isRecord(parsed.meta) ||
+    typeof parsed.meta.requestId !== "string"
+  ) {
+    throw new Error("Response is not a valid API error envelope.");
+  }
+
+  return {
+    success: false,
+    code: parsed.code,
+    meta: {
+      requestId: parsed.meta.requestId,
+    },
+  };
 }
 
 describe("Application Integration", () => {
@@ -13,7 +43,7 @@ describe("Application Integration", () => {
     const app = createApp();
 
     const response = await request(app).get("/unknown");
-    const body = parseJsonResponse(response.text);
+    const body = parseErrorEnvelope(response.text);
 
     expect(response.status).toBe(404);
     expect(body.success).toBe(false);
@@ -27,7 +57,7 @@ describe("Application Integration", () => {
     const app = createApp();
 
     const response = await request(app).get("/api/v1/unknown");
-    const body = parseJsonResponse(response.text);
+    const body = parseErrorEnvelope(response.text);
 
     expect(response.status).toBe(404);
     expect(body.code).toBe(ERROR_CODES.RESOURCE_NOT_FOUND);
@@ -38,7 +68,7 @@ describe("Application Integration", () => {
     const validUuid = "123e4567-e89b-12d3-a456-426614174000";
 
     const response = await request(app).get("/unknown").set("X-Request-ID", validUuid);
-    const body = parseJsonResponse(response.text);
+    const body = parseErrorEnvelope(response.text);
 
     expect(response.headers["x-request-id"]).toBe(validUuid);
     expect(body.meta.requestId).toBe(validUuid);
@@ -56,7 +86,7 @@ describe("Application Integration", () => {
     const largePayload = { data: "a".repeat(2 * 1024 * 1024) };
 
     const response = await request(app).post("/api/v1/test-json").send(largePayload);
-    const body = parseJsonResponse(response.text);
+    const body = parseErrorEnvelope(response.text);
 
     expect(response.status).toBe(413);
     expect(body.code).toBe(ERROR_CODES.PAYLOAD_TOO_LARGE);
@@ -74,7 +104,7 @@ describe("Application Integration", () => {
       .post("/api/v1/test-json")
       .set("Content-Type", "application/json")
       .send("{ invalid json }");
-    const body = parseJsonResponse(response.text);
+    const body = parseErrorEnvelope(response.text);
 
     expect(response.status).toBe(400);
     expect(body.code).toBe(ERROR_CODES.INVALID_JSON);

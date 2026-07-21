@@ -1,4 +1,3 @@
-import type { ErrorCode } from "../constants/error-codes.constants.js";
 import type { ApiFieldError } from "../types/api-response.types.js";
 
 export type AppErrorOptions = {
@@ -24,7 +23,9 @@ export class AppError extends Error {
     this.name = new.target.name;
     this.statusCode = options.statusCode;
     this.code = options.code;
-    this.errors = options.errors;
+    if (options.errors !== undefined) {
+      this.errors = options.errors;
+    }
     this.isOperational = options.isOperational ?? true;
 
     Object.setPrototypeOf(this, new.target.prototype);

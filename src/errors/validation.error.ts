@@ -9,7 +9,7 @@ export class ValidationError extends AppError {
       statusCode: HTTP_STATUS.UNPROCESSABLE_ENTITY,
       code: ERROR_CODES.VALIDATION_ERROR,
       message,
-      errors,
+      ...(errors === undefined ? {} : { errors }),
     });
   }
 }
