@@ -72,9 +72,9 @@ function normalizeAuthSession(data: AuthResponse["data"]): AuthGatewaySession | 
     expiresAt: session.expires_at,
     user: {
       id: user.id,
-      email: user.email,
-      emailConfirmedAt: user.email_confirmed_at,
       isAnonymous: user.is_anonymous === true,
+      ...(user.email ? { email: user.email } : {}),
+      ...(user.email_confirmed_at ? { emailConfirmedAt: user.email_confirmed_at } : {}),
     },
   };
 }

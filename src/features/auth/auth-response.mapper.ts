@@ -11,9 +11,9 @@ export function mapSessionToPublicResponse(
     expiresAt: session.expiresAt,
     user: {
       id: session.user.id,
-      email: session.user.email,
-      emailConfirmedAt: session.user.emailConfirmedAt,
       isAnonymous: session.user.isAnonymous,
+      ...(session.user.email ? { email: session.user.email } : {}),
+      ...(session.user.emailConfirmedAt ? { emailConfirmedAt: session.user.emailConfirmedAt } : {}),
     },
   };
 }

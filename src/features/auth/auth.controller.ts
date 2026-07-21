@@ -24,9 +24,9 @@ export function createRegisterController(
       setRefreshTokenCookie(res, config, refreshToken);
       return sendSuccess({
         response: res,
-        statusCode: HTTP_STATUS.CREATED,
+        statusCode: HTTP_STATUS.ACCEPTED,
         data: result,
-        message: "Authentication successful.",
+        ...("message" in result && result.message ? { message: result.message } : {}),
         requestId: req.context.requestId,
       });
     }
@@ -35,7 +35,7 @@ export function createRegisterController(
       response: res,
       statusCode: HTTP_STATUS.ACCEPTED,
       data: result,
-      message: "message" in result ? result.message : undefined,
+      ...("message" in result && result.message ? { message: result.message } : {}),
       requestId: req.context.requestId,
     });
   });

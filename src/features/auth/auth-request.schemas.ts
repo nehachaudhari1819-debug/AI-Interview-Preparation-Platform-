@@ -21,9 +21,9 @@ export const loginRequestSchema = z
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
-function mapZodErrorToSafeFields(error: ZodError): ApiFieldError[] {
+function mapZodErrorToSafeFields(error: z.ZodError<any>): ApiFieldError[] {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  return error.errors.map((issue) => {
+  return error.errors.map((issue: z.ZodIssue) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const field = issue.path.join(".");
     return {
@@ -38,7 +38,7 @@ function mapZodErrorToSafeFields(error: ZodError): ApiFieldError[] {
 export function parseRegisterRequest(body: unknown): RegisterRequest {
   const result = registerRequestSchema.safeParse(body);
   if (!result.success) {
-    throw new ValidationError(mapZodErrorToSafeFields(result.error));
+    throw new ValidationError("Invalid request body.", mapZodErrorToSafeFields(result.error));
   }
   return result.data;
 }
@@ -46,7 +46,7 @@ export function parseRegisterRequest(body: unknown): RegisterRequest {
 export function parseLoginRequest(body: unknown): LoginRequest {
   const result = loginRequestSchema.safeParse(body);
   if (!result.success) {
-    throw new ValidationError(mapZodErrorToSafeFields(result.error));
+    throw new ValidationError("Invalid request body.", mapZodErrorToSafeFields(result.error));
   }
   return result.data;
 }

@@ -31,11 +31,19 @@ export function normalizeSupabaseAuthError(error: unknown): AuthProviderFailure 
       code === "over_request_rate_limit" ||
       code === "over_email_send_rate_limit"
     ) {
-      return { success: false, reason: "rate_limited", providerCode: code };
+      return {
+      success: false,
+      reason: "rate_limited",
+      ...(code ? { providerCode: code } : {}),
+    };
     }
 
     if (status !== undefined && status >= 500) {
-      return { success: false, reason: "service_unavailable", providerCode: code };
+      return {
+      success: false,
+      reason: "service_unavailable",
+      ...(code ? { providerCode: code } : {}),
+    };
     }
 
     switch (code) {
@@ -64,7 +72,11 @@ export function normalizeSupabaseAuthError(error: unknown): AuthProviderFailure 
     }
 
     if (status === 400 || status === 422) {
-      return { success: false, reason: "invalid_request", providerCode: code };
+      return {
+    success: false,
+    reason: "invalid_request",
+    ...(code ? { providerCode: code } : {}),
+  };
     }
   }
 

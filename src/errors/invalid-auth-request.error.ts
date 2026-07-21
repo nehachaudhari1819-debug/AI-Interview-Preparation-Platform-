@@ -9,7 +9,7 @@ export class InvalidAuthRequestError extends AppError {
       statusCode: HTTP_STATUS.BAD_REQUEST,
       code: ERROR_CODES.INVALID_AUTH_REQUEST,
       message: "Authentication request is invalid.",
-      errors,
+      ...(errors ? { errors } : {}),
     });
   }
 }
