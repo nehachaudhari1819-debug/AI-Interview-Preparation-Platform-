@@ -12,7 +12,7 @@ describe("notFoundMiddleware", () => {
     notFoundMiddleware(mockRequest, mockResponse, nextFunction);
 
     expect(nextFunction).toHaveBeenCalledTimes(1);
-    const error = nextFunction.mock.calls[0][0];
+    const error = nextFunction.mock.calls[0][0] as Error;
     expect(error).toBeInstanceOf(NotFoundError);
     expect(error.message).toBe("Route GET /api/unknown was not found.");
   });

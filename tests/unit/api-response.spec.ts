@@ -14,7 +14,7 @@ describe("API Response Utilities", () => {
 
   it("sendSuccess sends a proper success envelope", () => {
     sendSuccess({
-      response: mockResponse,
+      response: mockResponse as Response,
       statusCode: 200,
       data: { id: 1 },
       requestId: "req-123",
@@ -32,7 +32,7 @@ describe("API Response Utilities", () => {
 
   it("sendSuccess omits message if undefined", () => {
     sendSuccess({
-      response: mockResponse,
+      response: mockResponse as Response,
       statusCode: 201,
       data: { id: 2 },
       requestId: "req-456",
@@ -47,7 +47,7 @@ describe("API Response Utilities", () => {
 
   it("sendCollection includes pagination", () => {
     sendCollection({
-      response: mockResponse,
+      response: mockResponse as Response,
       statusCode: 200,
       data: [{ id: 1 }],
       requestId: "req-789",
@@ -65,7 +65,14 @@ describe("API Response Utilities", () => {
       expect.objectContaining({
         success: true,
         data: [{ id: 1 }],
-        pagination: expect.any(Object),
+        pagination: {
+          page: 1,
+          limit: 10,
+          totalItems: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
       }),
     );
   });

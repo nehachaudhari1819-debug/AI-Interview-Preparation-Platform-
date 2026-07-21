@@ -62,7 +62,8 @@ describe("errorHandlerMiddleware", () => {
   });
 
   it("maps body parser entity.too.large to PAYLOAD_TOO_LARGE", () => {
-    const error = Object.assign(new Error("Payload too large"), { type: "entity.too.large" });
+    const error = new Error("Payload too large");
+    (error as Error & { type: string }).type = "entity.too.large";
 
     errorHandlerMiddleware(error, mockRequest as Request, mockResponse as Response, nextFunction);
 
