@@ -1,5 +1,5 @@
-import { mapSessionToPublicResponse } from "../../src/features/auth/auth-response.mapper.js";
-import type { AuthGatewaySession } from "../../src/features/auth/auth-api.types.js";
+import { mapSessionToPublicResponse } from "../../../src/features/auth/auth-response.mapper.js";
+import type { AuthGatewaySession } from "../../../src/features/auth/auth-api.types.js";
 
 describe("mapSessionToPublicResponse", () => {
   it("maps session correctly", () => {

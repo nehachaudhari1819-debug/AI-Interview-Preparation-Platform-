@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import { createLoginController } from "../../src/features/auth/auth.controller.js";
-import { HTTP_STATUS } from "../../src/constants/http.constants.js";
+import { createLoginController } from "../../../src/features/auth/auth.controller.js";
+import { HTTP_STATUS } from "../../../src/constants/http.constants.js";
 
-jest.mock("../../src/features/auth/auth-cookie.js", () => ({
+jest.mock("../../../src/features/auth/auth-cookie.js", () => ({
   setRefreshTokenCookie: jest.fn(),
 }));
 

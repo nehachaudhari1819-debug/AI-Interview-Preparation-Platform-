@@ -1,4 +1,4 @@
-import { createSupabaseAuthGateway } from "../../src/features/auth/supabase-auth-gateway.js";
+import { createSupabaseAuthGateway } from "../../../src/features/auth/supabase-auth-gateway.js";
 
 describe("SupabaseAuthGateway", () => {
   it("registerWithPassword delegates to client.auth.signUp", async () => {

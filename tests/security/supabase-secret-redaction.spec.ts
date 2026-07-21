@@ -35,6 +35,13 @@ describe("Supabase Secret Redaction", () => {
       rateLimit: { enabled: true, windowMs: 900000, maxRequests: 100 },
       helmet: { enableHsts: true },
     },
+    authSession: {
+      cookieName: "sb-auth",
+      cookieSecret: "test-secret",
+      cookieDomain: "localhost",
+      secure: false,
+      sameSite: "lax",
+    },
     supabase: {
       configured: true,
       url: "https://example.supabase.co",

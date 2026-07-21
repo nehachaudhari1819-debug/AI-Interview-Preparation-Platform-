@@ -15,6 +15,13 @@ export function createTestApplicationConfig(
     frontend: {
       origin: "http://localhost:5173",
     },
+    authSession: {
+      cookieName: "sb-auth",
+      cookieSecret: "test-secret",
+      cookieDomain: "localhost",
+      secure: false,
+      sameSite: "lax",
+    },
     supabase: {
       configured: false,
     },

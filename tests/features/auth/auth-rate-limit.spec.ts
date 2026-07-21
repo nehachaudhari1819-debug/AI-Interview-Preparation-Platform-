@@ -1,5 +1,5 @@
-import { createAuthApiRateLimitMiddleware } from "../../src/features/auth/create-auth-api-rate-limit.middleware.js";
-import { AuthenticationRateLimitExceededError } from "../../src/errors/authentication-rate-limit-exceeded.error.js";
+import { createAuthApiRateLimitMiddleware } from "../../../src/features/auth/create-auth-api-rate-limit.middleware.js";
+import { AuthenticationRateLimitExceededError } from "../../../src/errors/authentication-rate-limit-exceeded.error.js";
 import type { Request, Response } from "express";
 
 describe("createAuthApiRateLimitMiddleware", () => {

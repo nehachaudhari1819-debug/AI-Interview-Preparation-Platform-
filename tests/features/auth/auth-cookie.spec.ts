@@ -7,9 +7,9 @@ import {
   clearRefreshTokenCookie,
   PRODUCTION_REFRESH_COOKIE_NAME,
   DEVELOPMENT_REFRESH_COOKIE_NAME,
-} from "../../src/features/auth/auth-cookie.js";
-import type { ApplicationConfig } from "../../src/config/app-config.js";
-import type { ValidatedEnvironment } from "../../src/config/environment-schema.js";
+} from "../../../src/features/auth/auth-cookie.js";
+import type { ApplicationConfig } from "../../../src/config/app-config.js";
+import type { ValidatedEnvironment } from "../../../src/config/environment-schema.js";
 
 function createMockConfig(env: Partial<ValidatedEnvironment>): Readonly<ApplicationConfig> {
   return {

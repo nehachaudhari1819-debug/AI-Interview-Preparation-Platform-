@@ -1,4 +1,4 @@
-import { normalizeSupabaseAuthError } from "../../src/features/auth/supabase-auth-error-normalizer.js";
+import { normalizeSupabaseAuthError } from "../../../src/features/auth/supabase-auth-error-normalizer.js";
 import { AuthError } from "@supabase/supabase-js";
 
 describe("normalizeSupabaseAuthError", () => {

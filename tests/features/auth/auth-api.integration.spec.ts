@@ -1,13 +1,13 @@
 import request from "supertest";
 import type { Express } from "express";
-import { createApp } from "../../src/app.js";
-import { loadApplicationConfig } from "../../src/config/app-config.js";
-import { createAuthService } from "../../src/features/auth/auth.service.js";
-import { createAuthRouter } from "../../src/features/auth/auth.router.js";
-import { HTTP_STATUS } from "../../src/constants/http.constants.js";
+import { createApp } from "../../../src/app.js";
+import { loadApplicationConfig } from "../../../src/config/app-config.js";
+import { createAuthService } from "../../../src/features/auth/auth.service.js";
+import { createAuthRouter } from "../../../src/features/auth/auth.router.js";
+import { HTTP_STATUS } from "../../../src/constants/http.constants.js";
 import { Router } from "express";
 
-jest.mock("../../src/features/auth/auth.service.js");
+jest.mock("../../../src/features/auth/auth.service.js");
 
 describe("Auth API Integration", () => {
   let app: Express;

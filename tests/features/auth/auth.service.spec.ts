@@ -1,6 +1,6 @@
-import { createAuthService } from "../../src/features/auth/auth.service.js";
-import { AuthenticationServiceUnavailableError } from "../../src/errors/authentication-service-unavailable.error.js";
-import { InvalidLoginCredentialsError } from "../../src/errors/invalid-login-credentials.error.js";
+import { createAuthService } from "../../../src/features/auth/auth.service.js";
+import { AuthenticationServiceUnavailableError } from "../../../src/errors/authentication-service-unavailable.error.js";
+import { InvalidLoginCredentialsError } from "../../../src/errors/invalid-login-credentials.error.js";
 
 describe("AuthService", () => {
   const mockConfig = {

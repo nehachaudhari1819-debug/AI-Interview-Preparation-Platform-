@@ -13,6 +13,13 @@ describe("Safe Config Summary", () => {
         shutdownTimeoutMs: 10000,
       },
       frontend: { origin: "http://localhost:5173" },
+      authSession: {
+        cookieName: "sb-auth",
+        cookieSecret: "test-secret",
+        cookieDomain: "localhost",
+        secure: false,
+        sameSite: "lax",
+      },
       supabase: {
         configured: true,
         url: "https://example.supabase.co",

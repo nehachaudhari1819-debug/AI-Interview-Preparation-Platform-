@@ -1,8 +1,8 @@
 import {
   parseLoginRequest,
   parseRegisterRequest,
-} from "../../src/features/auth/auth-request.schemas.js";
-import { ValidationError } from "../../src/errors/validation.error.js";
+} from "../../../src/features/auth/auth-request.schemas.js";
+import { ValidationError } from "../../../src/errors/validation.error.js";
 
 describe("Auth Request Schemas", () => {
   describe("parseRegisterRequest", () => {
