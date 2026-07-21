@@ -56,6 +56,11 @@ Raw environment variables are untrusted strings that can lead to subtle bugs and
 | COOKIE_SECURE             | Optional          | `false`       | `boolean`         | Server Config         |
 | COOKIE_SAME_SITE          | Optional          | `lax`         | `CookieSameSite`  | Server Config         |
 | LOG_LEVEL                 | Optional          | `info`        | `LogLevel`        | Server Config         |
+| TRUST_PROXY_HOPS          | Optional          | `0`           | `number`          | Server Config         |
+| RATE_LIMIT_ENABLED        | Optional          | `true`        | `boolean`         | Server Config         |
+| RATE_LIMIT_WINDOW_MS      | Optional          | `60000`       | `number`          | Server Config         |
+| RATE_LIMIT_MAX_REQUESTS   | Optional          | `100`         | `number`          | Server Config         |
+| CORS_PREFLIGHT_MAX_AGE_SECONDS| Optional      | `600`         | `number`          | Server Config         |
 
 ## 7. Secret Classification
 

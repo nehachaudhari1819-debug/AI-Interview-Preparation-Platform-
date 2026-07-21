@@ -2,7 +2,14 @@
 
 ## 1. Purpose
 
-This document establishes the foundational architecture for the Express application, defining constants, standardized response formats, error handling mechanisms, middleware behavior, and the core server lifecycle. It sets the baseline upon which all future feature modules (auth, interviews, feedback, etc.) will be built.
+This document establishes the foundational Express application, defining constants, standardized response formats, error handling mechanisms, middleware behavior, and the core server lifecycle. It sets the baseline upon which all future feature modules (auth, interviews, feedback, etc.) will be built.
+
+## 2.5 Security Refactoring
+
+- The factory now explicitly requires an `ApplicationConfig` object.
+- Security middleware is strictly ordered.
+- The `express.urlencoded` parser has been completely removed to enforce a JSON-only API policy.
+- All tests use a central `createTestApplicationConfig()` factory to ensure safe defaults.
 
 ## 2. Scope
 

@@ -1,16 +1,52 @@
-import type { ApiErrorResponse, ApiSuccessResponse } from "../../src/types/api-response.types.js";
+import type { ApplicationConfig } from "../../src/config/app-config.js";
 
-export function isApiSuccessResponse(body: unknown): body is ApiSuccessResponse<unknown> {
-  return (
-    typeof body === "object" && body !== null && (body as Record<string, unknown>).success === true
-  );
+export function createTestApplicationConfig(
+  overrides?: Partial<ApplicationConfig>,
+): Readonly<ApplicationConfig> {
+  return {
+    runtime: {
+      nodeEnv: "test",
+      isDevelopment: false,
+      isTest: true,
+      isProduction: false,
+      port: 5000,
+      shutdownTimeoutMs: 10000,
+    },
+    frontend: {
+      origin: "http://localhost:5173",
+    },
+    supabase: {
+      configured: false,
+    },
+    ai: {
+      provider: "gemini",
+    },
+    storage: {
+      resumeBucket: "resumes",
+    },
+    cookies: {
+      secure: false,
+      sameSite: "lax",
+    },
+    logging: {
+      level: "silent",
+    },
+    security: {
+      trustProxyHops: 0,
+      cors: {
+        allowedOrigins: ["http://localhost:5173"],
+        credentials: true,
+        preflightMaxAgeSeconds: 600,
+      },
+      rateLimit: {
+        enabled: false,
+        windowMs: 60000,
+        maxRequests: 100,
+      },
+      helmet: {
+        enableHsts: false,
+      },
+    },
+    ...overrides,
+  };
 }
-
-export function isApiErrorResponse(body: unknown): body is ApiErrorResponse {
-  return (
-    typeof body === "object" && body !== null && (body as Record<string, unknown>).success === false
-  );
-}
-
-export const UUID_V4_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

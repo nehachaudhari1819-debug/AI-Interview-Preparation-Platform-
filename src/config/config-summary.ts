@@ -15,6 +15,12 @@ export type SafeConfigSummary = {
   cookieSecure: boolean;
   cookieSameSite: CookieSameSite;
   logLevel: LogLevel;
+  trustProxyHops: number;
+  corsAllowedOriginCount: number;
+  rateLimitEnabled: boolean;
+  rateLimitWindowMs: number;
+  rateLimitMaxRequests: number;
+  hstsEnabled: boolean;
 };
 
 export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): SafeConfigSummary {
@@ -34,5 +40,11 @@ export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): Sa
     cookieSecure: config.cookies.secure,
     cookieSameSite: config.cookies.sameSite,
     logLevel: config.logging.level,
+    trustProxyHops: config.security.trustProxyHops,
+    corsAllowedOriginCount: config.security.cors.allowedOrigins.length,
+    rateLimitEnabled: config.security.rateLimit.enabled,
+    rateLimitWindowMs: config.security.rateLimit.windowMs,
+    rateLimitMaxRequests: config.security.rateLimit.maxRequests,
+    hstsEnabled: config.security.helmet.enableHsts,
   };
 }

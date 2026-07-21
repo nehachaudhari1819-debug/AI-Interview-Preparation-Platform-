@@ -2,6 +2,7 @@ import { Router } from "express";
 import request from "supertest";
 
 import { createApp } from "../../src/app.js";
+import { createTestApplicationConfig } from "../setup/test-helpers.js";
 import { ERROR_CODES } from "../../src/constants/error-codes.constants.js";
 
 type ErrorEnvelope = {
@@ -40,7 +41,8 @@ function parseErrorEnvelope(text: string): ErrorEnvelope {
 
 describe("Application Integration", () => {
   it("GET /unknown returns 404 RESOURCE_NOT_FOUND", async () => {
-    const app = createApp();
+    const config = createTestApplicationConfig();
+    const app = createApp({ config });
 
     const response = await request(app).get("/unknown");
     const body = parseErrorEnvelope(response.text);
@@ -54,7 +56,8 @@ describe("Application Integration", () => {
   });
 
   it("GET /api/v1/unknown returns 404 RESOURCE_NOT_FOUND", async () => {
-    const app = createApp();
+    const config = createTestApplicationConfig();
+    const app = createApp({ config });
 
     const response = await request(app).get("/api/v1/unknown");
     const body = parseErrorEnvelope(response.text);
@@ -64,7 +67,8 @@ describe("Application Integration", () => {
   });
 
   it("preserves valid X-Request-ID header", async () => {
-    const app = createApp();
+    const config = createTestApplicationConfig();
+    const app = createApp({ config });
     const validUuid = "123e4567-e89b-12d3-a456-426614174000";
 
     const response = await request(app).get("/unknown").set("X-Request-ID", validUuid);
@@ -80,7 +84,8 @@ describe("Application Integration", () => {
       res.json({ ok: true });
     });
 
-    const app = createApp({ apiRouter: testRouter });
+    const config = createTestApplicationConfig();
+    const app = createApp({ config, apiRouter: testRouter });
 
     // Generate > 1MB of JSON
     const largePayload = { data: "a".repeat(2 * 1024 * 1024) };
@@ -98,7 +103,8 @@ describe("Application Integration", () => {
       res.json({ ok: true });
     });
 
-    const app = createApp({ apiRouter: testRouter });
+    const config = createTestApplicationConfig();
+    const app = createApp({ config, apiRouter: testRouter });
 
     const response = await request(app)
       .post("/api/v1/test-json")

@@ -1,11 +1,11 @@
 import type { Server } from "node:http";
 
-import { app } from "./app.js";
+import { createApp } from "./app.js";
 import { createSafeConfigSummary, loadApplicationConfig } from "./config/index.js";
 import { ConfigurationError } from "./errors/configuration.error.js";
 
 export type StartServerOptions = {
-  app: typeof app;
+  app: ReturnType<typeof createApp>;
   port: number;
   shutdownTimeoutMs: number;
 };
@@ -53,6 +53,8 @@ function bootstrap(): void {
   try {
     const config = loadApplicationConfig();
     const safeSummary = createSafeConfigSummary(config);
+
+    const app = createApp({ config });
 
     console.log("Starting backend application.", safeSummary);
 

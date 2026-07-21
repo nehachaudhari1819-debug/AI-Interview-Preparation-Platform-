@@ -25,12 +25,18 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.0.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^24.0.0",

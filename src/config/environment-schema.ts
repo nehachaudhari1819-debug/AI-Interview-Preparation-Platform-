@@ -61,6 +61,25 @@ export const environmentSchema = z
 
     // Logging
     LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
+
+    // Security
+    TRUST_PROXY_HOPS: z.preprocess(
+      parseInteger,
+      z.number().int().min(0).max(5).default(0),
+    ),
+    RATE_LIMIT_ENABLED: z.preprocess(parseBoolean, z.boolean().default(true)),
+    RATE_LIMIT_WINDOW_MS: z.preprocess(
+      parseInteger,
+      z.number().int().min(1000).max(3600000).default(60000),
+    ),
+    RATE_LIMIT_MAX_REQUESTS: z.preprocess(
+      parseInteger,
+      z.number().int().min(1).max(10000).default(100),
+    ),
+    CORS_PREFLIGHT_MAX_AGE_SECONDS: z.preprocess(
+      parseInteger,
+      z.number().int().min(0).max(86400).default(600),
+    ),
   })
   .superRefine((val, ctx) => {
     // Production secure cookies

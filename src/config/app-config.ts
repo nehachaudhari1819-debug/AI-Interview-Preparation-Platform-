@@ -17,6 +17,23 @@ export type ConfiguredSupabaseConfig = {
 
 export type SupabaseConfig = UnconfiguredSupabaseConfig | ConfiguredSupabaseConfig;
 
+export type SecurityConfig = {
+  trustProxyHops: number;
+  cors: {
+    allowedOrigins: readonly string[];
+    credentials: true;
+    preflightMaxAgeSeconds: number;
+  };
+  rateLimit: {
+    enabled: boolean;
+    windowMs: number;
+    maxRequests: number;
+  };
+  helmet: {
+    enableHsts: boolean;
+  };
+};
+
 export type ApplicationConfig = {
   runtime: {
     nodeEnv: NodeEnvironment;
@@ -45,6 +62,7 @@ export type ApplicationConfig = {
   logging: {
     level: LogLevel;
   };
+  security: SecurityConfig;
 };
 
 export function createApplicationConfig(environment: ValidatedEnvironment): ApplicationConfig {
@@ -99,6 +117,22 @@ export function createApplicationConfig(environment: ValidatedEnvironment): Appl
     },
     logging: {
       level: environment.LOG_LEVEL,
+    },
+    security: {
+      trustProxyHops: environment.TRUST_PROXY_HOPS,
+      cors: {
+        allowedOrigins: Object.freeze([new URL(environment.FRONTEND_URL).origin]),
+        credentials: true as const,
+        preflightMaxAgeSeconds: environment.CORS_PREFLIGHT_MAX_AGE_SECONDS,
+      },
+      rateLimit: {
+        enabled: environment.RATE_LIMIT_ENABLED,
+        windowMs: environment.RATE_LIMIT_WINDOW_MS,
+        maxRequests: environment.RATE_LIMIT_MAX_REQUESTS,
+      },
+      helmet: {
+        enableHsts: environment.NODE_ENV === "production",
+      },
     },
   };
 }
