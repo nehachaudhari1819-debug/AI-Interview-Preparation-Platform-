@@ -30,7 +30,7 @@ The middleware is registered in `src/app.ts` in the following strict order:
 ## Key Decisions
 
 - **URL-Encoded Parser Removed:** Since the API exclusively consumes JSON, `express.urlencoded` has been entirely removed to minimize the attack surface.
-- **CSRF Origin Guarding:** `sec-fetch-site` and `origin` headers are validated on unsafe methods (POST, PUT, DELETE, PATCH). If `sec-fetch-site` is `cross-site` or the origin does not match the configured CORS allowlist, the request is rejected with `CSRF_ORIGIN_DENIED`.
+- **CSRF Origin Guarding:** The `createCsrfOriginGuard` middleware validates `sec-fetch-site` and `origin` headers on unsafe methods (POST, PUT, DELETE, PATCH). It is deliberately **not** mounted globally so that programmatic clients (mobile apps, webhooks) aren't rejected. Instead, it is a route-level middleware reserved specifically for future cookie-backed authentication routes.
 - **HSTS:** HSTS is dynamically enabled via Helmet only in the `production` environment.
 
 ## Validation & Testing

@@ -14,7 +14,6 @@ import {
   createJsonContentTypeGuard,
   cookieParserMiddleware,
   requestSecurityContextMiddleware,
-  createCsrfOriginGuard,
 } from "./security/index.js";
 
 export type CreateAppOptions = {
@@ -37,7 +36,6 @@ export function createApp(options: CreateAppOptions): Express {
   app.use(requestIdMiddleware);
   app.use(requestSecurityContextMiddleware);
   app.use(createCorsMiddleware(options.config));
-  app.use(createCsrfOriginGuard(options.config));
   app.use(createApiRateLimitMiddleware(options.config));
   app.use(API_PREFIX, createJsonContentTypeGuard());
 
