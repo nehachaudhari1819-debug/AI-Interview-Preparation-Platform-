@@ -1,6 +1,8 @@
 import type { Request, Response } from "express";
 import { createLoginController } from "../../../src/features/auth/auth.controller.js";
 import { HTTP_STATUS } from "../../../src/constants/http.constants.js";
+import type { AuthService } from "../../../src/features/auth/auth.service.js";
+import type { ApplicationConfig } from "../../../src/config/app-config.js";
 
 jest.mock("../../../src/features/auth/auth-cookie.js", () => ({
   setRefreshTokenCookie: jest.fn(),
@@ -25,7 +27,10 @@ describe("AuthController", () => {
       json: jest.fn(),
     } as unknown as Response;
 
-    const controller = createLoginController({} as any, mockService as any);
+    const controller = createLoginController(
+      {} as unknown as Readonly<ApplicationConfig>,
+      mockService as unknown as AuthService,
+    );
     await controller(req, res, jest.fn());
 
     expect(mockService.login).toHaveBeenCalledWith({

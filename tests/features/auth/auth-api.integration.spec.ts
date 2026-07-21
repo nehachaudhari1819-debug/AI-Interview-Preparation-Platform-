@@ -31,7 +31,6 @@ describe("Auth API Integration", () => {
     const config = loadApplicationConfig();
     const authRouter = createAuthRouter({ config });
     const apiRouter = Router();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     apiRouter.use("/auth", authRouter);
 
     app = createApp({ config, apiRouter });

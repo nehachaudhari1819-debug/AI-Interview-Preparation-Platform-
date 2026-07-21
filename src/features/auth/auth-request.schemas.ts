@@ -1,10 +1,9 @@
-import { z, type ZodError } from "zod";
+import { z } from "zod";
 import { ValidationError } from "../../errors/validation.error.js";
 import type { ApiFieldError } from "../../types/api-response.types.js";
 
 export const registerRequestSchema = z
   .object({
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     email: z.string().trim().toLowerCase().email().max(254),
     password: z.string().min(8).max(128),
   })
@@ -21,15 +20,11 @@ export const loginRequestSchema = z
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
-function mapZodErrorToSafeFields(error: z.ZodError<any>): ApiFieldError[] {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-  return error.errors.map((issue: z.ZodIssue) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+function mapZodErrorToSafeFields(error: z.ZodError): ApiFieldError[] {
+  return error.errors.map((issue) => {
     const field = issue.path.join(".");
     return {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       field: field === "" ? "body" : field,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       message: issue.message,
     };
   });

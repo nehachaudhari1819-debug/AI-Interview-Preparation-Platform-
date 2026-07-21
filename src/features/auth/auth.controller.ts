@@ -35,7 +35,7 @@ export function createRegisterController(
       response: res,
       statusCode: HTTP_STATUS.ACCEPTED,
       data: result,
-      ...("message" in result && result.message ? { message: result.message } : {}),
+      ...(result.message ? { message: result.message } : {}),
       requestId: req.context.requestId,
     });
   });
