@@ -20,13 +20,14 @@ export function createRegisterController(
     const input = parseRegisterRequest(req.body);
     const { result, refreshToken } = await service.register(input);
 
-    if (result.status === "authenticated" && refreshToken) {
-      setRefreshTokenCookie(res, config, refreshToken);
+    if (result.status === "authenticated") {
+      if (refreshToken) {
+        setRefreshTokenCookie(res, config, refreshToken);
+      }
       return sendSuccess({
         response: res,
         statusCode: HTTP_STATUS.ACCEPTED,
         data: result,
-        ...("message" in result && result.message ? { message: result.message } : {}),
         requestId: req.context.requestId,
       });
     }
@@ -35,7 +36,7 @@ export function createRegisterController(
       response: res,
       statusCode: HTTP_STATUS.ACCEPTED,
       data: result,
-      ...(result.message ? { message: result.message } : {}),
+      message: result.message,
       requestId: req.context.requestId,
     });
   });

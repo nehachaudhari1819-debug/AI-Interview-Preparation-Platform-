@@ -14,11 +14,9 @@ describe("Safe Config Summary", () => {
       },
       frontend: { origin: "http://localhost:5173" },
       authSession: {
-        cookieName: "sb-auth",
-        cookieSecret: "test-secret",
-        cookieDomain: "localhost",
-        secure: false,
-        sameSite: "lax",
+        refreshCookieMaxAgeSeconds: 604800,
+        rateLimit: { enabled: true, windowMs: 900000, maxRequests: 5 },
+        emailConfirmationRedirectUrl: "http://localhost:3000/auth/callback",
       },
       supabase: {
         configured: true,

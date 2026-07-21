@@ -1,18 +1,17 @@
-import { z } from "zod";
+import { z, type core } from "zod";
 import { ValidationError } from "../../errors/validation.error.js";
 import type { ApiFieldError } from "../../types/api-response.types.js";
 
 export const registerRequestSchema = z
   .object({
-    email: z.string().trim().toLowerCase().email().max(254),
+    email: z.email().trim().toLowerCase().max(254),
     password: z.string().min(8).max(128),
   })
   .strict();
 
 export const loginRequestSchema = z
   .object({
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    email: z.string().trim().toLowerCase().email().max(254),
+    email: z.email().trim().toLowerCase().max(254),
     password: z.string().min(8).max(128),
   })
   .strict();
@@ -20,8 +19,8 @@ export const loginRequestSchema = z
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
-function mapZodErrorToSafeFields(error: z.ZodError): ApiFieldError[] {
-  return error.errors.map((issue) => {
+function mapZodErrorToSafeFields<T>(error: z.ZodError<T>): ApiFieldError[] {
+  return error.issues.map((issue: core.$ZodIssue): ApiFieldError => {
     const field = issue.path.join(".");
     return {
       field: field === "" ? "body" : field,
