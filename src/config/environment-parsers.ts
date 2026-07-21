@@ -5,7 +5,7 @@ export function emptyStringToUndefined(value: unknown): unknown {
 
   const normalized = value.trim();
 
-  return normalized.length === 0 ? undefined : normalized;
+  return normalized.length === 0 ? undefined : value;
 }
 
 export function parseBoolean(value: unknown): unknown {
@@ -43,7 +43,7 @@ export function parseInteger(value: unknown): unknown {
     }
 
     const parsed = Number(normalized);
-    if (!Number.isNaN(parsed)) {
+    if (Number.isFinite(parsed)) {
       return parsed;
     }
   }

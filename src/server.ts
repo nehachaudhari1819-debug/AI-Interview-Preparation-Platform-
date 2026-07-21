@@ -71,15 +71,7 @@ function bootstrap(): void {
   }
 }
 
-// Only bootstrap if run directly, allowing tests to import this file without starting
-if (
-  (process.argv[1] && process.argv[1].endsWith("server.ts")) ||
-  process.argv[1]?.endsWith("server.js")
-) {
-  bootstrap();
-} else {
-  // If not run directly, just execute it anyway as this is the entry point
-  // We will assume in Jest we mock bootstrap or don't import server.ts.
-  // Wait, let's just always bootstrap because tsx src/server.ts runs it directly.
+// Only bootstrap if not in test environment
+if (process.env.NODE_ENV !== "test") {
   bootstrap();
 }

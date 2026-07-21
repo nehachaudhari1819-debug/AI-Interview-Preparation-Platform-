@@ -3,6 +3,7 @@ import { startServer } from "../../src/server.js";
 import { loadApplicationConfig } from "../../src/config/index.js";
 import { ConfigurationError } from "../../src/errors/configuration.error.js";
 import type { Server } from "node:http";
+import type { Express } from "express";
 
 describe("Environment Startup Integration", () => {
   const originalEnv = { ...process.env };
@@ -53,12 +54,14 @@ describe("Environment Startup Integration", () => {
     const config = loadApplicationConfig({ loadEnvFile: false });
 
     // Mock Express App
+    const listenMock = jest.fn((port: number, cb: () => void) => {
+      if (typeof cb === "function") cb();
+      return {} as Server;
+    });
+
     const mockApp = {
-      listen: jest.fn().mockImplementation((port: unknown, cb: unknown) => {
-        if (typeof cb === "function") cb();
-        return {} as Server;
-      }),
-    } as unknown as typeof import("../../src/app.js").app;
+      listen: listenMock,
+    } as unknown as Express;
 
     const server = startServer({
       app: mockApp,
@@ -66,7 +69,7 @@ describe("Environment Startup Integration", () => {
       shutdownTimeoutMs: config.runtime.shutdownTimeoutMs,
     });
 
-    expect(mockApp.listen).toHaveBeenCalledWith(8123, expect.any(Function));
+    expect(listenMock).toHaveBeenCalledWith(8123, expect.any(Function));
     expect(server).toBeDefined();
   });
 });

@@ -9,7 +9,7 @@ import {
 
 const urlSchema = z
   .string()
-  .url()
+  .regex(/^https?:\/\//)
   .refine(
     (url) => {
       try {

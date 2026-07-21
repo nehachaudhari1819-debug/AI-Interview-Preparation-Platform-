@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
-import { ZodError } from "zod";
+import * as dotenv from "dotenv";
+
 import { ConfigurationError, type ConfigurationIssue } from "../errors/configuration.error.js";
 import { environmentSchema, type ValidatedEnvironment } from "./environment-schema.js";
 
@@ -7,13 +7,15 @@ export function parseEnvironment(source: Readonly<NodeJS.ProcessEnv>): Validated
   try {
     return environmentSchema.parse(source);
   } catch (error) {
-    if (error instanceof ZodError) {
-      const zodError = error as ZodError;
-      const issues: ConfigurationIssue[] = zodError.errors.map((err) => {
+    if (error instanceof Error && error.name === "ZodError") {
+      const zodErr = error as unknown as {
+        issues: Array<{ path: (string | number)[]; message: string }>;
+      };
+      const issues: ConfigurationIssue[] = zodErr.issues.map((err) => {
         const variable = err.path.join(".") || "unknown";
         return {
           variable,
-          message: err.message, // Safely returns Zod's generic type message or custom refines, never the raw value
+          message: err.message,
         };
       });
       throw new ConfigurationError(issues);
