@@ -11,15 +11,15 @@ describe("AuthService", () => {
   describe("register", () => {
     it("returns successful session when gateway succeeds", async () => {
       const mockGateway = {
-        registerWithPassword: jest.fn().mockResolvedValue({
+        registerWithPassword: jest.fn<any>().mockResolvedValue({
           success: true,
           userCreated: true,
           session: {
-            accessToken: "acc",
+            accessToken: "access-token",
             refreshToken: "ref",
             expiresIn: 3600,
-            expiresAt: 1234,
-            user: { id: "1" },
+            expiresAt: 123456789,
+            user: { id: "u-1" },
           },
         }),
       };
@@ -39,7 +39,7 @@ describe("AuthService", () => {
   describe("login", () => {
     it("throws InvalidLoginCredentialsError on invalid credentials", async () => {
       const mockGateway = {
-        loginWithPassword: jest.fn().mockResolvedValue({
+        loginWithPassword: jest.fn<any>().mockResolvedValue({
           success: false,
           reason: "invalid_credentials",
         }),

@@ -15,9 +15,10 @@ import { createAuthService } from "./auth.service.js";
 export function createAuthRouter(options: {
   config: Readonly<ApplicationConfig>;
   authMiddleware?: ReturnType<typeof createAuthenticationMiddleware>;
+  authService?: ReturnType<typeof createAuthService>;
 }): Router {
   const router = Router();
-  const service = createAuthService({ config: options.config });
+  const service = options.authService ?? createAuthService({ config: options.config });
 
   const authMiddleware =
     options.authMiddleware ?? createAuthenticationMiddleware({ config: options.config });

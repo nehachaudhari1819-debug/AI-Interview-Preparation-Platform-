@@ -8,7 +8,7 @@ import { createAuthRouter } from "../../../src/features/auth/auth.router.js";
 import { HTTP_STATUS } from "../../../src/constants/http.constants.js";
 import { Router } from "express";
 
-jest.mock("../../../src/features/auth/auth.service.js");
+// removed jest.mock
 
 describe("Auth API Integration", () => {
   let app: Express;
@@ -16,21 +16,19 @@ describe("Auth API Integration", () => {
 
   beforeEach(() => {
     mockAuthService = {
-      register: jest.fn().mockResolvedValue({ result: { status: "verification_required" } }),
+      register: jest.fn<any>().mockResolvedValue({ result: { status: "verification_required" } }),
       login: jest
-        .fn()
+        .fn<any>()
         .mockResolvedValue({ publicSession: { status: "authenticated" }, refreshToken: "token" }),
-      refresh: jest.fn().mockResolvedValue({
+      refresh: jest.fn<any>().mockResolvedValue({
         publicSession: { status: "authenticated" },
         rotatedRefreshToken: "token2",
       }),
-      logout: jest.fn().mockResolvedValue(undefined),
+      logout: jest.fn<any>().mockResolvedValue(undefined),
     };
 
-    (createAuthService as jest.Mock).mockReturnValue(mockAuthService);
-
     const config = loadApplicationConfig();
-    const authRouter = createAuthRouter({ config });
+    const authRouter = createAuthRouter({ config, authService: mockAuthService });
     const apiRouter = Router();
     apiRouter.use("/auth", authRouter);
 

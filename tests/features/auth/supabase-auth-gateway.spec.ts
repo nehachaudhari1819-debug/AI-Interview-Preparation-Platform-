@@ -3,7 +3,7 @@ import { createSupabaseAuthGateway } from "../../../src/features/auth/supabase-a
 
 describe("SupabaseAuthGateway", () => {
   it("registerWithPassword delegates to client.auth.signUp", async () => {
-    const mockSignUp = jest.fn().mockResolvedValue({
+    const mockSignUp = jest.fn<any>().mockResolvedValue({
       data: {
         session: {
           access_token: "access-1",

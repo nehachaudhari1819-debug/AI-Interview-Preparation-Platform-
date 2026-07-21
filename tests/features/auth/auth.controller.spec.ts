@@ -4,6 +4,7 @@ import { createLoginController } from "../../../src/features/auth/auth.controlle
 import { HTTP_STATUS } from "../../../src/constants/http.constants.js";
 import type { AuthService } from "../../../src/features/auth/auth.service.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
+import { createTestApplicationConfig } from "../../setup/test-helpers.js";
 
 jest.mock("../../../src/features/auth/auth-cookie.js", () => ({
   setRefreshTokenCookie: jest.fn(),
@@ -12,7 +13,7 @@ jest.mock("../../../src/features/auth/auth-cookie.js", () => ({
 describe("AuthController", () => {
   it("login calls service and sends success response", async () => {
     const mockService = {
-      login: jest.fn().mockResolvedValue({
+      login: jest.fn<any>().mockResolvedValue({
         publicSession: { status: "authenticated" },
         refreshToken: "ref-token",
       }),
@@ -26,12 +27,11 @@ describe("AuthController", () => {
     const res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
+      cookie: jest.fn(),
     } as unknown as Response;
 
-    const controller = createLoginController(
-      {} as unknown as Readonly<ApplicationConfig>,
-      mockService as unknown as AuthService,
-    );
+    const config = createTestApplicationConfig();
+    const controller = createLoginController(config, mockService as unknown as AuthService);
     await controller(req, res, jest.fn());
 
     expect(mockService.login).toHaveBeenCalledWith({
