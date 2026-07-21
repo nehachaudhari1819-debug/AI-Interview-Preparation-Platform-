@@ -154,6 +154,10 @@ UUIDs for all public resource references.
 * **State Updates**: Checking expected state before transitions (e.g., verify `in_progress` before `complete`).
 * **Optimistic Concurrency**: Row-level locks during transition updates to prevent race conditions.
 
+### System Health APIs (Public)
+* `GET /api/v1/health`: Basic liveness probe.
+* `GET /api/v1/health/ready`: Readiness probe checking database/provider connectivity.
+
 ---
 
 ## 2. Authentication APIs
@@ -454,6 +458,26 @@ RESOURCE_OWNER
 
 ## 6. Response and Evaluation APIs
 
+### GET /api/v1/interviews/:interviewId/questions
+
+**Purpose:**  
+Retrieve all questions assigned to a specific interview.
+
+**Access:**  
+RESOURCE_OWNER
+
+---
+
+### GET /api/v1/interviews/:interviewId/questions/:questionId
+
+**Purpose:**  
+Retrieve details for a specific interview question.
+
+**Access:**  
+RESOURCE_OWNER
+
+---
+
 ### POST /api/v1/interviews/:interviewId/responses
 
 **Purpose:**  
@@ -496,6 +520,16 @@ RESOURCE_OWNER
 
 **Rate-limit category:**  
 AI_EXPENSIVE
+
+---
+
+### GET /api/v1/interviews/:interviewId/responses/:responseId
+
+**Purpose:**  
+Retrieve details and evaluation for a specific response.
+
+**Access:**  
+RESOURCE_OWNER
 
 ---
 
@@ -570,6 +604,11 @@ Retrieve comprehensive feedback for a completed interview.
 **Access:**  
 RESOURCE_OWNER
 
+**Workflow Notes:**  
+* `POST /api/v1/interviews/:interviewId/complete` generates the feedback.
+* `GET /api/v1/interviews/:interviewId/feedback` retrieves the generated feedback.
+* Repeated completion requests are idempotent and do not regenerate feedback.
+
 **Success response (200):**
 ```json
 {
@@ -587,19 +626,24 @@ RESOURCE_OWNER
 
 ## 10. Administrative APIs
 
-### GET /api/v1/admin/users
-
-**Purpose:**  
-List all platform users (for administrative dashboards).
-
-**Access:**  
-ADMIN
-
-**Success response (200):**
-Paginated users list.
-
-**Security:**
+**Security for all admin routes:**
 Strict Role-Based Access Control middleware. Ordinary users receive 403 Forbidden.
+
+### Users Management
+* `GET /api/v1/admin/users`: List all platform users.
+* `GET /api/v1/admin/users/:userId`: Retrieve details for a specific user.
+* `PATCH /api/v1/admin/users/:userId/status`: Update a user's account status (e.g., suspend, activate).
+
+### Questions Management
+* `GET /api/v1/admin/questions`: List all global questions.
+* `POST /api/v1/admin/questions`: Create a new global question.
+* `PATCH /api/v1/admin/questions/:questionId`: Update a global question.
+* `DELETE /api/v1/admin/questions/:questionId`: Delete a global question.
+
+### Platform Data Access
+* `GET /api/v1/admin/interviews`: List all interviews for monitoring.
+* `GET /api/v1/admin/resume-analyses`: List all resume analyses for monitoring.
+* `GET /api/v1/admin/system/metrics`: Retrieve platform usage metrics.
 
 ---
 
