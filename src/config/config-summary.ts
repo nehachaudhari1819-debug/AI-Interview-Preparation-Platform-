@@ -1,0 +1,34 @@
+import type { ApplicationConfig } from "./app-config.js";
+import type { AiProvider, CookieSameSite, LogLevel, NodeEnvironment } from "./environment.types.js";
+
+export type SafeConfigSummary = {
+  nodeEnv: NodeEnvironment;
+  port: number;
+  shutdownTimeoutMs: number;
+  frontendOrigin: string;
+  supabaseConfigured: boolean;
+  aiProvider: AiProvider;
+  geminiConfigured: boolean;
+  openAiConfigured: boolean;
+  resumeBucket: string;
+  cookieSecure: boolean;
+  cookieSameSite: CookieSameSite;
+  logLevel: LogLevel;
+};
+
+export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): SafeConfigSummary {
+  return {
+    nodeEnv: config.runtime.nodeEnv,
+    port: config.runtime.port,
+    shutdownTimeoutMs: config.runtime.shutdownTimeoutMs,
+    frontendOrigin: config.frontend.origin,
+    supabaseConfigured: config.supabase.configured,
+    aiProvider: config.ai.provider,
+    geminiConfigured: config.ai.geminiApiKey !== undefined,
+    openAiConfigured: config.ai.openAiApiKey !== undefined,
+    resumeBucket: config.storage.resumeBucket,
+    cookieSecure: config.cookies.secure,
+    cookieSameSite: config.cookies.sameSite,
+    logLevel: config.logging.level,
+  };
+}

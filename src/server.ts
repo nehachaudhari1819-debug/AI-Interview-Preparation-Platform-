@@ -1,63 +1,85 @@
 import type { Server } from "node:http";
 
 import { app } from "./app.js";
-import { DEFAULT_PORT } from "./constants/application.constants.js";
+import { createSafeConfigSummary, loadApplicationConfig } from "./config/index.js";
+import { ConfigurationError } from "./errors/configuration.error.js";
 
-function resolvePort(rawPort: string | undefined): number {
-  if (rawPort === undefined) {
-    return DEFAULT_PORT;
-  }
+export type StartServerOptions = {
+  app: typeof app;
+  port: number;
+  shutdownTimeoutMs: number;
+};
 
-  const parsedPort = Number(rawPort);
-
-  if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
-    throw new Error("PORT must be an integer between 1 and 65535.");
-  }
-
-  return parsedPort;
-}
-
-const port = resolvePort(process.env.PORT);
-
-const server = startServer();
-let isShuttingDown = false;
-
-function startServer(): Server {
-  return app.listen(port, () => {
-    console.log(`Backend server listening on port ${String(port)}.`);
+export function startServer(options: StartServerOptions): Server {
+  const server = options.app.listen(options.port, () => {
+    console.log(`Server listening on port ${options.port}`);
   });
-}
 
-function shutdown(signal: NodeJS.Signals): void {
-  if (isShuttingDown) {
-    return;
-  }
+  const gracefulShutdown = (signal: string) => {
+    console.log(`${signal} received. Starting graceful shutdown.`);
 
-  isShuttingDown = true;
-
-  console.log(`${signal} received. Starting graceful shutdown.`);
-
-  const forceShutdownTimer = setTimeout(() => {
-    console.error("Graceful shutdown timed out.");
-    process.exitCode = 1;
-    server.closeAllConnections();
-  }, 10_000);
-
-  forceShutdownTimer.unref();
-
-  server.close((error) => {
-    clearTimeout(forceShutdownTimer);
-
-    if (error !== undefined) {
-      console.error("Server shutdown failed.", error);
+    const forceShutdownTimer = setTimeout(() => {
+      console.error("Graceful shutdown timed out.");
       process.exitCode = 1;
-      return;
-    }
+      process.exit();
+    }, options.shutdownTimeoutMs);
 
-    console.log("Backend server stopped.");
-    process.exitCode = 0;
+    forceShutdownTimer.unref();
+
+    server.closeAllConnections();
+    server.close((error) => {
+      clearTimeout(forceShutdownTimer);
+      if (error) {
+        console.error("Error during server closure:", error);
+        process.exitCode = 1;
+      } else {
+        console.log("Server closed successfully.");
+        process.exitCode = 0;
+      }
+    });
+  };
+
+  process.on("SIGTERM", () => {
+    gracefulShutdown("SIGTERM");
   });
+  process.on("SIGINT", () => {
+    gracefulShutdown("SIGINT");
+  });
+
+  return server;
 }
 
-process.once("SIGINT", shutdown);
-process.once("SIGTERM", shutdown);
+function bootstrap(): void {
+  try {
+    const config = loadApplicationConfig();
+    const safeSummary = createSafeConfigSummary(config);
+
+    console.log("Starting backend application.", safeSummary);
+
+    startServer({
+      app,
+      port: config.runtime.port,
+      shutdownTimeoutMs: config.runtime.shutdownTimeoutMs,
+    });
+  } catch (error: unknown) {
+    if (error instanceof ConfigurationError) {
+      console.error("Application configuration is invalid.", { issues: error.issues });
+    } else {
+      console.error("Backend startup failed unexpectedly.");
+    }
+    process.exitCode = 1;
+  }
+}
+
+// Only bootstrap if run directly, allowing tests to import this file without starting
+if (
+  (process.argv[1] && process.argv[1].endsWith("server.ts")) ||
+  process.argv[1]?.endsWith("server.js")
+) {
+  bootstrap();
+} else {
+  // If not run directly, just execute it anyway as this is the entry point
+  // We will assume in Jest we mock bootstrap or don't import server.ts.
+  // Wait, let's just always bootstrap because tsx src/server.ts runs it directly.
+  bootstrap();
+}

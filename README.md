@@ -16,8 +16,26 @@ npm install
 **3. Run Development Server:**
 
 ```powershell
-npm run dev
+npm run typecheck
 ```
+
+## Configuration
+
+This project uses a strict, typed configuration system. Raw environment variables are validated before the server starts.
+
+1. **Setup**: Copy the template file to `.env`:
+   ```powershell
+   Copy-Item ".env.example" ".env"
+   ```
+2. **Values**: Fill in only the local development values in your `.env` file.
+3. **Security**: Never commit the `.env` file to version control.
+4. **Startup**: Run the development server:
+   ```powershell
+   npm run dev
+   ```
+5. **Fail-fast**: If any required configuration is missing or invalid, the server will intentionally fail to start.
+
+Detailed documentation on the environment configuration rules and secret classification can be found in [docs/backend/phase-2/03-environment-configuration.md](./docs/backend/phase-2/03-environment-configuration.md).
 
 **4. Run Validation Pipeline:**
 
