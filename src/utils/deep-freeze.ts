@@ -3,7 +3,7 @@ export function deepFreeze<T extends object>(value: T): Readonly<T> {
     const prop = (value as Record<string, unknown>)[key];
 
     if (prop !== null && typeof prop === "object") {
-      deepFreeze(prop as object);
+      deepFreeze(prop);
     }
   }
 

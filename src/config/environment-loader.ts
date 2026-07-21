@@ -8,7 +8,8 @@ export function parseEnvironment(source: Readonly<NodeJS.ProcessEnv>): Validated
     return environmentSchema.parse(source);
   } catch (error) {
     if (error instanceof ZodError) {
-      const issues: ConfigurationIssue[] = error.errors.map((err) => {
+      const zodError = error as ZodError;
+      const issues: ConfigurationIssue[] = zodError.errors.map((err) => {
         const variable = err.path.join(".") || "unknown";
         return {
           variable,

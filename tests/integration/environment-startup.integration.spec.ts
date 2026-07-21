@@ -54,11 +54,11 @@ describe("Environment Startup Integration", () => {
 
     // Mock Express App
     const mockApp = {
-      listen: jest.fn().mockImplementation((port, cb) => {
+      listen: jest.fn().mockImplementation((port: unknown, cb: unknown) => {
         if (typeof cb === "function") cb();
         return {} as Server;
       }),
-    } as any;
+    } as unknown as typeof import("../../src/app.js").app;
 
     const server = startServer({
       app: mockApp,

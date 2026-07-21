@@ -12,7 +12,7 @@ export type StartServerOptions = {
 
 export function startServer(options: StartServerOptions): Server {
   const server = options.app.listen(options.port, () => {
-    console.log(`Server listening on port ${options.port}`);
+    console.log(`Server listening on port ${String(options.port)}`);
   });
 
   const gracefulShutdown = (signal: string) => {

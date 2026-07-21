@@ -107,7 +107,7 @@ describe("Environment Schema", () => {
         SUPABASE_PUBLISHABLE_KEY: "secret_value_123",
       });
       fail("Should have thrown due to missing SERVICE_ROLE_KEY");
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorString = JSON.stringify(error);
       expect(errorString).not.toContain("secret_value_123");
     }

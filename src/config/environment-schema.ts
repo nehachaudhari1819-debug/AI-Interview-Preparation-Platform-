@@ -65,7 +65,7 @@ export const environmentSchema = z
     // Production secure cookies
     if (val.NODE_ENV === "production" && !val.COOKIE_SECURE) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["COOKIE_SECURE"],
         message: "COOKIE_SECURE must be true when NODE_ENV=production.",
       });
@@ -74,7 +74,7 @@ export const environmentSchema = z
     // SameSite none requires secure cookies
     if (val.COOKIE_SAME_SITE === "none" && !val.COOKIE_SECURE) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["COOKIE_SAME_SITE"],
         message: "COOKIE_SAME_SITE=none requires COOKIE_SECURE=true.",
       });
@@ -93,7 +93,7 @@ export const environmentSchema = z
             ? "SUPABASE_PUBLISHABLE_KEY"
             : "SUPABASE_SERVICE_ROLE_KEY";
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           path: [path],
           message: "Supabase configuration must be fully provided or entirely absent.",
         });
