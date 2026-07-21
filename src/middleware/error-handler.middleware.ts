@@ -60,7 +60,7 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
     return;
   }
 
-  const requestId = request.context?.requestId ?? "unavailable";
+  const requestId = request.context.requestId;
   const appError = normalizeError(error);
 
   if (!appError.isOperational) {

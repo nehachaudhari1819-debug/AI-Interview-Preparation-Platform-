@@ -3,7 +3,7 @@ import type { ApiFieldError } from "../types/api-response.types.js";
 
 export type AppErrorOptions = {
   statusCode: number;
-  code: ErrorCode | string;
+  code: string;
   message: string;
   errors?: ApiFieldError[];
   isOperational?: boolean;
@@ -12,7 +12,7 @@ export type AppErrorOptions = {
 
 export class AppError extends Error {
   public readonly statusCode: number;
-  public readonly code: ErrorCode | string;
+  public readonly code: string;
   public readonly errors?: ApiFieldError[];
   public readonly isOperational: boolean;
 

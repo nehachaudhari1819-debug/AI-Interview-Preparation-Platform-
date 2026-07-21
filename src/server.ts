@@ -19,7 +19,7 @@ function resolvePort(rawPort: string | undefined): number {
 
 const port = resolvePort(process.env.PORT);
 
-let server: Server | undefined;
+const server = startServer();
 let isShuttingDown = false;
 
 function startServer(): Server {
@@ -37,7 +37,7 @@ function shutdown(signal: NodeJS.Signals): void {
 
   console.log(`${signal} received. Starting graceful shutdown.`);
 
-  if (server === undefined) {
+  if (!server) {
     process.exitCode = 0;
     return;
   }
@@ -45,7 +45,7 @@ function shutdown(signal: NodeJS.Signals): void {
   const forceShutdownTimer = setTimeout(() => {
     console.error("Graceful shutdown timed out.");
     process.exitCode = 1;
-    server?.closeAllConnections();
+    server.closeAllConnections();
   }, 10_000);
 
   forceShutdownTimer.unref();
@@ -63,8 +63,6 @@ function shutdown(signal: NodeJS.Signals): void {
     process.exitCode = 0;
   });
 }
-
-server = startServer();
 
 process.once("SIGINT", shutdown);
 process.once("SIGTERM", shutdown);
