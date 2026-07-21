@@ -24,7 +24,7 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 function mapZodErrorToSafeFields(error: ZodError): ApiFieldError[] {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   return error.errors.map((issue) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const field = issue.path.join(".");
     return {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
