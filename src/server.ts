@@ -1,30 +1,70 @@
+import type { Server } from "node:http";
+
 import { app } from "./app.js";
+import { DEFAULT_PORT } from "./constants/application.constants.js";
 
-const DEFAULT_PORT = 5000;
-const rawPort = process.env.PORT;
-const port = rawPort === undefined ? DEFAULT_PORT : Number.parseInt(rawPort, 10);
+function resolvePort(rawPort: string | undefined): number {
+  if (rawPort === undefined) {
+    return DEFAULT_PORT;
+  }
 
-if (!Number.isInteger(port) || port < 1 || port > 65535) {
-  throw new Error("PORT must be an integer between 1 and 65535.");
+  const parsedPort = Number(rawPort);
+
+  if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+    throw new Error("PORT must be an integer between 1 and 65535.");
+  }
+
+  return parsedPort;
 }
 
-const server = app.listen(port, () => {
-  console.log(`Backend server listening on port ${String(port)}.`);
-});
+const port = resolvePort(process.env.PORT);
+
+let server: Server | undefined;
+let isShuttingDown = false;
+
+function startServer(): Server {
+  return app.listen(port, () => {
+    console.log(`Backend server listening on port ${String(port)}.`);
+  });
+}
 
 function shutdown(signal: NodeJS.Signals): void {
-  console.log(`${signal} received. Shutting down.`);
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+
+  console.log(`${signal} received. Starting graceful shutdown.`);
+
+  if (server === undefined) {
+    process.exitCode = 0;
+    return;
+  }
+
+  const forceShutdownTimer = setTimeout(() => {
+    console.error("Graceful shutdown timed out.");
+    process.exitCode = 1;
+    server?.closeAllConnections();
+  }, 10_000);
+
+  forceShutdownTimer.unref();
 
   server.close((error) => {
-    if (error) {
+    clearTimeout(forceShutdownTimer);
+
+    if (error !== undefined) {
       console.error("Server shutdown failed.", error);
       process.exitCode = 1;
       return;
     }
 
+    console.log("Backend server stopped.");
     process.exitCode = 0;
   });
 }
+
+server = startServer();
 
 process.once("SIGINT", shutdown);
 process.once("SIGTERM", shutdown);
