@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { sendCollection, sendSuccess } from "../../src/utils/api-response.js";
 
 import type { Response } from "express";
@@ -7,8 +8,8 @@ describe("API Response Utilities", () => {
 
   beforeEach(() => {
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: jest.fn().mockReturnThis() as unknown as Response["status"],
+      json: jest.fn() as unknown as Response["json"],
     };
   });
 

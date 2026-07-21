@@ -1,4 +1,5 @@
-import type { NextFunction, Request, Response } from "express";
+import { jest } from "@jest/globals";
+import type { Request, Response } from "express";
 
 import { errorHandlerMiddleware } from "../../src/middleware/error-handler.middleware.js";
 import { AppError } from "../../src/errors/app-error.js";
@@ -15,8 +16,8 @@ describe("errorHandlerMiddleware", () => {
     mockRequest = { context: { requestId: "req-123" } };
     mockResponse = {
       headersSent: false,
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      status: jest.fn().mockReturnThis() as unknown as Response["status"],
+      json: jest.fn() as unknown as Response["json"],
     };
     nextFunction = jest.fn();
     originalConsoleError = console.error;

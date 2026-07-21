@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import type { Request, Response } from "express";
 
 import { requestIdMiddleware } from "../../src/middleware/request-id.middleware.js";
@@ -9,10 +10,10 @@ describe("requestIdMiddleware", () => {
 
   beforeEach(() => {
     mockRequest = {
-      header: jest.fn().mockReturnValue(undefined),
+      header: jest.fn().mockReturnValue(undefined) as unknown as Request["header"],
     };
     mockResponse = {
-      setHeader: jest.fn(),
+      setHeader: jest.fn() as unknown as Response["setHeader"],
     };
     nextFunction = jest.fn();
   });
@@ -31,7 +32,7 @@ describe("requestIdMiddleware", () => {
 
   it("preserves a valid incoming UUID", () => {
     const validUuid = "123e4567-e89b-12d3-a456-426614174000";
-    mockRequest.header = jest.fn().mockReturnValue(validUuid);
+    mockRequest.header = jest.fn().mockReturnValue(validUuid) as unknown as Request["header"];
 
     requestIdMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
@@ -41,7 +42,7 @@ describe("requestIdMiddleware", () => {
 
   it("replaces an invalid incoming request ID", () => {
     const invalidId = "not-a-uuid";
-    mockRequest.header = jest.fn().mockReturnValue(invalidId);
+    mockRequest.header = jest.fn().mockReturnValue(invalidId) as unknown as Request["header"];
 
     requestIdMiddleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
