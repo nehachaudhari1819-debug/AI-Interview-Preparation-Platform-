@@ -20,7 +20,7 @@
 
 **Identity Source**: `auth.users.id` (Supabase Auth).
 **Profile Sync Decision**: Database-driven via PostgreSQL Triggers.
-* A trigger on `auth.users` creates the baseline `public.users` record immediately upon successful Supabase registration. 
+* A trigger on `auth.users` creates the baseline `public.users` record immediately upon successful Supabase registration.
 * Express gracefully handles edge cases via idempotent fallback logic (if `public.users` is missing during login, a safe recovery function attempts to heal the profile without duplicating).
 
 ---
@@ -29,13 +29,13 @@
 
 ## POST /api/v1/auth/register
 
-**Purpose:**  
+**Purpose:**
 Registers a new user account on the platform.
 
-**Access classification:**  
+**Access classification:**
 PUBLIC
 
-**Rate-limit category:**  
+**Rate-limit category:**
 AUTH_STRICT
 
 **Required headers:**
@@ -108,13 +108,13 @@ Redirect to a "Check Your Email" screen. No application data access allowed.
 
 ## POST /api/v1/auth/resend-verification
 
-**Purpose:**  
+**Purpose:**
 Resends the verification email.
 
-**Access classification:**  
+**Access classification:**
 PUBLIC
 
-**Rate-limit category:**  
+**Rate-limit category:**
 AUTH_RECOVERY (e.g., 3 requests per 15 minutes)
 
 **Request body:**
@@ -138,13 +138,13 @@ AUTH_RECOVERY (e.g., 3 requests per 15 minutes)
 
 ## POST /api/v1/auth/login
 
-**Purpose:**  
+**Purpose:**
 Authenticates the user and issues session tokens.
 
-**Access classification:**  
+**Access classification:**
 PUBLIC
 
-**Rate-limit category:**  
+**Rate-limit category:**
 AUTH_STRICT
 
 **Cookie requirements:**
@@ -240,10 +240,10 @@ Creates the secure refresh cookie.
 
 ## POST /api/v1/auth/refresh
 
-**Purpose:**  
+**Purpose:**
 Exchanges a valid refresh cookie for a new access and refresh token.
 
-**Access classification:**  
+**Access classification:**
 SESSION_COOKIE_REQUIRED
 
 **Cookie requirements:**
@@ -273,7 +273,7 @@ If multiple calls fire, Supabase handles rotation. The frontend MUST mutex refre
 
 ## POST /api/v1/auth/logout
 
-**Purpose:**  
+**Purpose:**
 Terminates the current session.
 
 **Cookie requirements:**
@@ -293,7 +293,7 @@ Reads and clears `refresh_token`.
 
 ## POST /api/v1/auth/forgot-password
 * Apply `AUTH_RECOVERY` limits.
-* Response is completely neutral to prevent enumeration. 
+* Response is completely neutral to prevent enumeration.
 * Send email containing an approved redirect link.
 
 ## POST /api/v1/auth/reset-password
@@ -376,7 +376,7 @@ No passwords or tokens are ever logged.
 
 1. **Login**: POST `/login`, store `accessToken` in memory context.
 2. **Requests**: Attach `Authorization: Bearer <token>`.
-3. **401 Interceptor**: 
+3. **401 Interceptor**:
     * Request fails 401.
     * Mutex locks API calls.
     * POST `/refresh`.
