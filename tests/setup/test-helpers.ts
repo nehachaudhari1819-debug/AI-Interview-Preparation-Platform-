@@ -21,7 +21,11 @@ export function createTestApplicationConfig(
       emailConfirmationRedirectUrl: "http://localhost:3000/auth/callback",
     },
     supabase: {
-      configured: false,
+      configured: true,
+      url: "https://example.supabase.co",
+      publishableKey: "pk_test",
+      privilegedKey: "sk_test",
+      privilegedKeyType: "secret",
     },
     ai: {
       provider: "gemini",

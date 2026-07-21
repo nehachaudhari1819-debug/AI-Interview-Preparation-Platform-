@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { createSupabaseAuthGateway } from "../../../src/features/auth/supabase-auth-gateway.js";
 
 describe("SupabaseAuthGateway", () => {

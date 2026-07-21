@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import request from "supertest";
 import type { Express } from "express";
 import { createApp } from "../../../src/app.js";

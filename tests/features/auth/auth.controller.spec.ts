@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import type { Request, Response } from "express";
 import { createLoginController } from "../../../src/features/auth/auth.controller.js";
 import { HTTP_STATUS } from "../../../src/constants/http.constants.js";

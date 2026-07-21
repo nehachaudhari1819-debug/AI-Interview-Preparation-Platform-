@@ -4,14 +4,14 @@ import type { ApiFieldError } from "../../types/api-response.types.js";
 
 export const registerRequestSchema = z
   .object({
-    email: z.email().trim().toLowerCase().max(254),
+    email: z.string().trim().toLowerCase().pipe(z.email().max(254)),
     password: z.string().min(8).max(128),
   })
   .strict();
 
 export const loginRequestSchema = z
   .object({
-    email: z.email().trim().toLowerCase().max(254),
+    email: z.string().trim().toLowerCase().pipe(z.email().max(254)),
     password: z.string().min(8).max(128),
   })
   .strict();

@@ -1,5 +1,6 @@
 import { createAuthApiRateLimitMiddleware } from "../../../src/features/auth/create-auth-api-rate-limit.middleware.js";
 import { AuthenticationRateLimitExceededError } from "../../../src/errors/authentication-rate-limit-exceeded.error.js";
+import { jest } from "@jest/globals";
 import type { Request, Response } from "express";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
 
