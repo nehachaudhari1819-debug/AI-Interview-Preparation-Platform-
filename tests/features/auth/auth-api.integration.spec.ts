@@ -2,7 +2,7 @@ import { jest } from "@jest/globals";
 import request from "supertest";
 import type { Express } from "express";
 import { createApp } from "../../../src/app.js";
-import { loadApplicationConfig } from "../../../src/config/app-config.js";
+import { createTestApplicationConfig } from "../../setup/test-helpers.js";
 import { createAuthService } from "../../../src/features/auth/auth.service.js";
 import { createAuthRouter } from "../../../src/features/auth/auth.router.js";
 import { HTTP_STATUS } from "../../../src/constants/http.constants.js";
@@ -27,7 +27,7 @@ describe("Auth API Integration", () => {
       logout: jest.fn<any>().mockResolvedValue(undefined),
     };
 
-    const config = loadApplicationConfig();
+    const config = createTestApplicationConfig();
     const authRouter = createAuthRouter({ config, authService: mockAuthService });
     const apiRouter = Router();
     apiRouter.use("/auth", authRouter);
