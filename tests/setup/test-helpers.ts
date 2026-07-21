@@ -17,7 +17,7 @@ export function createTestApplicationConfig(
     },
     authSession: {
       refreshCookieMaxAgeSeconds: 604800,
-      rateLimit: { enabled: true, windowMs: 900000, maxRequests: 5 },
+      rateLimit: { windowMs: 900000, maxRequests: 5 },
       emailConfirmationRedirectUrl: "http://localhost:3000/auth/callback",
     },
     supabase: {
