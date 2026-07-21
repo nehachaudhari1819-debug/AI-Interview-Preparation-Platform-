@@ -42,6 +42,14 @@ Detailed documentation on the environment configuration rules and secret classif
 - [04. Supabase Client Foundation](./docs/backend/phase-2/04-supabase-client-foundation.md)
 - [05. Security Middleware Foundation](./docs/backend/phase-2/05-security-middleware-foundation.md).
 
+- **Phase 2: Core Platform Infrastructure** _(In Progress)_
+  - Express.js Setup (Completed)
+  - Validation Pipeline (Completed)
+  - Environment Management (Completed)
+  - Database Client Setup (Completed)
+  - Base Security Middleware (Completed)
+  - Authentication Domain Foundation (Completed)
+
 **4. Run Validation Pipeline:**
 
 ```powershell

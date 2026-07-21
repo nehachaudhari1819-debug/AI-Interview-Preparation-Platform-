@@ -1,5 +1,6 @@
 import { jest } from "@jest/globals";
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
+import { AuthenticationError } from "../../src/errors/authentication.error.js";
 
 import { errorHandlerMiddleware } from "../../src/middleware/error-handler.middleware.js";
 import { AppError } from "../../src/errors/app-error.js";
@@ -60,6 +61,29 @@ describe("errorHandlerMiddleware", () => {
       meta: { requestId: "req-123" },
     });
     expect(console.error).toHaveBeenCalled();
+  });
+
+  it("adds WWW-Authenticate challenge for AuthenticationError", () => {
+    const customAuthError = new (class extends AuthenticationError {
+      constructor() {
+        super({
+          code: "test_auth_error",
+          statusCode: 401,
+          message: "Test Message",
+        });
+      }
+    })();
+    mockResponse.setHeader = jest.fn() as any;
+
+    errorHandlerMiddleware(
+      customAuthError,
+      mockRequest as Request,
+      mockResponse as Response,
+      nextFunction,
+    );
+
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("WWW-Authenticate", "Bearer");
+    expect(mockResponse.status).toHaveBeenCalledWith(401);
   });
 
   it("maps body parser entity.too.large to PAYLOAD_TOO_LARGE", () => {

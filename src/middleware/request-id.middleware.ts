@@ -19,6 +19,9 @@ export function requestIdMiddleware(
   request.context = {
     ...request.context,
     requestId,
+    authentication: {
+      state: "anonymous",
+    },
   };
 
   response.setHeader("X-Request-ID", requestId);

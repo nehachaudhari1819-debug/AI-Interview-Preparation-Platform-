@@ -27,6 +27,9 @@ The middleware is registered in `src/app.ts` in the following strict order:
 10. API Router (`/api/v1`)
 11. Not Found & Error Handlers
 
+- **Authentication Handlers**: `WWW-Authenticate: Bearer` challenge is now emitted by the Error Handler upon `AuthenticationError`.
+- **CSRF Token Issue/Verify**: Implemented (Route-level only, reserved for authenticated state-mutating requests).
+
 ## Key Decisions
 
 - **URL-Encoded Parser Removed:** Since the API exclusively consumes JSON, `express.urlencoded` has been entirely removed to minimize the attack surface.

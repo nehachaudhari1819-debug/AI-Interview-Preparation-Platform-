@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { jest } from "@jest/globals";
 import { createPrivilegedSupabaseClient } from "../../../src/integrations/supabase/admin/create-privileged-supabase-client.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";

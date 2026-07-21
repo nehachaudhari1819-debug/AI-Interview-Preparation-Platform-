@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { jest } from "@jest/globals";
 import { createPublicSupabaseClient } from "../../src/integrations/supabase/create-public-supabase-client.js";
 import { createUserSupabaseClient } from "../../src/integrations/supabase/create-user-supabase-client.js";

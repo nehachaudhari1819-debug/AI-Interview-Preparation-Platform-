@@ -15,6 +15,8 @@ Supabase requires distinct client configurations depending on the access level n
 - Export boundaries enforced (admin factory isolated).
 - Secret keys and user tokens heavily guarded and redacted from errors.
 
+**Authentication Boundary**: Token verification (`getClaims`) uses ONLY the public client. The privileged client is strictly prohibited in authentication middlewares to prevent implicit privilege escalation.
+
 ## 3. Current Key Terminology
 
 - **Publishable Key**: Safe for frontend or public-level operations. Relies on RLS for data access.

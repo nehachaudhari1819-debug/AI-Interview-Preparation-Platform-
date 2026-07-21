@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { normalizeSupabaseError } from "../../src/integrations/supabase/supabase-error-normalizer.js";
 import { createUserSupabaseClient } from "../../src/integrations/supabase/create-user-supabase-client.js";
 import { jest } from "@jest/globals";

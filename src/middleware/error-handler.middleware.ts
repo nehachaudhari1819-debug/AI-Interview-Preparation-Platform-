@@ -3,6 +3,7 @@ import type { ErrorRequestHandler } from "express";
 import { ERROR_CODES } from "../constants/error-codes.constants.js";
 import { HTTP_STATUS } from "../constants/http.constants.js";
 import { AppError } from "../errors/app-error.js";
+import { AuthenticationError } from "../errors/authentication.error.js";
 import type { ApiErrorResponse } from "../types/api-response.types.js";
 
 type ExpressBodyParserError = Error & {
@@ -79,6 +80,10 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
     },
     ...(appError.errors === undefined ? {} : { errors: appError.errors }),
   };
+
+  if (appError instanceof AuthenticationError) {
+    response.setHeader("WWW-Authenticate", appError.challenge);
+  }
 
   response.status(appError.statusCode).json(body);
 };

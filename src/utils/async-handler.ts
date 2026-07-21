@@ -8,6 +8,6 @@ type AsyncRequestHandler = (
 
 export function asyncHandler(handler: AsyncRequestHandler): RequestHandler {
   return (request, response, next) => {
-    void handler(request, response, next).catch(next);
+    return handler(request, response, next).catch(next);
   };
 }
