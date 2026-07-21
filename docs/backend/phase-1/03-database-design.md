@@ -475,7 +475,7 @@ Performance indexing tailored to common API reads:
 
 * **Interviews / Responses**: Default behavior is **Soft Delete** (`deleted_at` timestamp). Frontend queries must filter `deleted_at IS NULL`.
 * **Resumes**: Hard delete storage objects, soft delete analysis record. `extracted_text` must be purged 30 days after completion for data minimization.
-* **Account Deletion**: Request sets `account_status = 'deletion_pending'`. A background job enforces: 
+* **Account Deletion**: Request sets `account_status = 'deletion_pending'`. A background job enforces:
     * Deletion of Supabase Auth record.
     * Hard deletion of `public.users` (cascading to interviews, responses, PII).
     * Preservation of `audit_logs` (anonymized via `ON DELETE SET NULL`).
