@@ -22,7 +22,10 @@ describe("requestIdMiddleware", () => {
 
     expect(mockRequest.context?.requestId).toBeDefined();
     expect(mockRequest.context?.requestId).toHaveLength(36);
-    expect(mockResponse.setHeader).toHaveBeenCalledWith("X-Request-ID", mockRequest.context?.requestId);
+    expect(mockResponse.setHeader).toHaveBeenCalledWith(
+      "X-Request-ID",
+      mockRequest.context?.requestId,
+    );
     expect(nextFunction).toHaveBeenCalledTimes(1);
   });
 

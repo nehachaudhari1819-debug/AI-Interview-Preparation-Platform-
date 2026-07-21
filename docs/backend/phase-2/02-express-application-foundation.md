@@ -1,9 +1,11 @@
 # P2.2 — TypeScript and Express Application Foundation
 
 ## 1. Purpose
+
 This document establishes the foundational architecture for the Express application, defining constants, standardized response formats, error handling mechanisms, middleware behavior, and the core server lifecycle. It sets the baseline upon which all future feature modules (auth, interviews, feedback, etc.) will be built.
 
 ## 2. Scope
+
 - Application constants (`PORT`, `API_PREFIX`, body limits)
 - Error codes and HTTP status mappings
 - Typed request contexts
@@ -15,6 +17,7 @@ This document establishes the foundational architecture for the Express applicat
 - Server graceful shutdown and timeouts
 
 ## 3. Out-of-scope items
+
 - Supabase integration and database clients
 - Authentication, tokens, and authorization
 - Feature modules (Questions, Interviews, Resume)
@@ -22,6 +25,7 @@ This document establishes the foundational architecture for the Express applicat
 - External AI provider adapters
 
 ## 4. Application architecture
+
 - **`app.ts`**: The pure application factory that constructs the Express app dynamically.
 - **`server.ts`**: The entrypoint responsible for port resolution, startup logging, and signals mapping.
 - **`routes`**: Versioned API router entry points.
@@ -32,7 +36,9 @@ This document establishes the foundational architecture for the Express applicat
 - **`constants`**: Centralized configurations mapped for simple reuse.
 
 ## 5. Middleware order
+
 The execution sequence in `app.ts` is strictly deterministic:
+
 1. Framework overrides (Disable `X-Powered-By`)
 2. Request ID generation / capture (`requestIdMiddleware`)
 3. Body parsers (`express.json`, `express.urlencoded`)
@@ -41,16 +47,20 @@ The execution sequence in `app.ts` is strictly deterministic:
 6. Central error transformer (`errorHandlerMiddleware`)
 
 ## 6. API prefix
+
 `API_PREFIX` is globally mapped to `/api/v1`.
 
 ## 7. Request ID contract
+
 - **Incoming Header**: `X-Request-ID` (UUID formatted, maximum 64 chars).
 - **Generation**: Created automatically using `node:crypto` `randomUUID` if missing/invalid.
 - **Propagation**: Saved securely to `req.context.requestId`.
 - **Response**: Emitted back in the HTTP Header `X-Request-ID` and in JSON as `meta.requestId`.
 
 ## 8. Success response contract
+
 Success responses wrap unstructured JSON data in a uniform shell.
+
 ```json
 {
   "success": true,
@@ -61,7 +71,9 @@ Success responses wrap unstructured JSON data in a uniform shell.
 ```
 
 ## 9. Error response contract
+
 Error envelopes hide operational secrets while explaining failures simply.
+
 ```json
 {
   "success": false,
@@ -73,6 +85,7 @@ Error envelopes hide operational secrets while explaining failures simply.
 ```
 
 ## 10. Error taxonomy
+
 - **`AppError`**: Base application exception enclosing status codes and public messaging.
 - **`NotFoundError`**: Used implicitly by the `notFoundMiddleware` or explicitly by controllers.
 - **`ValidationError`**: Triggers HTTP 422 containing deep field errors.
@@ -80,27 +93,33 @@ Error envelopes hide operational secrets while explaining failures simply.
 - **Parser Normalization**: Converts raw body-parser failures (`entity.too.large`, `entity.parse.failed`) into HTTP 413 and 400 safely.
 
 ## 11. Type augmentation
+
 The Express namespace has been properly augmented globally (`Express.Request`) to include the `context` object, providing strict access to `requestId`.
 
 ## 12. Router architecture
+
 Fake functional routes have intentionally been omitted to prevent testing debt or insecure phantom routes. The `/api/v1` router is initialized securely, waiting for future controllers to register valid paths.
 
 ## 13. Application factory
+
 `createApp()` acts as a decoupled factory, optionally accepting an injected `Router`. This allows test specifications to mount ad-hoc routes inside the application architecture without touching production configurations.
 
 ## 14. Server lifecycle
+
 - `PORT` parsing ensures non-privileged, integer resolution between 1-65535, defaulting to 5000.
 - Safe listeners trigger exactly once.
 - Deterministic signal hooks track state using `isShuttingDown` to avert repetitive callbacks.
 - A forced timeout (10,000ms) prevents hanging processes if connections stubbornly refuse to close.
 
 ## 15. Security posture
+
 - Stack traces are completely sanitized and dropped from network responses.
 - Application error causes are suppressed.
 - `express` parsers map errors safely to known codes rather than dumping underlying buffer exceptions.
 - Hardened default limits (`1mb`) defend against memory exhaustions.
 
 ## 16. Test inventory
+
 1. **`request-id.middleware.spec.ts`**: Ensures UUIDs are tracked or reliably generated.
 2. **`app-error.spec.ts`**: Checks prototype inheritance and payload configuration.
 3. **`api-response.spec.ts`**: Asserts envelope formatting, nullity handling, and pagination tracking.
@@ -109,6 +128,7 @@ Fake functional routes have intentionally been omitted to prevent testing debt o
 6. **`application.integration.spec.ts`**: Uses `supertest` to mount the network layer completely, verifying headers, 404 boundaries, payload limit 413 triggers, and parsing malformations.
 
 ## 17. Validation results
+
 - `npm run format:check`: PENDING
 - `npm run lint`: PENDING
 - `npm run typecheck`: PENDING
@@ -118,9 +138,11 @@ Fake functional routes have intentionally been omitted to prevent testing debt o
 - `git diff --check`: PENDING
 
 ## 18. Deferred work
+
 - Environment validation, Database initialization, Supabase clients, Authentication routines, Rate limit scaling, Advanced logging tools (e.g. Pino).
 
 ## 19. Acceptance checklist
+
 - [x] Correct `backend` branch confirmed
 - [x] Starting P2.1 commit confirmed
 - [x] Node.js v24.11.0 confirmed
@@ -192,6 +214,7 @@ Fake functional routes have intentionally been omitted to prevent testing debt o
 - [ ] Final working tree clean
 
 ## 20. Git evidence
+
 - **Branch**: `backend`
 - **Commit**: PENDING
 - **Full SHA**: PENDING
