@@ -467,19 +467,19 @@ Child-resource policies using `EXISTS` must rely on indexed foreign keys. Avoid 
 
 ## Policy: interviews_owner_select
 
-**Table:**  
+**Table:**
 `public.interviews`
 
-**Operation:**  
+**Operation:**
 `SELECT`
 
-**Target role:**  
+**Target role:**
 `authenticated`
 
-**Access classification:**  
+**Access classification:**
 `OWNER_READ`
 
-**Purpose:**  
+**Purpose:**
 Allow active students to read only their own non-deleted interviews.
 
 **USING expression:**
