@@ -2,7 +2,7 @@ import { jest } from "@jest/globals";
 import { startServer } from "../../src/server.js";
 import { loadApplicationConfig } from "../../src/config/index.js";
 import { ConfigurationError } from "../../src/errors/configuration.error.js";
-import type { Server } from "node:http";
+import { createServer, type Server } from "node:http";
 import type { Express } from "express";
 
 describe("Environment Startup Integration", () => {
@@ -56,11 +56,16 @@ describe("Environment Startup Integration", () => {
 
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
+    const httpServer = createServer();
+    const mockObservability = {
+      logger: { info: jest.fn() },
+      lifecycle: { markReady: jest.fn() },
+    } as any;
+
     const server = startServer({
-      // app: mockApp,
+      server: httpServer,
       port: 0, // Use ephemeral port to avoid EADDRINUSE conflicts
-      // shutdownTimeoutMs: 10,
-      config,
+      observability: mockObservability,
     });
 
     expect(server).toBeDefined();
