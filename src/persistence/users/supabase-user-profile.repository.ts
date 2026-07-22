@@ -42,7 +42,6 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .eq("id", id)
       .maybeSingle();
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (error !== null) {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
@@ -51,6 +50,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!data) {
       throw new PersistenceError(
         PersistenceErrorCode.RECORD_NOT_FOUND,
@@ -87,7 +87,6 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .select()
       .maybeSingle();
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (error !== null) {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
@@ -96,6 +95,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!data) {
       // Because RLS filters rows that don't match auth.uid(), a missing row on update
       // generally means the profile wasn't found OR the user lacks permission to update it.

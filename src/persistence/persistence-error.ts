@@ -23,6 +23,7 @@ export class PersistenceError extends Error {
     this.originalError = originalError;
 
     // Maintain proper stack trace in V8 engines
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, PersistenceError);
     }
@@ -33,7 +34,6 @@ export class PersistenceError extends Error {
    */
   static is(err: unknown, code?: PersistenceErrorCode): err is PersistenceError {
     if (err instanceof PersistenceError) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (code !== undefined) {
         return err.code === code;
       }
