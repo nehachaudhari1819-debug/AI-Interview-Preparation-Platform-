@@ -3,10 +3,7 @@ import { PersistenceError, PersistenceErrorCode } from "../../../src/persistence
 
 describe("PersistenceError", () => {
   it("creates an error with the correct code and message", () => {
-    const error = new PersistenceError(
-      PersistenceErrorCode.RECORD_NOT_FOUND,
-      "User not found"
-    );
+    const error = new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "User not found");
 
     expect(error.code).toBe(PersistenceErrorCode.RECORD_NOT_FOUND);
     expect(error.message).toBe("User not found");
@@ -18,7 +15,7 @@ describe("PersistenceError", () => {
     const error = new PersistenceError(
       PersistenceErrorCode.OPERATION_FAILED,
       "Operation failed",
-      original
+      original,
     );
 
     expect(error.originalError).toBe(original);

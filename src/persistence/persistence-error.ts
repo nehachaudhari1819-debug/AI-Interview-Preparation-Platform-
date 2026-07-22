@@ -16,11 +16,7 @@ export class PersistenceError extends Error {
   public readonly code: PersistenceErrorCode;
   public readonly originalError?: unknown;
 
-  constructor(
-    code: PersistenceErrorCode,
-    message: string,
-    originalError?: unknown,
-  ) {
+  constructor(code: PersistenceErrorCode, message: string, originalError?: unknown) {
     super(message);
     this.name = "PersistenceError";
     this.code = code;

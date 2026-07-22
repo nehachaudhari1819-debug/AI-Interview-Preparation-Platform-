@@ -42,7 +42,7 @@ describe("SupabaseUserProfileRepository", () => {
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
 
       const result = await repository.findById(mockData.id);
-      
+
       expect(result.id).toBe(mockData.id);
       expect(result.fullName).toBe(mockData.full_name);
       expect(mockSupabaseClient.from).toHaveBeenCalledWith("users");
@@ -55,19 +55,24 @@ describe("SupabaseUserProfileRepository", () => {
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
 
       await expect(repository.findById("123")).rejects.toThrowError(
-        new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "User profile not found for id: 123")
+        new PersistenceError(
+          PersistenceErrorCode.RECORD_NOT_FOUND,
+          "User profile not found for id: 123",
+        ),
       );
     });
 
     it("throws OPERATION_FAILED when supabase throws", async () => {
       const mockError = new Error("DB Error");
-      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: mockError } as never);
+      const mockMaybeSingle = jest
+        .fn()
+        .mockResolvedValue({ data: null, error: mockError } as never);
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
 
       await expect(repository.findById("123")).rejects.toThrowError(
-        new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed to query user profile")
+        new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed to query user profile"),
       );
     });
   });

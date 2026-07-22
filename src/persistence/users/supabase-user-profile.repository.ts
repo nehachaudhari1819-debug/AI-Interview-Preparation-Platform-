@@ -1,22 +1,13 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../database.types.ts";
-import {
-  PersistenceError,
-  PersistenceErrorCode,
-} from "../persistence-error.ts";
+import { PersistenceError, PersistenceErrorCode } from "../persistence-error.ts";
 import { UserProfileRepository } from "./user-profile.repository.ts";
-import {
-  UserProfile,
-  UserProfileSchema,
-  UserProfileUpdate,
-} from "./user-profile.types.ts";
+import { UserProfile, UserProfileSchema, UserProfileUpdate } from "./user-profile.types.ts";
 
 export class SupabaseUserProfileRepository implements UserProfileRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
-  private mapDatabaseRowToDomain(
-    row: Database["public"]["Tables"]["users"]["Row"],
-  ): UserProfile {
+  private mapDatabaseRowToDomain(row: Database["public"]["Tables"]["users"]["Row"]): UserProfile {
     // Parse the date strings into JavaScript Date objects
     const profile = {
       ...row,
@@ -68,10 +59,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
     return this.mapDatabaseRowToDomain(data);
   }
 
-  async updateOwnProfile(
-    id: string,
-    updates: UserProfileUpdate,
-  ): Promise<UserProfile> {
+  async updateOwnProfile(id: string, updates: UserProfileUpdate): Promise<UserProfile> {
     // Map domain fields to DB schema fields
     const dbUpdates: Database["public"]["Tables"]["users"]["Update"] = {
       ...(updates.fullName !== undefined && { full_name: updates.fullName }),
@@ -120,7 +108,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
   async isActive(id: string): Promise<boolean> {
     try {
       const { data, error } = await this.supabase.rpc("is_active_user");
-      
+
       // is_active_user acts on auth.uid() automatically.
       // But we double check the id here for interface consistency.
       if (error) return false;

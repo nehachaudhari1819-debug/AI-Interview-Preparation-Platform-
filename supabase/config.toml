@@ -39,10 +39,6 @@ enabled = true
 port = 54323
 # External URL of the API. Used to allow CORS.
 api_url = "http://127.0.0.1"
-# External URL of GraphQL. Used to allow CORS.
-graphql_url = "http://127.0.0.1"
-# External URL of the database pooler.
-pooler_url = "http://127.0.0.1"
 
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
@@ -81,10 +77,6 @@ refresh_token_reuse_interval = 10
 enable_signup = true
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false
-# Allow/disallow password sign-ins to your project.
-enable_email_signup = true
-# If enabled, users need to confirm their email address before signing in.
-enable_email_autoconfirm = false
 # Update the minimum password length requirement for your project.
 minimum_password_length = 8
 
@@ -92,13 +84,11 @@ minimum_password_length = 8
 [edge_runtime]
 enabled = true
 # Policy that determines whether an Edge Function can execute depending on its verification status.
-# Configure one of the supported policies: `Enforce`, `Permit`, `Audit`.
-policy = "Permit"
+# Configure one of the supported policies: `per_worker`, `oneshot`.
+policy = "oneshot"
 inspector_port = 8083
 
 [analytics]
 enabled = false
 # Port to use for the local vector data.
 port = 54327
-# Port to use for the local vector data API.
-api_port = 54328
