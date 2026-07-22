@@ -11,6 +11,8 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      FRONTEND_URL: http://localhost:5173
     steps:
       - uses: actions/checkout@v4
 
