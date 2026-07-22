@@ -1,6 +1,14 @@
 import { openApiDocument } from "../../../src/openapi/openapi-document.js";
 
 describe("OpenAPI Paths", () => {
+  const requirePath = (path: string) => {
+    const pathItem = openApiDocument.paths[path];
+    if (!pathItem) {
+      throw new Error(`Missing OpenAPI path: ${path}`);
+    }
+    return pathItem;
+  };
+
   it("should have correct path prefixes", () => {
     const paths = Object.keys(openApiDocument.paths);
     for (const path of paths) {
@@ -16,7 +24,7 @@ describe("OpenAPI Paths", () => {
   });
 
   it("should correctly document methods", () => {
-    const login = openApiDocument.paths["/api/v1/auth/login"]!;
+    const login = requirePath("/api/v1/auth/login");
     expect(login).toBeDefined();
     expect(login.post).toBeDefined();
     expect(login.get).toBeUndefined(); // Login is POST only

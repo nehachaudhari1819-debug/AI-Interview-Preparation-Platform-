@@ -1,8 +1,16 @@
 import { openApiDocument } from "../../src/openapi/openapi-document.js";
 
 describe("OpenAPI Security Boundaries", () => {
+  const requirePath = (path: string) => {
+    const pathItem = openApiDocument.paths[path];
+    if (!pathItem) {
+      throw new Error(`Missing OpenAPI path: ${path}`);
+    }
+    return pathItem;
+  };
+
   it("should not expose protected routes as public", () => {
-    const meRoute = openApiDocument.paths["/api/v1/auth/me"]!;
+    const meRoute = requirePath("/api/v1/auth/me");
     expect(meRoute).toBeDefined();
     expect(meRoute.get?.security).toBeDefined();
 
@@ -12,17 +20,17 @@ describe("OpenAPI Security Boundaries", () => {
   });
 
   it("should not falsely protect public routes", () => {
-    const loginRoute = openApiDocument.paths["/api/v1/auth/login"]!;
+    const loginRoute = requirePath("/api/v1/auth/login");
     expect(loginRoute).toBeDefined();
     expect(loginRoute.post?.security).toBeUndefined(); // Should be fully public
 
-    const registerRoute = openApiDocument.paths["/api/v1/auth/register"]!;
+    const registerRoute = requirePath("/api/v1/auth/register");
     expect(registerRoute).toBeDefined();
     expect(registerRoute.post?.security).toBeUndefined(); // Should be fully public
   });
 
   it("should require CookieAuth for refresh", () => {
-    const refreshRoute = openApiDocument.paths["/api/v1/auth/refresh"]!;
+    const refreshRoute = requirePath("/api/v1/auth/refresh");
     expect(refreshRoute).toBeDefined();
     expect(refreshRoute.post?.security).toBeDefined();
 
