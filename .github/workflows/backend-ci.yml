@@ -23,13 +23,17 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 1.226.4
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Database Validation
-        run: npm run db:validate
+      - name: Start local Supabase
+        run: npx supabase start
 
-      - name: Project Validation
+      - name: Validate project
         run: npm run validate
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop --no-backup

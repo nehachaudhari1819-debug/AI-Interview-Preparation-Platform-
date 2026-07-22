@@ -13,17 +13,6 @@ describe("PersistenceError", () => {
     expect(error.name).toBe("PersistenceError");
   });
 
-  it("stores the original error if provided", () => {
-    const original = new Error("Supabase internal error");
-    const error = new PersistenceError(
-      PersistenceErrorCode.OPERATION_FAILED,
-      "Operation failed",
-      original,
-    );
-
-    expect(error.originalError).toBe(original);
-  });
-
   describe("is() helper", () => {
     it("identifies a generic PersistenceError", () => {
       const error = new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "Not found");

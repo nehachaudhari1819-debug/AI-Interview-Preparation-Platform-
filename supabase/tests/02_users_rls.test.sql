@@ -1,5 +1,5 @@
 begin;
-select plan(9);
+select plan(8);
 
 -- Create mock auth users
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -13,8 +13,9 @@ update public.users set account_status = 'suspended' where id = '33333333-3333-3
 
 -- 1. Test Anon cannot read users
 set local role anon;
-select is_empty(
+select throws_ok(
   'select * from public.users',
+  'permission denied for table users',
   'Anonymous role cannot read profiles'
 );
 
@@ -50,21 +51,21 @@ update public.users set full_name = 'Hacked' where id = '22222222-2222-2222-2222
 -- 6. Test Authenticated user cannot elevate their role to admin
 select throws_ok(
   'update public.users set role = ''admin'' where id = ''11111111-1111-1111-1111-111111111111''',
-  'new row violates row-level security policy for table "users"',
+  'permission denied for table users',
   'Authenticated user cannot elevate role to admin'
 );
 
 -- 7. Test Authenticated user cannot change their account_status
 select throws_ok(
   'update public.users set account_status = ''suspended'' where id = ''11111111-1111-1111-1111-111111111111''',
-  'new row violates row-level security policy for table "users"',
+  'permission denied for table users',
   'Authenticated user cannot change account status'
 );
 
 -- 8. Test Authenticated user cannot change their ID
 select throws_ok(
   'update public.users set id = ''22222222-2222-2222-2222-222222222222'' where id = ''11111111-1111-1111-1111-111111111111''',
-  'new row violates row-level security policy for table "users"',
+  'permission denied for table users',
   'Authenticated user cannot hijack another ID'
 );
 

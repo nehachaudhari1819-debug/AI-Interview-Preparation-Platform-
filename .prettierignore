@@ -3,3 +3,4 @@ dist
 coverage
 package-lock.json
 docs/backend/phase-1/
+src/persistence/database.types.ts

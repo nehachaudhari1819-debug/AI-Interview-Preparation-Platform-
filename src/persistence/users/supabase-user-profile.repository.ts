@@ -28,7 +28,6 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       throw new PersistenceError(
         PersistenceErrorCode.VALIDATION_FAILED,
         "Database returned an invalid user profile format",
-        parsed.error,
       );
     }
 
@@ -46,11 +45,9 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
         "Failed to query user profile",
-        error,
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!data) {
       throw new PersistenceError(
         PersistenceErrorCode.RECORD_NOT_FOUND,
@@ -82,7 +79,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
 
     const { data, error } = await this.supabase
       .from("users")
-      .update(dbUpdates as never)
+      .update(dbUpdates)
       .eq("id", id)
       .select()
       .maybeSingle();
@@ -91,11 +88,9 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
         "Failed to update user profile",
-        error,
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!data) {
       // Because RLS filters rows that don't match auth.uid(), a missing row on update
       // generally means the profile wasn't found OR the user lacks permission to update it.
@@ -108,12 +103,16 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
     return this.mapDatabaseRowToDomain(data);
   }
 
-  async isActive(_id: string): Promise<boolean> {
+  async isActive(id: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.rpc("is_active_user");
+      const { data, error } = await this.supabase
+        .from("users")
+        .select("account_status, deleted_at")
+        .eq("id", id)
+        .maybeSingle();
 
-      if (error !== null) return false;
-      return data === true;
+      if (error !== null || !data) return false;
+      return data.account_status === "active" && data.deleted_at === null;
     } catch {
       return false;
     }

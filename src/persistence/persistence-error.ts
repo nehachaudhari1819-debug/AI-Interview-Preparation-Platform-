@@ -14,19 +14,13 @@ export enum PersistenceErrorCode {
 
 export class PersistenceError extends Error {
   public readonly code: PersistenceErrorCode;
-  public readonly originalError?: unknown;
 
-  constructor(code: PersistenceErrorCode, message: string, originalError?: unknown) {
+  constructor(code: PersistenceErrorCode, message: string) {
     super(message);
     this.name = "PersistenceError";
     this.code = code;
-    this.originalError = originalError;
 
-    // Maintain proper stack trace in V8 engines
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, PersistenceError);
-    }
+    Error.captureStackTrace(this, PersistenceError);
   }
 
   /**

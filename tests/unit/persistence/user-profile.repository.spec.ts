@@ -81,21 +81,51 @@ describe("SupabaseUserProfileRepository", () => {
   });
 
   describe("isActive", () => {
-    it("returns true when rpc returns true", async () => {
-      mockSupabaseClient.rpc.mockResolvedValue({ data: true, error: null } as never);
+    it("returns true when profile is active", async () => {
+      const mockMaybeSingle = jest.fn().mockResolvedValue({
+        data: { account_status: "active", deleted_at: null },
+        error: null,
+      } as never);
+      const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
+
       const result = await repository.isActive("123");
       expect(result).toBe(true);
-      expect(mockSupabaseClient.rpc).toHaveBeenCalledWith("is_active_user");
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("users");
+      expect(mockSelect).toHaveBeenCalledWith("account_status, deleted_at");
+      expect(mockEq).toHaveBeenCalledWith("id", "123");
     });
 
-    it("returns false when rpc returns false", async () => {
-      mockSupabaseClient.rpc.mockResolvedValue({ data: false, error: null } as never);
+    it("returns false when profile is not active", async () => {
+      const mockMaybeSingle = jest.fn().mockResolvedValue({
+        data: { account_status: "suspended", deleted_at: null },
+        error: null,
+      } as never);
+      const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
+
       const result = await repository.isActive("123");
       expect(result).toBe(false);
     });
 
-    it("returns false when rpc errors out securely", async () => {
-      mockSupabaseClient.rpc.mockRejectedValue(new Error("Network Error"));
+    it("returns false when profile is not found", async () => {
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null } as never);
+      const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
+
+      const result = await repository.isActive("123");
+      expect(result).toBe(false);
+    });
+
+    it("returns false when db errors out securely", async () => {
+      const mockMaybeSingle = jest.fn().mockRejectedValue(new Error("Network Error") as never);
+      const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
+
       const result = await repository.isActive("123");
       expect(result).toBe(false); // Fail closed securely
     });
