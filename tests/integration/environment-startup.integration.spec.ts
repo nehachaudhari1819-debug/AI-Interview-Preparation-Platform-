@@ -57,7 +57,7 @@ describe("Environment Startup Integration", () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
     const server = startServer({
-      app: mockApp,
+      // app: mockApp,
       port: 0, // Use ephemeral port to avoid EADDRINUSE conflicts
       shutdownTimeoutMs: 10,
       config,

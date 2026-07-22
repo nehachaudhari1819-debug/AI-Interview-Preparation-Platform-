@@ -10,8 +10,8 @@ describe("Safe Error Serializer", () => {
 
     const result = safeErrorSerializer(error);
 
-    expect(result.message).toBeUndefined();
-    expect(result.stack).toBeUndefined();
+    expect((result as any).message).toBeUndefined();
+    expect((result as any).stack).toBeUndefined();
     expect((result as any).password).toBeUndefined();
 
     expect(result.name).toBe("Error");
@@ -20,7 +20,7 @@ describe("Safe Error Serializer", () => {
   });
 
   it("preserves safe category and status for structured errors", () => {
-    const error = new ConfigurationError("Bad config");
+    const error = new ConfigurationError("Bad config", []);
     const result = safeErrorSerializer(error);
 
     expect(result.category).toBe("startup");

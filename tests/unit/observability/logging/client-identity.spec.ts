@@ -1,40 +1,20 @@
 import { jest } from "@jest/globals";
-import { createClientIdentitySerializer } from "../../../../src/observability/logging/client-identity.js";
+import { createClientIdentity } from "../../../../src/observability/logging/create-client-identity.js";
+import type { ApplicationConfig } from "../../../../src/config/app-config.js";
 
-describe("Client Identity Serializer", () => {
+describe("Client Identity", () => {
   it("omits the IP when clientIpMode is omit", () => {
-    const serialize = createClientIdentitySerializer("omit");
-    const req = {
-      ip: "192.168.1.1",
-      headers: {
-        "x-forwarded-for": "10.0.0.1",
-        "user-agent": "jest-test",
-      },
-    };
-
-    const result = serialize(req as any);
-
-    expect(result.ip).toBeUndefined();
-    expect(result.userAgent).toBe("jest-test");
-    expect(JSON.stringify(result)).not.toContain("192.168.1.1");
-    expect(JSON.stringify(result)).not.toContain("10.0.0.1");
+    const config = { observability: { clientIpMode: "omit" } } as ApplicationConfig;
+    const result = createClientIdentity("192.168.1.1", config);
+    expect(result).toBeUndefined();
   });
 
   it("hashes the IP when clientIpMode is hash", () => {
-    const serialize = createClientIdentitySerializer("hash", "secret-key-123");
-    const req = {
-      ip: "192.168.1.1",
-      headers: {
-        "user-agent": "jest-test",
-      },
-    };
-
-    const result = serialize(req as any);
-
-    expect(result.ip).toBeUndefined();
-    expect(result.clientId).toBeDefined();
-    expect(result.clientId.length).toBeGreaterThan(10);
-    expect(result.userAgent).toBe("jest-test");
-    expect(JSON.stringify(result)).not.toContain("192.168.1.1");
+    const config = {
+      observability: { clientIpMode: "hash", clientIpHashKey: "secret-key-123" },
+    } as ApplicationConfig;
+    const result = createClientIdentity("192.168.1.1", config);
+    expect(result).toBeDefined();
+    expect(result?.length).toBeGreaterThan(10);
   });
 });

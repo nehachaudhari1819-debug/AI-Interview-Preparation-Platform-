@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import { Writable } from "node:stream";
 import { createApplicationLogger } from "../../../../src/observability/logging/create-application-logger.js";
-import { createTestApplicationConfig } from "../../setup/test-helpers.js";
+import { createTestApplicationConfig } from "../../../setup/test-helpers.js";
 
 describe("Application Logger", () => {
   it("respects the log level configuration", () => {

@@ -20,7 +20,7 @@ describe("Shutdown Admission Middleware", () => {
       debug: jest.fn(),
       trace: jest.fn(),
       silent: jest.fn(),
-      child: jest.fn().mockReturnThis(),
+      child: jest.fn() as any,
       flush: jest.fn(),
     };
     lifecycle = createApplicationLifecycle();

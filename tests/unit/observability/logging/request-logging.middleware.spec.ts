@@ -16,13 +16,13 @@ describe("Request Logging Middleware", () => {
       debug: jest.fn(),
       trace: jest.fn(),
       silent: jest.fn(),
-      child: jest.fn().mockReturnThis(),
+      child: jest.fn() as any,
       flush: jest.fn(),
     };
   });
 
   it("logs completed requests", () => {
-    const middleware = createRequestLoggingMiddleware(mockLogger);
+    const middleware = createRequestLoggingMiddleware({ config: {} as any, logger: mockLogger });
 
     const req = new EventEmitter() as Request;
     (req as any).path = "/api/test";
@@ -43,7 +43,7 @@ describe("Request Logging Middleware", () => {
   });
 
   it("logs aborted requests and ignores subsequent finish", () => {
-    const middleware = createRequestLoggingMiddleware(mockLogger);
+    const middleware = createRequestLoggingMiddleware({ config: {} as any, logger: mockLogger });
 
     const req = new EventEmitter() as Request;
     (req as any).path = "/api/test";

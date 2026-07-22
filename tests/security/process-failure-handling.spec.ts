@@ -41,7 +41,7 @@ describe("process-failure-handling.security", () => {
       debug: jest.fn(),
       trace: jest.fn(),
       silent: jest.fn(),
-      child: jest.fn().mockReturnThis(),
+      child: jest.fn() as any,
       flush: jest.fn(),
     };
 
@@ -63,13 +63,13 @@ describe("process-failure-handling.security", () => {
     const err = new Error("Fatal failure");
     (err as any).password = "secret-pass";
 
-    processTarget.emit("uncaughtException", err, "uncaughtException");
+    processTarget.emit("uncaughtException", err);
 
     expect(lifecycle.markFailed).toHaveBeenCalledWith("uncaught_exception");
     expect(shutdownController.shutdown).toHaveBeenCalledWith("uncaught_exception", 1);
 
     expect(logger.fatal).toHaveBeenCalled();
-    const callArgs = logger.fatal.mock.calls[0][0] as Record<string, any>;
+    const callArgs = (logger.fatal as jest.Mock).mock.calls[0][0] as any;
 
     expect(callArgs.event).toBe("process.uncaught_exception");
     expect(callArgs.error.password).toBeUndefined();
