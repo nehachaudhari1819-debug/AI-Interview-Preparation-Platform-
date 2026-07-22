@@ -90,5 +90,20 @@ export interface Database {
         };
       };
     };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      is_active_user: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 }
