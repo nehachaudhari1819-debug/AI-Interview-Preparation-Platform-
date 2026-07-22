@@ -42,6 +42,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .eq("id", id)
       .maybeSingle();
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (error !== null) {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
@@ -86,6 +87,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .select()
       .maybeSingle();
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (error !== null) {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,

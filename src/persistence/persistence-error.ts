@@ -33,6 +33,7 @@ export class PersistenceError extends Error {
    */
   static is(err: unknown, code?: PersistenceErrorCode): err is PersistenceError {
     if (err instanceof PersistenceError) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (code !== undefined) {
         return err.code === code;
       }
