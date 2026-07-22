@@ -2,6 +2,7 @@ import { jest } from "@jest/globals";
 import type { Request, Response } from "express";
 import { createHealthController } from "../../../../src/api/health/health.controller.js";
 import type { HealthService } from "../../../../src/api/health/health.service.js";
+import type { SafeConfigSummary } from "../../../../src/config/config-summary.js";
 
 describe("health.controller", () => {
   let req: Partial<Request>;
@@ -22,9 +23,7 @@ describe("health.controller", () => {
         .mockReturnValue({ status: "ready", state: "ready", uptime: 1000 }),
       getConfig: jest
         .fn<HealthService["getConfig"]>()
-        .mockReturnValue(
-          {} as unknown as import("../../../../src/config/config-summary.js").SafeConfigSummary,
-        ),
+        .mockReturnValue({} as unknown as SafeConfigSummary),
     };
   });
 
