@@ -7,13 +7,13 @@ import { bootstrapObservability } from "../../src/observability/index.js";
 import { createSafeConfigSummary } from "../../src/config/index.js";
 import { createHttpServer } from "../../src/server/create-http-server.js";
 import express, { Router } from "express";
+import type { ApplicationConfig } from "../../src/config/app-config.js";
 
 describe("logging-client-ip-privacy.security", () => {
   let app: express.Express;
   let logOutput: string[] = [];
   let observability: ReturnType<typeof bootstrapObservability>;
-  let configOverrides:
-    Partial<import("../../../src/config/app-config.js").ApplicationConfig> | undefined;
+  let configOverrides: Partial<ApplicationConfig> | undefined;
 
   const setupApp = () => {
     logOutput = [];

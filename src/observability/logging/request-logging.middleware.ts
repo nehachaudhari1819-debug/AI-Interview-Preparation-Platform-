@@ -61,12 +61,12 @@ export function createRequestLoggingMiddleware({
       const securityContext = req.securityContext as { authenticated?: boolean } | undefined;
       const authenticationState = securityContext?.authenticated ? "authenticated" : "anonymous";
 
-      const logData: Record<string, any> = {
+      const logData: Record<string, unknown> = {
         event: LOG_EVENTS.httpRequestCompleted,
         requestId,
         method: req.method,
         path: req.path,
-        route: (req.route as { path?: string })?.path ?? "unmatched",
+        route: (req.route as { path?: string }).path ?? "unmatched",
         statusCode,
         durationMs,
         outcome,
@@ -90,12 +90,12 @@ export function createRequestLoggingMiddleware({
       const securityContext = req.securityContext as { authenticated?: boolean } | undefined;
       const authenticationState = securityContext?.authenticated ? "authenticated" : "anonymous";
 
-      const logData: Record<string, any> = {
+      const logData: Record<string, unknown> = {
         event: LOG_EVENTS.httpRequestAborted,
         requestId,
         method: req.method,
         path: req.path,
-        route: (req.route as { path?: string })?.path ?? "unmatched",
+        route: (req.route as { path?: string }).path ?? "unmatched",
         statusCode: res.statusCode,
         durationMs,
         outcome: "aborted",
