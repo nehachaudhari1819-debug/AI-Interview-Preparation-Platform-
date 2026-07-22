@@ -1,4 +1,4 @@
-import type { UserProfile, UserProfileUpdate } from "./user-profile.types.ts";
+import type { UserProfile, UserProfileUpdate } from "./user-profile.types.js";
 
 /**
  * Interface defining the persistence operations for User Profiles.

@@ -1,9 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../database.types.ts";
-import { PersistenceError, PersistenceErrorCode } from "../persistence-error.ts";
-import type { UserProfileRepository } from "./user-profile.repository.ts";
-import { UserProfileSchema } from "./user-profile.types.ts";
-import type { UserProfile, UserProfileUpdate } from "./user-profile.types.ts";
+import type { Database } from "../database.types.js";
+import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js";
+import type { UserProfileRepository } from "./user-profile.repository.js";
+import { UserProfileSchema } from "./user-profile.types.js";
+import type { UserProfile, UserProfileUpdate } from "./user-profile.types.js";
 
 export class SupabaseUserProfileRepository implements UserProfileRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}

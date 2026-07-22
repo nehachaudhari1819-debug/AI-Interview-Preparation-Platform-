@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { PersistenceError, PersistenceErrorCode } from "../../../src/persistence/persistence-error";
+import { PersistenceError, PersistenceErrorCode } from "../../../src/persistence/persistence-error.js";
 
 describe("PersistenceError", () => {
   it("creates an error with the correct code and message", () => {

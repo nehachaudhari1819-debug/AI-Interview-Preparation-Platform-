@@ -1,8 +1,8 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { SupabaseUserProfileRepository } from "../../../src/persistence/users/supabase-user-profile.repository";
-import { PersistenceError, PersistenceErrorCode } from "../../../src/persistence/persistence-error";
-import type { Database } from "../../../src/persistence/database.types";
+import { SupabaseUserProfileRepository } from "../../../src/persistence/users/supabase-user-profile.repository.js";
+import { PersistenceError, PersistenceErrorCode } from "../../../src/persistence/persistence-error.js";
+import type { Database } from "../../../src/persistence/database.types.js";
 
 describe("SupabaseUserProfileRepository", () => {
   let mockSupabaseClient: jest.Mocked<SupabaseClient<Database>>;

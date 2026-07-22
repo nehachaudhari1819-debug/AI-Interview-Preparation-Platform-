@@ -1,3 +1,3 @@
-export * from "./persistence-error.ts";
-export * from "./database.types.ts";
-export * from "./users/index.ts";
+export * from "./persistence-error.js";
+export * from "./database.types.js";
+export * from "./users/index.js";
