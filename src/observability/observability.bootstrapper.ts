@@ -34,7 +34,11 @@ export function bootstrapObservability({
   server,
   destination,
 }: ObservabilityDependencies): ObservabilitySystem {
-  const logger = createApplicationLogger({ config, destination });
+  const loggerOptions: import("./logging/index.js").CreateApplicationLoggerOptions = { config };
+  if (destination) {
+    loggerOptions.destination = destination;
+  }
+  const logger = createApplicationLogger(loggerOptions);
   const lifecycle = createApplicationLifecycle();
   const tracker = createInFlightRequestTracker();
 

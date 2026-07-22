@@ -74,7 +74,7 @@ describe("logging-context-isolation.security", () => {
 
     observability.logger.info("Outside context");
 
-    const lastLog = JSON.parse(logOutput[logOutput.length - 1]);
+    const lastLog = JSON.parse(logOutput[logOutput.length - 1] ?? "{}");
     expect(lastLog.msg).toBe("Outside context");
     expect(lastLog.requestId).toBeUndefined();
   });

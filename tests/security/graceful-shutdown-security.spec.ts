@@ -29,7 +29,7 @@ describe("graceful-shutdown.security", () => {
         pretty: false,
         logHealthRequests: false,
         clientIpMode: "omit",
-        serviceName: "test",
+        serviceName: "ai-interview-preparation-platform-backend",
         appVersion: "1",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 50,
@@ -41,7 +41,7 @@ describe("graceful-shutdown.security", () => {
     observability = bootstrapObservability({ config, server, destination: logStream });
     observability.unregisterProcessHandlers();
 
-    let longRequestResolve: () => void;
+    let longRequestResolve: () => void = () => {};
     const longRequestPromise = new Promise<void>((resolve) => {
       longRequestResolve = resolve;
     });
@@ -86,7 +86,7 @@ describe("graceful-shutdown.security", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const shutdownPromise = observability.shutdownController.shutdown("test_timeout", 0);
+    const shutdownPromise = observability.shutdownController.shutdown("SIGTERM", 0);
 
     await shutdownPromise;
 

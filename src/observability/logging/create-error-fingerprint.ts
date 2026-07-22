@@ -7,7 +7,7 @@ export function createErrorFingerprint(error: unknown): string {
   if (error instanceof AppError) {
     canonicalRepresentation = `${error.name}:${error.code}:${String(error.statusCode)}`;
   } else if (error instanceof Error) {
-    const errorRecord = error as Record<string, unknown>;
+    const errorRecord = error as unknown as Record<string, unknown>;
     const code =
       typeof errorRecord.code === "string"
         ? errorRecord.code

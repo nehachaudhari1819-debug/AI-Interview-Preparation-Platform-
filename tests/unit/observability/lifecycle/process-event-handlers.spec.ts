@@ -41,7 +41,7 @@ describe("process-event-handlers", () => {
       debug: jest.fn(),
       trace: jest.fn(),
       silent: jest.fn(),
-      child: jest.fn().mockReturnThis(),
+      child: jest.fn() as unknown as ApplicationLogger["child"],
       flush: jest.fn(),
     };
 
@@ -86,11 +86,11 @@ describe("process-event-handlers", () => {
       processTarget,
     });
     const error = new Error("Test uncaught exception");
-    processTarget.emit("uncaughtException", error, "uncaughtException");
+    processTarget.emit("uncaughtException", error);
 
     expect(lifecycle.markFailed).toHaveBeenCalledWith("uncaught_exception");
     expect(logger.fatal).toHaveBeenCalled();
-    const logCall = logger.fatal.mock.calls[0][0] as Record<string, any>;
+    const logCall = (logger.fatal as jest.Mock).mock.calls[0][0] as Record<string, unknown>;
     expect(logCall.event).toBe("process.uncaught_exception");
     expect(logCall.error).toBeDefined();
     expect(logCall.error.name).toBe("Error");
@@ -111,7 +111,7 @@ describe("process-event-handlers", () => {
 
     expect(lifecycle.markFailed).toHaveBeenCalledWith("unhandled_rejection");
     expect(logger.fatal).toHaveBeenCalled();
-    const logCall = logger.fatal.mock.calls[0][0] as Record<string, any>;
+    const logCall = (logger.fatal as jest.Mock).mock.calls[0][0] as Record<string, unknown>;
     expect(logCall.event).toBe("process.unhandled_rejection");
     expect(logCall.error).toBeDefined();
     expect(logCall.error.name).toBe("Error");
@@ -137,7 +137,7 @@ describe("process-event-handlers", () => {
       Promise.reject(new Error("Something failed")),
     );
 
-    const logCall = logger.fatal.mock.calls[0][0] as Record<string, any>;
+    const logCall = (logger.fatal as jest.Mock).mock.calls[0][0] as Record<string, unknown>;
     expect(logCall.error.category).toBe("unexpected");
     expect(logCall.error.password).toBeUndefined();
     expect(logCall.error.cookie).toBeUndefined();
@@ -197,7 +197,7 @@ describe("process-event-handlers", () => {
       logger,
       processTarget,
     });
-    processTarget.emit("uncaughtException", new Error("Fatal"), "uncaughtException");
+    processTarget.emit("uncaughtException", new Error("Fatal"));
     expect(lifecycle.markReady).not.toHaveBeenCalled();
   });
 });

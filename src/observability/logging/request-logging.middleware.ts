@@ -17,7 +17,7 @@ export function createRequestLoggingMiddleware({
   clock = () => performance.now(),
 }: CreateRequestLoggingMiddlewareOptions): RequestHandler {
   return function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
-    const requestId = req.id as string | undefined;
+    const requestId = (req as unknown as { id?: string }).id;
     if (!requestId) {
       next();
       return;
@@ -58,7 +58,8 @@ export function createRequestLoggingMiddleware({
       }
 
       const clientId = createClientIdentity(req.ip, config);
-      const securityContext = req.securityContext as { authenticated?: boolean } | undefined;
+      const securityContext = (req as unknown as { securityContext?: { authenticated?: boolean } })
+        .securityContext;
       const authenticationState = securityContext?.authenticated ? "authenticated" : "anonymous";
 
       const logData: Record<string, unknown> = {
@@ -87,7 +88,8 @@ export function createRequestLoggingMiddleware({
 
       const durationMs = Math.round(clock() - startTime);
       const clientId = createClientIdentity(req.ip, config);
-      const securityContext = req.securityContext as { authenticated?: boolean } | undefined;
+      const securityContext = (req as unknown as { securityContext?: { authenticated?: boolean } })
+        .securityContext;
       const authenticationState = securityContext?.authenticated ? "authenticated" : "anonymous";
 
       const logData: Record<string, unknown> = {

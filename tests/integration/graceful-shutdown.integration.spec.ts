@@ -20,7 +20,7 @@ describe("graceful-shutdown.integration", () => {
         pretty: false,
         logHealthRequests: false,
         clientIpMode: "omit",
-        serviceName: "test",
+        serviceName: "ai-interview-preparation-platform-backend",
         appVersion: "1",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 5000,
@@ -32,7 +32,7 @@ describe("graceful-shutdown.integration", () => {
     observability = bootstrapObservability({ config, server });
     observability.unregisterProcessHandlers();
 
-    let finishLongRequest: () => void;
+    let finishLongRequest: () => void = () => {};
     const longRequestPromise = new Promise<void>((resolve) => {
       finishLongRequest = resolve;
     });
@@ -80,7 +80,7 @@ describe("graceful-shutdown.integration", () => {
     const longReqPromise = request(server).get("/api/v1/long");
     await new Promise((resolve) => setTimeout(resolve, 50)); // Ensure it's in flight
 
-    const shutdownPromise = observability.shutdownController.shutdown("test_shutdown", 0);
+    const shutdownPromise = observability.shutdownController.shutdown("SIGTERM", 0);
 
     const readyRes = await request(server).get("/health/ready");
     expect(readyRes.status).toBe(503);

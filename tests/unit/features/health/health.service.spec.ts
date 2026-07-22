@@ -26,7 +26,7 @@ describe("health.service", () => {
       debug: jest.fn(),
       trace: jest.fn(),
       silent: jest.fn(),
-      child: jest.fn().mockReturnThis(),
+      child: jest.fn() as unknown as ApplicationLogger["child"],
       flush: jest.fn(),
     };
   });

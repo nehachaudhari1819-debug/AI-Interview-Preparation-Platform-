@@ -14,7 +14,7 @@ describe("Safe Error Serializer", () => {
     expect(result.stack).toBeUndefined();
     expect((result as any).password).toBeUndefined();
 
-    expect(result.type).toBe("Error");
+    expect(result.name).toBe("Error");
     expect(result.category).toBe("unexpected");
     expect(result.fingerprint).toBeDefined();
   });
@@ -24,14 +24,14 @@ describe("Safe Error Serializer", () => {
     const result = safeErrorSerializer(error);
 
     expect(result.category).toBe("startup");
-    expect(result.type).toBe("ConfigurationError");
+    expect(result.name).toBe("ConfigurationError");
   });
 
   it("handles non-error objects gracefully", () => {
     const obj = { msg: "Something went wrong" };
     const result = safeErrorSerializer(obj);
 
-    expect(result.type).toBe("UnknownError");
+    expect(result.name).toBe("UnknownError");
     expect(result.category).toBe("unexpected");
     expect(result.fingerprint).toBeDefined();
   });

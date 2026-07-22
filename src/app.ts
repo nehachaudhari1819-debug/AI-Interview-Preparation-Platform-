@@ -35,8 +35,8 @@ import {
 export type CreateAppOptions = {
   config: Readonly<ApplicationConfig>;
   apiRouter?: Router;
-  observability: ObservabilitySystem;
-  configSummary: SafeConfigSummary;
+  observability?: ObservabilitySystem;
+  configSummary?: SafeConfigSummary;
 };
 
 export function createApp(options: CreateAppOptions): Express {
@@ -62,24 +62,28 @@ export function createApp(options: CreateAppOptions): Express {
   app.use(requestSecurityContextMiddleware);
 
   // 5.1 Add Request Logging and Lifecycle Middleware
-  app.use(
-    createRequestLoggingMiddleware({
-      config: options.config,
-      logger: options.observability.logger,
-    }),
-  );
-  app.use(createInFlightRequestMiddleware({ tracker: options.observability.tracker }));
-  app.use(createShutdownAdmissionMiddleware({ lifecycle: options.observability.lifecycle }));
+  if (options.observability) {
+    app.use(
+      createRequestLoggingMiddleware({
+        config: options.config,
+        logger: options.observability.logger,
+      }),
+    );
+    app.use(createInFlightRequestMiddleware({ tracker: options.observability.tracker }));
+    app.use(createShutdownAdmissionMiddleware({ lifecycle: options.observability.lifecycle }));
+  }
 
   // Mount health endpoints
-  const healthService = createHealthService({
-    lifecycle: options.observability.lifecycle,
-    logger: options.observability.logger,
-    configSummary: options.configSummary,
-  });
-  const healthController = createHealthController({ healthService });
-  const healthRouter = createHealthRouter({ healthController });
-  app.use("/health", healthRouter);
+  if (options.observability && options.configSummary) {
+    const healthService = createHealthService({
+      lifecycle: options.observability.lifecycle,
+      logger: options.observability.logger,
+      configSummary: options.configSummary,
+    });
+    const healthController = createHealthController({ healthService });
+    const healthRouter = createHealthRouter({ healthController });
+    app.use("/health", healthRouter);
+  }
 
   // 6. Apply Helmet
   app.use(createHelmetMiddleware(options.config));

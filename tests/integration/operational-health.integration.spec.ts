@@ -39,7 +39,7 @@ describe("operational-health.integration", () => {
 
   it("Shutdown readiness returns 503", async () => {
     observability.lifecycle.markReady();
-    observability.lifecycle.beginShutdown();
+    observability.lifecycle.beginShutdown("SIGTERM");
     const res = await request(app).get("/health/ready");
     expect(res.status).toBe(503);
   });
@@ -52,7 +52,7 @@ describe("operational-health.integration", () => {
 
   it("Liveness remains 200 during shutdown", async () => {
     observability.lifecycle.markReady();
-    observability.lifecycle.beginShutdown();
+    observability.lifecycle.beginShutdown("SIGTERM");
     const res = await request(app).get("/health");
     expect(res.status).toBe(200);
   });

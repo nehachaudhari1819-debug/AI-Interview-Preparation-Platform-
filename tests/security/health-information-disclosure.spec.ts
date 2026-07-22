@@ -26,7 +26,7 @@ describe("health-information-disclosure.security", () => {
         logHealthRequests: false,
         clientIpMode: "hash",
         clientIpHashKey: "fake-client-ip-hash-key",
-        serviceName: "test",
+        serviceName: "ai-interview-preparation-platform-backend",
         appVersion: "1",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 5000,

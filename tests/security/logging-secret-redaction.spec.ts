@@ -1,6 +1,6 @@
 import { jest } from "@jest/globals";
 import { Writable } from "node:stream";
-import { createApplicationLogger } from "../../src/observability/logging/application-logger.factory.js";
+import { createApplicationLogger } from "../../src/observability/logging/create-application-logger.js";
 import { createTestApplicationConfig } from "../setup/test-helpers.js";
 
 describe("logging-secret-redaction.security", () => {
@@ -22,7 +22,7 @@ describe("logging-secret-redaction.security", () => {
         pretty: false,
         logHealthRequests: false,
         clientIpMode: "omit",
-        serviceName: "test",
+        serviceName: "ai-interview-preparation-platform-backend",
         appVersion: "1",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 5000,

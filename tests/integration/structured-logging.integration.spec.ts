@@ -32,7 +32,7 @@ describe("structured-logging.integration", () => {
         pretty: false,
         logHealthRequests: false,
         clientIpMode: "omit",
-        serviceName: "test-service",
+        serviceName: "ai-interview-preparation-platform-backend",
         appVersion: "1.0.0",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 1000,
