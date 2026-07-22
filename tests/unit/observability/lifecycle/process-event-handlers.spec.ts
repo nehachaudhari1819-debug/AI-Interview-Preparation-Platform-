@@ -49,9 +49,7 @@ describe("process-event-handlers", () => {
   });
 
   afterEach(() => {
-    if (unregister) {
-      unregister();
-    }
+    unregister();
   });
 
   it("registers no listeners during module import", () => {
@@ -133,12 +131,16 @@ describe("process-event-handlers", () => {
       cookie: "some-cookie",
       message: "Something failed",
     };
-    processTarget.emit("unhandledRejection", rejectionValue, Promise.reject(rejectionValue));
+    processTarget.emit(
+      "unhandledRejection",
+      rejectionValue,
+      Promise.reject(new Error("Something failed")),
+    );
 
     const logCall = logger.fatal.mock.calls[0][0] as Record<string, any>;
     expect(logCall.error.category).toBe("unexpected");
-    expect((logCall.error).password).toBeUndefined();
-    expect((logCall.error).cookie).toBeUndefined();
+    expect(logCall.error.password).toBeUndefined();
+    expect(logCall.error.cookie).toBeUndefined();
   });
 
   it("duplicate shutdown execution is prevented via the controller, process handles pass calls to controller", () => {
@@ -174,7 +176,9 @@ describe("process-event-handlers", () => {
   });
 
   it("does not call process.exit() directly", () => {
-    const exitSpy = jest.spyOn(process, "exit").mockImplementation((() => {}) as any);
+    const exitSpy = jest.spyOn(process, "exit").mockImplementation((() => {
+      throw new Error("exited");
+    }) as unknown as (code?: number) => never);
     unregister = registerProcessEventHandlers({
       shutdownController,
       lifecycle,

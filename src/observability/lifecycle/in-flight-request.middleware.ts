@@ -12,7 +12,8 @@ export function createInFlightRequestMiddleware({
 }: CreateInFlightRequestMiddlewareOptions): RequestHandler {
   return function inFlightRequestMiddleware(req: Request, res: Response, next: NextFunction) {
     if (excludePaths.includes(req.path)) {
-      next(); return;
+      next();
+      return;
     }
 
     tracker.increment();

@@ -80,7 +80,7 @@ describe("graceful-shutdown.integration", () => {
     const longReqPromise = request(server).get("/api/v1/long");
     await new Promise((resolve) => setTimeout(resolve, 50)); // Ensure it's in flight
 
-    const shutdownPromise = observability.lifecycle.beginShutdown("test_shutdown");
+    const shutdownPromise = observability.shutdownController.shutdown("test_shutdown", 0);
 
     const readyRes = await request(server).get("/health/ready");
     expect(readyRes.status).toBe(503);

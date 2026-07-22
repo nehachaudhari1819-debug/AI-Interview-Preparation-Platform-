@@ -44,7 +44,7 @@ export function createGracefulShutdownController({
     });
   const flushLogger =
     dependencies.flushLogger ??
-    (async () => {
+    (() => {
       try {
         if (typeof logger.flush === "function") {
           logger.flush();
@@ -52,6 +52,7 @@ export function createGracefulShutdownController({
       } catch {
         // Ignore errors during final flush
       }
+      return Promise.resolve();
     });
 
   let shutdownPromise: Promise<void> | null = null;

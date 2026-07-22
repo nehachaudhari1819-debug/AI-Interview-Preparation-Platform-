@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+import type { ApplicationConfig } from "../../../../src/config/app-config.js";
 import {
   createGracefulShutdownController,
   type GracefulShutdownController,
@@ -39,7 +40,7 @@ describe("Graceful Shutdown Controller", () => {
   it("coordinates shutdown correctly", async () => {
     const server = createHttpServer(express(), {
       observability: { shutdownGracePeriodMs: 1000 },
-    } as any);
+    } as unknown as ApplicationConfig);
     const serverCloseSpy = jest.spyOn(server, "close").mockImplementation((cb) => {
       if (cb) cb();
       return server;

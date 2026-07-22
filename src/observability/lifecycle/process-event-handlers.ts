@@ -30,7 +30,9 @@ export function registerProcessEventHandlers({
     if (state !== "failed" && state !== "stopped") {
       try {
         lifecycle.markFailed("uncaught_exception");
-      } catch {}
+      } catch {
+        // Ignore transition error if already stopped
+      }
     }
 
     logger.fatal({
@@ -47,7 +49,9 @@ export function registerProcessEventHandlers({
     if (state !== "failed" && state !== "stopped") {
       try {
         lifecycle.markFailed("unhandled_rejection");
-      } catch {}
+      } catch {
+        // Ignore transition error if already stopped
+      }
     }
 
     logger.fatal({

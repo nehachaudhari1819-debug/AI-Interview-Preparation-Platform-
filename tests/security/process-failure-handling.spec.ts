@@ -49,9 +49,7 @@ describe("process-failure-handling.security", () => {
   });
 
   afterEach(() => {
-    if (unregister) {
-      unregister();
-    }
+    unregister();
   });
 
   it("handles uncaughtException safely", () => {
@@ -74,7 +72,7 @@ describe("process-failure-handling.security", () => {
     const callArgs = logger.fatal.mock.calls[0][0] as Record<string, any>;
 
     expect(callArgs.event).toBe("process.uncaught_exception");
-    expect((callArgs.error).password).toBeUndefined();
+    expect(callArgs.error.password).toBeUndefined();
     expect(lifecycle.markReady).not.toHaveBeenCalled();
   });
 });

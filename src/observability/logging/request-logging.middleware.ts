@@ -19,7 +19,8 @@ export function createRequestLoggingMiddleware({
   return function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
     const requestId = req.id as string | undefined;
     if (!requestId) {
-      next(); return;
+      next();
+      return;
     }
 
     const childLogger = logger.child({ requestId });
