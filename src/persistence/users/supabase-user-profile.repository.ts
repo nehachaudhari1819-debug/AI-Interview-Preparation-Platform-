@@ -82,7 +82,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
 
     const { data, error } = await this.supabase
       .from("users")
-      .update(dbUpdates)
+      .update(dbUpdates as never)
       .eq("id", id)
       .select()
       .maybeSingle();
