@@ -16,15 +16,11 @@ describe("health.controller", () => {
       setHeader: jest.fn() as any,
     };
     healthService = {
-      getLiveness: jest
-        .fn<import("../../../../src/api/health/health.service.js").HealthService["getLiveness"]>()
-        .mockReturnValue({ status: "ok" }),
+      getLiveness: jest.fn<HealthService["getLiveness"]>().mockReturnValue({ status: "ok" }),
       getReadiness: jest
-        .fn<import("../../../../src/api/health/health.service.js").HealthService["getReadiness"]>()
+        .fn<HealthService["getReadiness"]>()
         .mockReturnValue({ status: "ready", state: "ready", uptime: 1000 }),
-      getConfig: jest
-        .fn<import("../../../../src/api/health/health.service.js").HealthService["getConfig"]>()
-        .mockReturnValue({}),
+      getConfig: jest.fn<HealthService["getConfig"]>().mockReturnValue({}),
     };
   });
 

@@ -1,7 +1,7 @@
 import type { Server } from "node:http";
 import type { DestinationStream } from "pino";
 import type { ApplicationConfig } from "../config/app-config.js";
-import { createApplicationLogger } from "./logging/index.js";
+import { createApplicationLogger, type CreateApplicationLoggerOptions } from "./logging/index.js";
 import type { ApplicationLogger } from "./logging/index.js";
 import {
   createApplicationLifecycle,
@@ -34,7 +34,7 @@ export function bootstrapObservability({
   server,
   destination,
 }: ObservabilityDependencies): ObservabilitySystem {
-  const loggerOptions: import("./logging/index.js").CreateApplicationLoggerOptions = { config };
+  const loggerOptions: CreateApplicationLoggerOptions = { config };
   if (destination) {
     loggerOptions.destination = destination;
   }
