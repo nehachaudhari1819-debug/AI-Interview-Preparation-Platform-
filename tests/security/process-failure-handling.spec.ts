@@ -43,7 +43,7 @@ describe("process-failure-handling.security", () => {
       silent: jest.fn(),
       child: jest.fn().mockReturnThis(),
       flush: jest.fn(),
-    } as unknown as jest.Mocked<ApplicationLogger>;
+    };
 
     processTarget = new EventEmitter() as NodeJS.Process;
   });
@@ -74,7 +74,7 @@ describe("process-failure-handling.security", () => {
     const callArgs = logger.fatal.mock.calls[0][0] as Record<string, any>;
 
     expect(callArgs.event).toBe("process.uncaught_exception");
-    expect((callArgs.error as any).password).toBeUndefined();
+    expect((callArgs.error).password).toBeUndefined();
     expect(lifecycle.markReady).not.toHaveBeenCalled();
   });
 });

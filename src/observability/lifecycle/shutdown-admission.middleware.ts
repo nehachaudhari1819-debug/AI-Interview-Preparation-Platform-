@@ -11,13 +11,13 @@ export function createShutdownAdmissionMiddleware({
 }: CreateShutdownAdmissionMiddlewareOptions): RequestHandler {
   return function shutdownAdmissionMiddleware(req: Request, res: Response, next: NextFunction) {
     if (req.path === "/health" || req.path === "/health/ready") {
-      return next();
+      next(); return;
     }
 
     const { state } = lifecycle.getSnapshot();
 
     if (state === "shutting_down" || state === "failed" || state === "stopped") {
-      return next(new ServiceUnavailableError());
+      next(new ServiceUnavailableError()); return;
     }
 
     next();

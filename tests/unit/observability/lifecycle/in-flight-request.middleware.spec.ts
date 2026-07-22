@@ -23,7 +23,7 @@ describe("In-Flight Request Middleware", () => {
       silent: jest.fn(),
       child: jest.fn().mockReturnThis(),
       flush: jest.fn(),
-    } as unknown as jest.Mocked<ApplicationLogger>;
+    };
     tracker = createInFlightRequestTracker();
   });
 

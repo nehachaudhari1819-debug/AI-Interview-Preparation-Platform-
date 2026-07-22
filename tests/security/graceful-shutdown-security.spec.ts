@@ -73,7 +73,7 @@ describe("graceful-shutdown.security", () => {
   });
 
   it("forces connection closure and logs safely on timeout", async () => {
-    await new Promise((resolve) => server.listen(0, () => resolve(null)));
+    await new Promise((resolve) => server.listen(0, () => { resolve(null); }));
 
     request(server)
       .post("/api/v1/long")

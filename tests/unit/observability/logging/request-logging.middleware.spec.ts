@@ -1,8 +1,8 @@
 import { jest } from "@jest/globals";
 import { createRequestLoggingMiddleware } from "../../../../src/observability/logging/request-logging.middleware.js";
-import { ApplicationLogger } from "../../../../src/observability/logging/application-logger.types.js";
+import type { ApplicationLogger } from "../../../../src/observability/logging/application-logger.types.js";
 import EventEmitter from "node:events";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 
 describe("Request Logging Middleware", () => {
   let mockLogger: jest.Mocked<ApplicationLogger>;
@@ -18,7 +18,7 @@ describe("Request Logging Middleware", () => {
       silent: jest.fn(),
       child: jest.fn().mockReturnThis(),
       flush: jest.fn(),
-    } as unknown as jest.Mocked<ApplicationLogger>;
+    };
   });
 
   it("logs completed requests", () => {

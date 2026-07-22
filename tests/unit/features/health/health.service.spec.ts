@@ -28,7 +28,7 @@ describe("health.service", () => {
       silent: jest.fn(),
       child: jest.fn().mockReturnThis(),
       flush: jest.fn(),
-    } as unknown as jest.Mocked<ApplicationLogger>;
+    };
   });
 
   const getConfigSummary = () => createSafeConfigSummary(createTestApplicationConfig());

@@ -18,7 +18,7 @@ describe("health.controller", () => {
     healthService = {
       getLiveness: jest.fn().mockReturnValue({ status: "ok" }),
       getReadiness: jest.fn().mockReturnValue({ status: "ready", state: "ready", uptime: 1000 }),
-      getConfig: jest.fn().mockReturnValue({} as any),
+      getConfig: jest.fn().mockReturnValue({}),
     };
   });
 

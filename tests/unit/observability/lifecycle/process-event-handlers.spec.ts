@@ -43,7 +43,7 @@ describe("process-event-handlers", () => {
       silent: jest.fn(),
       child: jest.fn().mockReturnThis(),
       flush: jest.fn(),
-    } as unknown as jest.Mocked<ApplicationLogger>;
+    };
 
     processTarget = new EventEmitter() as NodeJS.Process;
   });
@@ -137,8 +137,8 @@ describe("process-event-handlers", () => {
 
     const logCall = logger.fatal.mock.calls[0][0] as Record<string, any>;
     expect(logCall.error.category).toBe("unexpected");
-    expect((logCall.error as any).password).toBeUndefined();
-    expect((logCall.error as any).cookie).toBeUndefined();
+    expect((logCall.error).password).toBeUndefined();
+    expect((logCall.error).cookie).toBeUndefined();
   });
 
   it("duplicate shutdown execution is prevented via the controller, process handles pass calls to controller", () => {

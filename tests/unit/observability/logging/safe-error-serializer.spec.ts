@@ -29,7 +29,7 @@ describe("Safe Error Serializer", () => {
 
   it("handles non-error objects gracefully", () => {
     const obj = { msg: "Something went wrong" };
-    const result = safeErrorSerializer(obj as any);
+    const result = safeErrorSerializer(obj);
 
     expect(result.type).toBe("UnknownError");
     expect(result.category).toBe("unexpected");

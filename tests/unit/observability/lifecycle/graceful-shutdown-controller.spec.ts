@@ -31,7 +31,7 @@ describe("Graceful Shutdown Controller", () => {
       silent: jest.fn(),
       child: jest.fn().mockReturnThis(),
       flush: jest.fn(),
-    } as unknown as jest.Mocked<ApplicationLogger>;
+    };
     lifecycle = createApplicationLifecycle();
     tracker = createInFlightRequestTracker();
   });
