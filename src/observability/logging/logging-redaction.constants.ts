@@ -1,0 +1,27 @@
+export const LOG_REDACTION_PATHS = [
+  "password",
+  "newPassword",
+  "currentPassword",
+  "accessToken",
+  "refreshToken",
+  "access_token",
+  "refresh_token",
+  "authorization",
+  "cookie",
+  "set-cookie",
+  "supabaseAnonKey",
+  "supabaseServiceRoleKey",
+  "serviceRoleKey",
+  "clientIpHashKey",
+
+  "req.headers.authorization",
+  "req.headers.cookie",
+  "request.headers.authorization",
+  "request.headers.cookie",
+  "res.headers.set-cookie",
+  "response.headers.set-cookie",
+
+  "headers.authorization",
+  "headers.cookie",
+  "headers.set-cookie",
+];

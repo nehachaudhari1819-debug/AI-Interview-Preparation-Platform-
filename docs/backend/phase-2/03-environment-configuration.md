@@ -56,6 +56,13 @@ Raw environment variables are untrusted strings that can lead to subtle bugs and
 | COOKIE_SECURE                            | Optional          | `false`       | `boolean`         | Server Config         |
 | COOKIE_SAME_SITE                         | Optional          | `lax`         | `CookieSameSite`  | Server Config         |
 | LOG_LEVEL                                | Optional          | `info`        | `LogLevel`        | Server Config         |
+| LOG_PRETTY                               | Optional          | `false`       | `boolean`         | Server Config         |
+| LOG_HEALTH_REQUESTS                      | Optional          | `false`       | `boolean`         | Server Config         |
+| LOG_CLIENT_IP_MODE                       | Optional          | `omit`        | `string`          | Server Config         |
+| LOG_CLIENT_IP_HASH_KEY                   | Optional          | N/A           | `string`          | Server-Only Secret    |
+| APP_VERSION                              | Optional          | `0.1.0`       | `string`          | Server Config         |
+| GIT_COMMIT_SHA                           | Optional          | `unknown`     | `string`          | Server Config         |
+| SHUTDOWN_GRACE_PERIOD_MS                 | Optional          | `15000`       | `number`          | Server Config         |
 | TRUST_PROXY_HOPS                         | Optional          | `0`           | `number`          | Server Config         |
 | RATE_LIMIT_IPV6_SUBNET                   | Optional          | `56`          | `number`          | Server Config         |
 | RATE_LIMIT_GLOBAL_ENABLED                | Optional          | `true`        | `boolean`         | Server Config         |

@@ -1,54 +1,28 @@
 import type { Server } from "node:http";
 
+import express from "express";
 import { createApp } from "./app.js";
 import { createSafeConfigSummary, loadApplicationConfig } from "./config/index.js";
-import type { ApplicationConfig } from "./config/app-config.js";
 import { createHttpServer } from "./server/create-http-server.js";
 import { ConfigurationError } from "./errors/configuration.error.js";
+import { bootstrapObservability, LOG_EVENTS, type ObservabilitySystem } from "./observability/index.js";
 
 export type StartServerOptions = {
-  app: ReturnType<typeof createApp>;
+  server: Server;
   port: number;
-  shutdownTimeoutMs: number;
-  config: Readonly<ApplicationConfig>;
+  observability: ObservabilitySystem;
 };
 
 export function startServer(options: StartServerOptions): Server {
-  const server = createHttpServer(options.app, options.config);
+  const { server, port, observability } = options;
 
-  server.listen(options.port, () => {
-    console.log(`Server listening on port ${String(options.port)}`);
-  });
-
-  const gracefulShutdown = (signal: string) => {
-    console.log(`${signal} received. Starting graceful shutdown.`);
-
-    const forceShutdownTimer = setTimeout(() => {
-      console.error("Graceful shutdown timed out.");
-      process.exitCode = 1;
-      process.exit();
-    }, options.shutdownTimeoutMs);
-
-    forceShutdownTimer.unref();
-
-    server.closeAllConnections();
-    server.close((error) => {
-      clearTimeout(forceShutdownTimer);
-      if (error) {
-        console.error("Error during server closure:", error);
-        process.exitCode = 1;
-      } else {
-        console.log("Server closed successfully.");
-        process.exitCode = 0;
-      }
+  server.listen(port, () => {
+    observability.logger.info({
+      event: LOG_EVENTS.applicationReady,
+      port,
+      message: `Server listening on port ${String(port)}`,
     });
-  };
-
-  process.on("SIGTERM", () => {
-    gracefulShutdown("SIGTERM");
-  });
-  process.on("SIGINT", () => {
-    gracefulShutdown("SIGINT");
+    observability.lifecycle.markReady();
   });
 
   return server;
@@ -57,23 +31,33 @@ export function startServer(options: StartServerOptions): Server {
 function bootstrap(): void {
   try {
     const config = loadApplicationConfig();
-    const safeSummary = createSafeConfigSummary(config);
+    const configSummary = createSafeConfigSummary(config);
 
-    const app = createApp({ config });
+    const tempApp = express();
+    const server = createHttpServer(tempApp, config);
 
-    console.log("Starting backend application.", safeSummary);
+    const observability = bootstrapObservability({ config, server });
+    observability.logger.info({
+      event: LOG_EVENTS.applicationStarting,
+      message: "Starting backend application.",
+      config: configSummary,
+    });
+
+    const app = createApp({ config, observability, configSummary });
+    
+    server.removeAllListeners("request");
+    server.on("request", app);
 
     startServer({
-      app,
+      server,
       port: config.runtime.port,
-      shutdownTimeoutMs: config.runtime.shutdownTimeoutMs,
-      config,
+      observability,
     });
   } catch (error: unknown) {
     if (error instanceof ConfigurationError) {
       console.error("Application configuration is invalid.", { issues: error.issues });
     } else {
-      console.error("Backend startup failed unexpectedly.");
+      console.error("Backend startup failed unexpectedly.", error);
     }
     process.exitCode = 1;
   }

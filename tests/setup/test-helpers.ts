@@ -36,8 +36,15 @@ export function createTestApplicationConfig(
       secure: false,
       sameSite: "lax",
     },
-    logging: {
-      level: "silent",
+    observability: {
+      logLevel: "silent",
+      pretty: false,
+      logHealthRequests: false,
+      clientIpMode: "omit",
+      serviceName: "ai-interview-preparation-platform-backend",
+      appVersion: "0.1.0",
+      gitCommitSha: "unknown",
+      shutdownGracePeriodMs: 15000,
     },
     security: {
       trustProxyHops: 0,

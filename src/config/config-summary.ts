@@ -1,5 +1,5 @@
 import type { ApplicationConfig } from "./app-config.js";
-import type { AiProvider, CookieSameSite, LogLevel, NodeEnvironment } from "./environment.types.js";
+import type { AiProvider, ClientIpLogMode, CookieSameSite, LogLevel, NodeEnvironment } from "./environment.types.js";
 
 export type SafeConfigSummary = {
   nodeEnv: NodeEnvironment;
@@ -15,6 +15,13 @@ export type SafeConfigSummary = {
   cookieSecure: boolean;
   cookieSameSite: CookieSameSite;
   logLevel: LogLevel;
+  logPretty: boolean;
+  logHealthRequests: boolean;
+  logClientIpMode: ClientIpLogMode;
+  serviceName: string;
+  appVersion: string;
+  gitCommitSha: string;
+  shutdownGracePeriodMs: number;
   trustProxyHops: number;
   corsAllowedOriginCount: number;
   rateLimitEnabled: boolean;
@@ -52,7 +59,14 @@ export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): Sa
     resumeBucket: config.storage.resumeBucket,
     cookieSecure: config.cookies.secure,
     cookieSameSite: config.cookies.sameSite,
-    logLevel: config.logging.level,
+    logLevel: config.observability.logLevel,
+    logPretty: config.observability.pretty,
+    logHealthRequests: config.observability.logHealthRequests,
+    logClientIpMode: config.observability.clientIpMode,
+    serviceName: config.observability.serviceName,
+    appVersion: config.observability.appVersion,
+    gitCommitSha: config.observability.gitCommitSha,
+    shutdownGracePeriodMs: config.observability.shutdownGracePeriodMs,
     trustProxyHops: config.security.trustProxyHops,
     corsAllowedOriginCount: config.security.cors.allowedOrigins.length,
     rateLimitEnabled: config.rateLimits.globalApi.enabled,

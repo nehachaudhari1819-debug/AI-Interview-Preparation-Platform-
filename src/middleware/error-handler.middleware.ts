@@ -5,6 +5,7 @@ import { HTTP_STATUS } from "../constants/http.constants.js";
 import { AppError } from "../errors/app-error.js";
 import { AuthenticationError } from "../errors/authentication.error.js";
 import type { ApiErrorResponse } from "../types/api-response.types.js";
+import { safeErrorSerializer, LOG_EVENTS, getRequestLogger } from "../observability/logging/index.js";
 
 type ExpressBodyParserError = Error & {
   status?: number;
@@ -64,10 +65,22 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
   const requestId = request.context.requestId;
   const appError = normalizeError(error);
 
-  if (!appError.isOperational) {
-    console.error("Unhandled application error.", {
+  const logger = request.log ?? getRequestLogger();
+  if (logger) {
+    const serializedError = safeErrorSerializer(error);
+    let level: "info" | "warn" | "error" = "error";
+
+    if (appError.statusCode < 500) {
+      level = appError.statusCode === HTTP_STATUS.TOO_MANY_REQUESTS ? "warn" : "info";
+    }
+
+    logger[level]({
+      event: LOG_EVENTS.httpRequestError,
       requestId,
-      error,
+      method: request.method,
+      path: request.path,
+      statusCode: appError.statusCode,
+      error: serializedError,
     });
   }
 
