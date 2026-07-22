@@ -107,7 +107,7 @@ describe("process-event-handlers", () => {
       processTarget,
     });
     const error = new Error("Test unhandled rejection");
-    processTarget.emit("unhandledRejection", error, Promise.reject(error));
+    processTarget.emit("unhandledRejection", error, Promise.resolve());
 
     expect(lifecycle.markFailed).toHaveBeenCalledWith("unhandled_rejection");
     expect(logger.fatal).toHaveBeenCalled();
@@ -131,11 +131,7 @@ describe("process-event-handlers", () => {
       cookie: "some-cookie",
       message: "Something failed",
     };
-    processTarget.emit(
-      "unhandledRejection",
-      rejectionValue,
-      Promise.reject(new Error("Something failed")),
-    );
+    processTarget.emit("unhandledRejection", rejectionValue, Promise.resolve());
 
     const logCall = (logger.fatal as any).mock.calls[0][0];
     expect(logCall.error.category).toBe("unexpected");
