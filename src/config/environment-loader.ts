@@ -18,7 +18,10 @@ export function parseEnvironment(source: Readonly<NodeJS.ProcessEnv>): Validated
           message: err.message,
         };
       });
-      console.error("Configuration validation failed with issues:", JSON.stringify(issues, null, 2));
+      console.error(
+        "Configuration validation failed with issues:",
+        JSON.stringify(issues, null, 2),
+      );
       throw new ConfigurationError(issues);
     }
     throw error;

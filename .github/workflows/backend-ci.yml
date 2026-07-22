@@ -43,7 +43,7 @@ jobs:
         run: |
           echo "Generating .env.test from Supabase..."
           npx supabase status -o env > .env.test
-          
+
           # Verify required variables are present
           if ! grep -q "API_URL" .env.test; then
             echo "ERROR: API_URL not found in .env.test"

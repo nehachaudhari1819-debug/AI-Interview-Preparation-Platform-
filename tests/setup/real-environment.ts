@@ -23,7 +23,7 @@ const parsedLocalEnv = envResult.parsed || {};
 
 if (Object.keys(parsedLocalEnv).length === 0) {
   throw new Error(
-    "CRITICAL: .env.test file is empty or missing. Run: npx supabase status -o env > .env.test"
+    "CRITICAL: .env.test file is empty or missing. Run: npx supabase status -o env > .env.test",
   );
 }
 
