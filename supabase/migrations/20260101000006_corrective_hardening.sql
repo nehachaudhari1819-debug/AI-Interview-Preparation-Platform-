@@ -86,3 +86,20 @@ begin
   return new;
 end;
 $$;
+
+-- 5. Update is_active_user to use account_status instead of is_active
+create or replace function private.is_active_user()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.users
+    where id = (select auth.uid())
+      and account_status = 'active'
+      and deleted_at is null
+  );
+$$;
