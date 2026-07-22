@@ -42,7 +42,7 @@ describe("SupabaseUserProfileRepository", () => {
       const mockMaybeSingle = jest.fn().mockResolvedValue({ data: mockData, error: null } as never);
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as never);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       const result = await repository.findById(mockData.id);
 
@@ -55,7 +55,7 @@ describe("SupabaseUserProfileRepository", () => {
       const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null } as never);
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as never);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       await expect(repository.findById("123")).rejects.toThrowError(
         new PersistenceError(
@@ -72,7 +72,7 @@ describe("SupabaseUserProfileRepository", () => {
         .mockResolvedValue({ data: null, error: mockError } as never);
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as never);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       await expect(repository.findById("123")).rejects.toThrowError(
         new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed to query user profile"),
