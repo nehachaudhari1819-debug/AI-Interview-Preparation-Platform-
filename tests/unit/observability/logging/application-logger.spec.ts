@@ -63,6 +63,6 @@ describe("Application Logger", () => {
     const parsed = JSON.parse(output);
     expect(parsed.service).toBe("ai-interview-preparation-platform-backend");
     expect(parsed.version).toBe("1.2.3");
-    expect(parsed.commit).toBe("deadbeef");
+    expect(parsed.commitSha).toBe("deadbeef");
   });
 });

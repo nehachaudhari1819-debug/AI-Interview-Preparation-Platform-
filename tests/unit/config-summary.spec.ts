@@ -1,9 +1,10 @@
 import { createSafeConfigSummary } from "../../src/config/config-summary.js";
+import { createTestApplicationConfig } from "../setup/test-helpers.js";
 import type { ApplicationConfig } from "../../src/config/app-config.js";
 
 describe("Safe Config Summary", () => {
   it("includes safe operational settings and excludes secrets", () => {
-    const config = {
+    const config: Readonly<ApplicationConfig> = createTestApplicationConfig({
       runtime: {
         nodeEnv: "development",
         isDevelopment: true,
@@ -39,8 +40,7 @@ describe("Safe Config Summary", () => {
         },
         helmet: { enableHsts: false },
       },
-      cookies: { secure: false, sameSite: "lax" },
-      logging: { level: "info" },
+
       rateLimits: {
         ipv6Subnet: 56,
         globalApi: { enabled: true, windowMs: 900000, maxRequests: 100 },
@@ -58,7 +58,7 @@ describe("Safe Config Summary", () => {
         keepAliveTimeoutMs: 5000,
         maxHeadersCount: 100,
       },
-    } as unknown as ApplicationConfig;
+    });
 
     const summary = createSafeConfigSummary(config);
 

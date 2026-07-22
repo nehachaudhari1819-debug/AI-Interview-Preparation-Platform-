@@ -7,6 +7,8 @@ import { bootstrapObservability } from "../../src/observability/index.js";
 import { createSafeConfigSummary } from "../../src/config/index.js";
 import { createHttpServer } from "../../src/server/create-http-server.js";
 import express, { Router } from "express";
+import type { AddressInfo } from "node:net";
+import type { ShutdownReason } from "../../src/observability/lifecycle/graceful-shutdown-controller.js";
 
 describe("graceful-shutdown.security", () => {
   let app: express.Express;
@@ -48,6 +50,9 @@ describe("graceful-shutdown.security", () => {
 
     const apiRouter = Router();
     apiRouter.post("/long", async (req, res) => {
+      if ((app as any).onLongRequest) {
+        (app as any).onLongRequest();
+      }
       await longRequestPromise;
       res.status(200).json({ ok: true });
     });
@@ -74,19 +79,31 @@ describe("graceful-shutdown.security", () => {
 
   it("forces connection closure and logs safely on timeout", async () => {
     await new Promise((resolve) =>
-      server.listen(0, () => {
+      server.listen(0, "127.0.0.1", () => {
         resolve(null);
       }),
     );
 
-    request(server)
+    const port = (server.address() as AddressInfo).port;
+    request(`http://127.0.0.1:${String(port)}`)
       .post("/api/v1/long")
       .set("Authorization", "Bearer my-secret")
-      .send({ password: "my-password" });
+      .send({ password: "my-password" })
+      .end();
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    let inFlight = false;
+    (app as any).onLongRequest = () => {
+      inFlight = true;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    while (!inFlight) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
 
-    const shutdownPromise = observability.shutdownController.shutdown("SIGTERM", 0);
+    const shutdownPromise = observability.shutdownController.shutdown(
+      "test_timeout" as unknown as ShutdownReason,
+      0,
+    );
 
     await shutdownPromise;
 

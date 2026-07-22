@@ -86,6 +86,8 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
       statusCode: appError.statusCode,
       error: serializedError,
     });
+  } else if (!appError.isOperational) {
+    console.error("Unhandled error:", error);
   }
 
   const body: ApiErrorResponse = {

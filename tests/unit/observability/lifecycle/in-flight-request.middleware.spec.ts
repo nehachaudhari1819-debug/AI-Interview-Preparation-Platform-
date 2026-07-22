@@ -53,7 +53,7 @@ describe("In-Flight Request Middleware", () => {
     middleware(req, res, next);
     expect(tracker.getCount()).toBe(1);
 
-    req.emit("close");
+    res.emit("close");
     expect(tracker.getCount()).toBe(0);
 
     res.emit("finish");

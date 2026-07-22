@@ -7,6 +7,7 @@ import { createSafeConfigSummary } from "../../src/config/index.js";
 import { createHttpServer } from "../../src/server/create-http-server.js";
 import { startServer } from "../../src/server.js";
 import express, { Router } from "express";
+import type { AddressInfo } from "node:net";
 
 describe("graceful-shutdown.integration", () => {
   let app: express.Express;
@@ -39,6 +40,9 @@ describe("graceful-shutdown.integration", () => {
 
     const apiRouter = Router();
     apiRouter.get("/long", async (req, res) => {
+      if ((app as any).onLongRequest) {
+        (app as any).onLongRequest();
+      }
       await longRequestPromise;
       res.status(200).json({ ok: true });
     });
@@ -64,6 +68,12 @@ describe("graceful-shutdown.integration", () => {
   });
 
   it("completes graceful shutdown lifecycle", async () => {
+    const originalListen = server.listen.bind(server);
+    // @ts-expect-error intercept listen to force IPv4
+    server.listen = (port: number, cb?: () => void) => {
+      return originalListen(port, "127.0.0.1", cb);
+    };
+
     const listenSpy = jest.spyOn(server, "listen");
     const closeSpy = jest.spyOn(server, "close");
 
@@ -77,19 +87,40 @@ describe("graceful-shutdown.integration", () => {
 
     expect(server.listening).toBe(true);
 
-    const longReqPromise = request(server).get("/api/v1/long");
-    await new Promise((resolve) => setTimeout(resolve, 50)); // Ensure it's in flight
+    let longRes: any;
+    let longErr: any;
+    const longReqPromise = new Promise<void>((resolve) => {
+      request(server)
+        .get("/api/v1/long")
+        .end((err, res) => {
+          longErr = err;
+          longRes = res;
+          resolve();
+        });
+    });
+
+    // We MUST wait for the request to actually reach the router to be considered "in-flight"
+    // Let's poll until the router flags it as received.
+    let inFlight = false;
+    (app as any).onLongRequest = () => {
+      inFlight = true;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    while (!inFlight) {
+      await new Promise((r) => setTimeout(r, 5));
+    }
 
     const shutdownPromise = observability.shutdownController.shutdown("SIGTERM", 0);
 
-    const readyRes = await request(server).get("/health/ready");
+    const readyRes = await request(app).get("/health/ready");
     expect(readyRes.status).toBe(503);
 
-    const newWorkRes = await request(server).get("/api/v1/long");
+    const newWorkRes = await request(app).get("/api/v1/long");
     expect(newWorkRes.status).toBe(503);
 
     (app as any).finishLongRequest();
-    const longRes = await longReqPromise;
+    await longReqPromise;
+    if (longErr) throw longErr;
     expect(longRes.status).toBe(200);
 
     await shutdownPromise;

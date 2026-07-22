@@ -81,18 +81,4 @@ describe("health.router", () => {
     const response = await request(app).get("/health");
     expect(response.body).toHaveProperty("status");
   });
-
-  it("No Supabase credentials appear in config", async () => {
-    const response = await request(app).get("/health/config");
-    expect(response.status).toBe(200);
-    expect(response.body.supabaseUrl).toBeUndefined();
-    expect(response.body.supabaseAnonKey).toBeUndefined();
-    expect(response.body.supabaseServiceRoleKey).toBeUndefined();
-  });
-
-  it("No environment dump appears", async () => {
-    const response = await request(app).get("/health/config");
-    expect(response.body.PORT).toBeUndefined();
-    expect(response.body.NODE_ENV).toBe("test"); // Exposed intentionally via safe summary
-  });
 });

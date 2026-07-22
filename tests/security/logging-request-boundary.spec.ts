@@ -23,6 +23,7 @@ describe("logging-request-boundary.security", () => {
     });
 
     const config = createTestApplicationConfig();
+    (config as any).observability.logLevel = "info";
     const tempApp = express();
     const server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server, destination: logStream });

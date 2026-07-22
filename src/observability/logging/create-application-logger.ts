@@ -2,6 +2,7 @@ import pino from "pino";
 import type { DestinationStream, Logger, LoggerOptions } from "pino";
 import type { ApplicationConfig } from "../../config/app-config.js";
 import { LOG_REDACTION_PATHS } from "./logging-redaction.constants.js";
+import { safeErrorSerializer } from "./safe-error-serializer.js";
 
 export type CreateApplicationLoggerOptions = {
   config: Readonly<ApplicationConfig>;
@@ -24,6 +25,10 @@ export function createApplicationLogger({
     redact: {
       paths: LOG_REDACTION_PATHS,
       censor: "[REDACTED]",
+    },
+    serializers: {
+      err: safeErrorSerializer,
+      error: safeErrorSerializer,
     },
   };
 

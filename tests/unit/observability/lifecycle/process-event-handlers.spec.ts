@@ -10,7 +10,7 @@ describe("process-event-handlers", () => {
   let lifecycle: jest.Mocked<ApplicationLifecycle>;
   let logger: jest.Mocked<ApplicationLogger>;
   let processTarget: NodeJS.Process;
-  let unregister: () => void;
+  let unregister: (() => void) | undefined;
 
   beforeEach(() => {
     shutdownController = {
@@ -49,7 +49,9 @@ describe("process-event-handlers", () => {
   });
 
   afterEach(() => {
-    unregister();
+    if (unregister) {
+      unregister();
+    }
   });
 
   it("registers no listeners during module import", () => {
@@ -93,7 +95,7 @@ describe("process-event-handlers", () => {
     const logCall = (logger.fatal as any).mock.calls[0][0];
     expect(logCall.event).toBe("process.uncaught_exception");
     expect(logCall.error).toBeDefined();
-    expect(logCall.error.name).toBe("Error");
+    expect(logCall.error.name).toBe("InternalError");
     expect(logCall.error.fingerprint).toBeDefined();
 
     expect(shutdownController.shutdown).toHaveBeenCalledWith("uncaught_exception", 1);
@@ -114,7 +116,7 @@ describe("process-event-handlers", () => {
     const logCall = (logger.fatal as any).mock.calls[0][0];
     expect(logCall.event).toBe("process.unhandled_rejection");
     expect(logCall.error).toBeDefined();
-    expect(logCall.error.name).toBe("Error");
+    expect(logCall.error.name).toBe("InternalError");
 
     expect(shutdownController.shutdown).toHaveBeenCalledWith("unhandled_rejection", 1);
   });

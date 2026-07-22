@@ -69,9 +69,9 @@ export function registerProcessEventHandlers({
   processTarget.on("unhandledRejection", onUnhandledRejection);
 
   return () => {
-    processTarget.removeListener("SIGINT", onSigInt);
-    processTarget.removeListener("SIGTERM", onSigTerm);
-    processTarget.removeListener("uncaughtException", onUncaughtException);
-    processTarget.removeListener("unhandledRejection", onUnhandledRejection);
+    processTarget.off("SIGINT", onSigInt);
+    processTarget.off("SIGTERM", onSigTerm);
+    processTarget.off("uncaughtException", onUncaughtException);
+    processTarget.off("unhandledRejection", onUnhandledRejection);
   };
 }

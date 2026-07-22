@@ -61,7 +61,7 @@ export function createApp(options: CreateAppOptions): Express {
   // 5. Add request security context
   app.use(requestSecurityContextMiddleware);
 
-  // 5.1 Add Request Logging and Lifecycle Middleware
+  // 5.1 Add Request Logging Middleware
   if (options.observability) {
     app.use(
       createRequestLoggingMiddleware({
@@ -69,12 +69,13 @@ export function createApp(options: CreateAppOptions): Express {
         logger: options.observability.logger,
       }),
     );
-    app.use(createInFlightRequestMiddleware({ tracker: options.observability.tracker }));
-    app.use(createShutdownAdmissionMiddleware({ lifecycle: options.observability.lifecycle }));
   }
 
   // 6. Apply Helmet (before health so it gets security headers)
   app.use(createHelmetMiddleware(options.config));
+
+  // 7. Apply CORS
+  app.use(createCorsMiddleware(options.config));
 
   // Mount health endpoints
   if (options.observability && options.configSummary) {
@@ -88,8 +89,11 @@ export function createApp(options: CreateAppOptions): Express {
     app.use("/health", healthRouter);
   }
 
-  // 7. Apply CORS
-  app.use(createCorsMiddleware(options.config));
+  // 7.1 Apply Lifecycle Middleware
+  if (options.observability) {
+    app.use(createShutdownAdmissionMiddleware({ lifecycle: options.observability.lifecycle }));
+    app.use(createInFlightRequestMiddleware({ tracker: options.observability.tracker }));
+  }
 
   // 8. Apply request-target guard
   app.use(createApiRequestTargetGuard(options.config));

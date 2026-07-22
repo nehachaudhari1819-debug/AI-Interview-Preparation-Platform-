@@ -24,6 +24,7 @@ describe("logging-context-isolation.security", () => {
     });
 
     const config = createTestApplicationConfig();
+    (config as any).observability.logLevel = "info";
     const tempApp = express();
     const server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server, destination: logStream });
@@ -53,31 +54,36 @@ describe("logging-context-isolation.security", () => {
   });
 
   it("isolates context between concurrent requests", async () => {
-    const req1 = request(app).get("/api/v1/delay?ms=20").set("X-Request-ID", "req-1");
-    const req2 = request(app).get("/api/v1/delay?ms=10").set("X-Request-ID", "req-2");
+    const req1Id = "11111111-1111-4111-8111-111111111111";
+    const req2Id = "22222222-2222-4222-8222-222222222222";
+    const req1 = request(app).get("/api/v1/delay?ms=20").set("X-Request-ID", req1Id);
+    const req2 = request(app).get("/api/v1/delay?ms=10").set("X-Request-ID", req2Id);
 
     await Promise.all([req1, req2]);
 
     const logs = logOutput.map((l) => JSON.parse(l));
 
-    const req1Logs = logs.filter((l) => l.requestId === "req-1");
+    const req1Logs = logs.filter((l) => l.requestId === req1Id);
     expect(req1Logs.length).toBeGreaterThan(1);
     req1Logs.forEach((l) => {
-      expect(l.requestId).toBe("req-1");
-      expect(l.msg).not.toContain("req-2");
+      expect(l.requestId).toBe(req1Id);
+      const msg = l.msg || l.message || "";
+      expect(msg).not.toContain(req2Id);
     });
 
-    const req2Logs = logs.filter((l) => l.requestId === "req-2");
+    const req2Logs = logs.filter((l) => l.requestId === req2Id);
     expect(req2Logs.length).toBeGreaterThan(1);
     req2Logs.forEach((l) => {
-      expect(l.requestId).toBe("req-2");
-      expect(l.msg).not.toContain("req-1");
+      expect(l.requestId).toBe(req2Id);
+      const msg = l.msg || l.message || "";
+      expect(msg).not.toContain(req1Id);
     });
 
     observability.logger.info("Outside context");
 
     const lastLog = JSON.parse(logOutput[logOutput.length - 1] ?? "{}");
-    expect(lastLog.msg).toBe("Outside context");
+    const lastMsg = lastLog.msg || lastLog.message || "";
+    expect(lastMsg).toBe("Outside context");
     expect(lastLog.requestId).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@ import { createUserSupabaseClient } from "../../src/integrations/supabase/create
 import { jest } from "@jest/globals";
 import { requireSupabaseConfig } from "../../src/integrations/supabase/require-supabase-config.js";
 import { createSafeConfigSummary } from "../../src/config/config-summary.js";
+import { createTestApplicationConfig } from "../setup/test-helpers.js";
 import type { ApplicationConfig } from "../../src/config/app-config.js";
 
 describe("Supabase Secret Redaction", () => {
@@ -11,7 +12,7 @@ describe("Supabase Secret Redaction", () => {
   const FAKE_LEGACY = "fake-legacy-service-role-key-to-redact";
   const FAKE_USER_TOKEN = "fake-user-access-token-to-redact";
 
-  const configSecret = {
+  const configSecret: Readonly<ApplicationConfig> = createTestApplicationConfig({
     runtime: {
       nodeEnv: "development",
       isDevelopment: true,
@@ -23,8 +24,7 @@ describe("Supabase Secret Redaction", () => {
     frontend: { origin: "http://localhost:5173" },
     ai: { provider: "gemini" },
     storage: { resumeBucket: "resumes" },
-    cookies: { secure: false, sameSite: "lax" },
-    logging: { level: "info" },
+
     security: {
       trustProxyHops: 1,
       cors: {
@@ -62,7 +62,7 @@ describe("Supabase Secret Redaction", () => {
       privilegedKey: FAKE_SECRET,
       privilegedKeyType: "secret",
     },
-  } as unknown as ApplicationConfig;
+  });
 
   let consoleLogSpy: any;
   let consoleErrorSpy: any;
@@ -99,7 +99,9 @@ describe("Supabase Secret Redaction", () => {
   });
 
   it("requireSupabaseConfig errors do not include key values", () => {
-    const badConfig = { supabase: { configured: false } } as ApplicationConfig;
+    const badConfig: Readonly<ApplicationConfig> = createTestApplicationConfig({
+      supabase: { configured: false },
+    });
     try {
       requireSupabaseConfig(badConfig);
     } catch (e: unknown) {

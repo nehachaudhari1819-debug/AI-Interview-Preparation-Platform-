@@ -14,8 +14,9 @@ export function createErrorFingerprint(error: unknown): string {
         : typeof errorRecord.code === "number"
           ? String(errorRecord.code)
           : "";
-    const stack = error.stack ?? "";
-    canonicalRepresentation = `${error.name}:${code}:${stack}`;
+    let stackFrames = (error.stack ?? "").split("\n").slice(1);
+    stackFrames = stackFrames.map((frame) => frame.replace(/:\d+:\d+/, "").trim()).slice(0, 10);
+    canonicalRepresentation = `${error.name}:${code}:${stackFrames.join(",")}`;
   } else if (typeof error === "string") {
     canonicalRepresentation = `string_error:${error}`;
   } else {

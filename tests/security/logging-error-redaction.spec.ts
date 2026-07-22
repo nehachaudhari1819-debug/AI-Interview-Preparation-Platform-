@@ -40,7 +40,7 @@ describe("logging-error-redaction.security", () => {
     (error as any).provider = { email: "user@example.com" };
     (error as any).cookie = "fake-cookie-value";
 
-    logger.error({ err: error, event: "test.error" }, "Something went wrong");
+    logger.error({ error, event: "test.error" }, "Something went wrong");
 
     const errorLog = logOutput[0];
 

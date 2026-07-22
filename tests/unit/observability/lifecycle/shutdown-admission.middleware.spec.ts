@@ -6,6 +6,7 @@ import {
 } from "../../../../src/observability/lifecycle/application-lifecycle.js";
 import type { ApplicationLogger } from "../../../../src/observability/logging/application-logger.types.js";
 import type { Request, Response } from "express";
+import { ServiceUnavailableError } from "../../../../src/errors/service-unavailable.error.js";
 
 describe("Shutdown Admission Middleware", () => {
   let mockLogger: jest.Mocked<ApplicationLogger>;
@@ -45,16 +46,28 @@ describe("Shutdown Admission Middleware", () => {
     const middleware = createShutdownAdmissionMiddleware({ lifecycle });
 
     const req = { originalUrl: "/api/test" } as Request;
-    const res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    } as unknown as Response;
+    const res = {} as Response;
     const next = jest.fn();
 
     middleware(req, res, next);
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(503);
-    expect(res.json).toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+
+    const firstCall = next.mock.calls.at(0);
+
+    if (!firstCall) {
+      throw new Error("Expected next middleware callback to be called.");
+    }
+
+    const errorArg: unknown = firstCall[0];
+
+    expect(errorArg).toBeInstanceOf(ServiceUnavailableError);
+
+    if (!(errorArg instanceof ServiceUnavailableError)) {
+      throw new Error("Expected a ServiceUnavailableError.");
+    }
+
+    expect(errorArg.name).toBe("ServiceUnavailableError");
+    expect(errorArg.statusCode).toBe(503);
   });
 
   it("admits /health endpoints even when shutting down", () => {

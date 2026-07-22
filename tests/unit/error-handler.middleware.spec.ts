@@ -23,6 +23,7 @@ describe("errorHandlerMiddleware", () => {
     nextFunction = jest.fn();
     originalConsoleError = console.error;
     console.error = jest.fn();
+    mockRequest.log = { error: jest.fn(), info: jest.fn(), warn: jest.fn() } as any;
   });
 
   afterEach(() => {
@@ -45,7 +46,7 @@ describe("errorHandlerMiddleware", () => {
       code: "TEST_CODE",
       meta: { requestId: "req-123" },
     });
-    expect(console.error).not.toHaveBeenCalled();
+    expect(mockRequest.log?.error).not.toHaveBeenCalled();
   });
 
   it("converts unknown errors to 500 INTERNAL_SERVER_ERROR", () => {
@@ -60,7 +61,7 @@ describe("errorHandlerMiddleware", () => {
       code: ERROR_CODES.INTERNAL_SERVER_ERROR,
       meta: { requestId: "req-123" },
     });
-    expect(console.error).toHaveBeenCalled();
+    expect(mockRequest.log?.error).toHaveBeenCalled();
   });
 
   it("adds WWW-Authenticate challenge for AuthenticationError", () => {

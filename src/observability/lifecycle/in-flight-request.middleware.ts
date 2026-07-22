@@ -29,6 +29,7 @@ export function createInFlightRequestMiddleware({
 
     res.on("finish", onDone);
     res.on("close", onDone);
+    req.on("aborted", onDone);
 
     next();
   };

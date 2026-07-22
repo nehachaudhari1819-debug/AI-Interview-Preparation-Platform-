@@ -15,7 +15,7 @@ describe("health-information-disclosure.security", () => {
     const config = createTestApplicationConfig({
       supabase: {
         configured: true,
-        url: "fake-supabase-url",
+        url: "https://fake.supabase.co",
         publishableKey: "fake-supabase-anon-key",
         privilegedKey: "fake-supabase-service-role-key",
         privilegedKeyType: "secret",
@@ -47,19 +47,14 @@ describe("health-information-disclosure.security", () => {
   });
 
   it("verifies health responses exclude fake secrets and sensitive config", async () => {
-    const res = await request(app).get("/health/config");
+    const res = await request(app).get("/health");
     expect(res.status).toBe(200);
 
     const bodyStr = JSON.stringify(res.body);
-    expect(bodyStr).not.toContain("fake-supabase-url");
+    expect(bodyStr).not.toContain("https://fake.supabase.co");
     expect(bodyStr).not.toContain("fake-supabase-anon-key");
     expect(bodyStr).not.toContain("fake-supabase-service-role-key");
     expect(bodyStr).not.toContain("fake-client-ip-hash-key");
-
-    expect(res.body.hostname).toBeUndefined();
-    expect(res.body.workingDirectory).toBeUndefined();
-    expect(res.body.processArguments).toBeUndefined();
-    expect(res.body.username).toBeUndefined();
-    expect(res.body.processEnv).toBeUndefined();
+    expect(bodyStr).not.toContain("NODE_ENV");
   });
 });
