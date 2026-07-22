@@ -21,6 +21,12 @@ if (envResult.error) {
 
 const parsedLocalEnv = envResult.parsed || {};
 
+if (Object.keys(parsedLocalEnv).length === 0) {
+  throw new Error(
+    "CRITICAL: .env.test file is empty or missing. Run: npx supabase status -o env > .env.test"
+  );
+}
+
 // Map Supabase CLI standard variable names to our app config schema variables
 const mappedEnv = {
   ...process.env,
