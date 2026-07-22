@@ -43,6 +43,7 @@ Detailed documentation on the environment configuration rules and secret classif
 - [05. Security Middleware Foundation](./docs/backend/phase-2/05-security-middleware-foundation.md).
 - [06. Authentication Domain Foundation](./docs/backend/phase-2/06-authentication-domain-foundation.md).
 - [07. Authentication API & Session Lifecycle](./docs/backend/phase-2/07-authentication-api-session-lifecycle.md).
+- [08. Rate Limiting & API Security Refinement](./docs/backend/phase-2/08-rate-limiting-api-security-refinement.md).
 
 - **Phase 2: Core Platform Infrastructure** _(In Progress)_
   - Express.js Setup (Completed)
@@ -52,6 +53,7 @@ Detailed documentation on the environment configuration rules and secret classif
   - Base Security Middleware (Completed)
   - Authentication Domain Foundation (Completed)
   - Authentication API & Session Lifecycle (Completed)
+  - Rate Limiting & API Security Refinement (Completed)
 
 **4. Run Validation Pipeline:**
 

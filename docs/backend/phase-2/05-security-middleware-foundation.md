@@ -24,8 +24,9 @@ The middleware is registered in `src/app.ts` in the following strict order:
 7. Content-Type Guard (`createJsonContentTypeGuard`)
 8. JSON Parser (`express.json`)
 9. Cookie Parser (`cookieParserMiddleware`)
-10. API Router (`/api/v1`)
-11. Not Found & Error Handlers
+10. Request Boundaries (Method Guard, Target Guard)
+11. API Router (`/api/v1`)
+12. Not Found & Error Handlers
 
 - **Authentication Handlers**: `WWW-Authenticate: Bearer` challenge is now emitted by the Error Handler upon `AuthenticationError`.
 - **CSRF Token Issue/Verify**: Implemented (Route-level only, reserved for authenticated state-mutating requests).
@@ -35,6 +36,9 @@ The middleware is registered in `src/app.ts` in the following strict order:
 - **URL-Encoded Parser Removed:** Since the API exclusively consumes JSON, `express.urlencoded` has been entirely removed to minimize the attack surface.
 - **CSRF Origin Guarding:** The `createCsrfOriginGuard` middleware validates `sec-fetch-site` and `origin` headers on unsafe methods (POST, PUT, DELETE, PATCH). It is deliberately **not** mounted globally so that programmatic clients (mobile apps, webhooks) aren't rejected. Instead, it is a route-level middleware reserved specifically for future cookie-backed authentication routes.
 - **HSTS:** HSTS is dynamically enabled via Helmet only in the `production` environment.
+- **Request Boundaries:** Added protections for max JSON body size (default 100KB), max URL length (2048), max query parameters (50), and strict HTTP methods to block malicious payloads early.
+- **Proxy Trust Bounded:** Explicit `trustProxyHops` configuration blocks infinite proxy spoofing, resolving vulnerabilities with X-Forwarded-For.
+- **IPv6 Subnet Grouping:** Applies /56 subnet masking using `ipaddr.js` to prevent IPv6 rotating bypass attacks and IPv4-mapped address collapsing bugs.
 
 ## Validation & Testing
 

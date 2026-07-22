@@ -18,12 +18,22 @@ export type SafeConfigSummary = {
   trustProxyHops: number;
   corsAllowedOriginCount: number;
   rateLimitEnabled: boolean;
-  rateLimitWindowMs: number;
-  rateLimitMaxRequests: number;
+  globalRateLimitWindowMs: number;
+  globalRateLimitMaxRequests: number;
+  authCredentialRateLimitWindowMs: number;
+  authCredentialRateLimitMaxRequests: number;
+  authSessionRateLimitWindowMs: number;
+  authSessionRateLimitMaxRequests: number;
+  rateLimitIpv6Subnet: number;
+  apiJsonBodyLimitBytes: number;
+  apiMaxUrlLength: number;
+  apiMaxQueryParameters: number;
+  serverRequestTimeoutMs: number;
+  serverHeadersTimeoutMs: number;
+  serverKeepAliveTimeoutMs: number;
+  serverMaxHeadersCount: number;
   hstsEnabled: boolean;
   authRefreshCookieMaxAgeSeconds: number;
-  authRateLimitWindowMs: number;
-  authRateLimitMaxRequests: number;
 };
 
 export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): SafeConfigSummary {
@@ -45,12 +55,22 @@ export function createSafeConfigSummary(config: Readonly<ApplicationConfig>): Sa
     logLevel: config.logging.level,
     trustProxyHops: config.security.trustProxyHops,
     corsAllowedOriginCount: config.security.cors.allowedOrigins.length,
-    rateLimitEnabled: config.security.rateLimit.enabled,
-    rateLimitWindowMs: config.security.rateLimit.windowMs,
-    rateLimitMaxRequests: config.security.rateLimit.maxRequests,
+    rateLimitEnabled: config.rateLimits.globalApi.enabled,
+    globalRateLimitWindowMs: config.rateLimits.globalApi.windowMs,
+    globalRateLimitMaxRequests: config.rateLimits.globalApi.maxRequests,
+    authCredentialRateLimitWindowMs: config.rateLimits.authCredentials.windowMs,
+    authCredentialRateLimitMaxRequests: config.rateLimits.authCredentials.maxRequests,
+    authSessionRateLimitWindowMs: config.rateLimits.authSession.windowMs,
+    authSessionRateLimitMaxRequests: config.rateLimits.authSession.maxRequests,
+    rateLimitIpv6Subnet: config.rateLimits.ipv6Subnet,
+    apiJsonBodyLimitBytes: config.requestBoundaries.jsonBodyLimitBytes,
+    apiMaxUrlLength: config.requestBoundaries.maxUrlLength,
+    apiMaxQueryParameters: config.requestBoundaries.maxQueryParameters,
+    serverRequestTimeoutMs: config.httpServer.requestTimeoutMs,
+    serverHeadersTimeoutMs: config.httpServer.headersTimeoutMs,
+    serverKeepAliveTimeoutMs: config.httpServer.keepAliveTimeoutMs,
+    serverMaxHeadersCount: config.httpServer.maxHeadersCount,
     hstsEnabled: config.security.helmet.enableHsts,
     authRefreshCookieMaxAgeSeconds: config.authSession.refreshCookieMaxAgeSeconds,
-    authRateLimitWindowMs: config.authSession.rateLimit.windowMs,
-    authRateLimitMaxRequests: config.authSession.rateLimit.maxRequests,
   };
 }

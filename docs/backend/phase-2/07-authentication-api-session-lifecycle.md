@@ -13,8 +13,7 @@ This phase establishes the primary authentication gateway using Supabase Auth. I
 ### Configuration
 
 - `AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS`: Configurable cookie lifetime.
-- `AUTH_RATE_LIMIT_WINDOW_MS`: Rate limiting window.
-- `AUTH_RATE_LIMIT_MAX_REQUESTS`: Rate limit ceiling for auth endpoints.
+- Split auth rate limits via environment config into distinct `AUTH_CREDENTIALS` and `AUTH_SESSION` policies.
 
 ### Errors
 
@@ -32,7 +31,7 @@ Normalized `AuthError` from Supabase to unified `AppError` variants:
 ### Security Features
 
 1. **Cookie Policies**: `HttpOnly`, `Secure` (production), specific `/api/v1/auth` path boundary.
-2. **Rate Limiting**: Specifically targeted to the authentication endpoints to prevent brute-force attacks.
+2. **Rate Limiting**: Specifically targeted to the authentication endpoints to prevent brute-force attacks. Separate limiters for Credentials (login/register) and Session (refresh). Logout endpoint has no route-specific limiter.
 3. **No-Store Middleware**: Prevents browser caching of authentication responses containing access tokens.
 4. **Token Redaction**: Refresh tokens are never leaked into the public response bodies, only delivered via `Set-Cookie`.
 

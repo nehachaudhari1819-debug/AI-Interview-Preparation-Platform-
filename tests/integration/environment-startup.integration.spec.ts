@@ -48,28 +48,33 @@ describe("Environment Startup Integration", () => {
     }
   });
 
-  it("server startup is allowed to proceed when configuration is valid", () => {
+  it("server startup is allowed to proceed when configuration is valid", async () => {
     process.env.FRONTEND_URL = "http://localhost:5173";
     process.env.PORT = "8123";
     const config = loadApplicationConfig({ loadEnvFile: false });
+    const mockApp = {} as unknown as Express;
 
-    // Mock Express App
-    const listenMock = jest.fn((port: number, cb: () => void) => {
-      if (typeof cb === "function") cb();
-      return {} as Server;
-    });
-
-    const mockApp = {
-      listen: listenMock,
-    } as unknown as Express;
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
     const server = startServer({
       app: mockApp,
-      port: config.runtime.port,
-      shutdownTimeoutMs: config.runtime.shutdownTimeoutMs,
+      port: 0, // Use ephemeral port to avoid EADDRINUSE conflicts
+      shutdownTimeoutMs: 10,
+      config,
     });
 
-    expect(listenMock).toHaveBeenCalledWith(8123, expect.any(Function));
     expect(server).toBeDefined();
+
+    await new Promise((resolve) => {
+      server.on("listening", resolve);
+    });
+
+    expect(server.listening).toBe(true);
+
+    await new Promise((resolve) => {
+      server.close(resolve);
+    });
+
+    logSpy.mockRestore();
   });
 });

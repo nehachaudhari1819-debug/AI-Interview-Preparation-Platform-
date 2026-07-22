@@ -39,28 +39,38 @@ Raw environment variables are untrusted strings that can lead to subtle bugs and
 
 ## 6. Supported Variables
 
-| Variable                       | Required/Optional | Default       | Type              | Secret Classification |
-| ------------------------------ | ----------------- | ------------- | ----------------- | --------------------- |
-| NODE_ENV                       | Optional          | `development` | `NodeEnvironment` | Public                |
-| PORT                           | Optional          | `5000`        | `number`          | Public                |
-| SHUTDOWN_TIMEOUT_MS            | Optional          | `10000`       | `number`          | Public                |
-| FRONTEND_URL                   | Required          | N/A           | `string`          | Public                |
-| SUPABASE_URL                   | Optional          | N/A           | `string`          | Server Config         |
-| SUPABASE_PUBLISHABLE_KEY       | Optional          | N/A           | `string`          | Server Config         |
-| SUPABASE_SECRET_KEY            | Optional          | N/A           | `string`          | Server-Only Secret    |
-| SUPABASE_SERVICE_ROLE_KEY      | Optional (Legacy) | N/A           | `string`          | Server-Only Secret    |
-| AI_PROVIDER                    | Optional          | `gemini`      | `AiProvider`      | Server Config         |
-| GEMINI_API_KEY                 | Optional          | N/A           | `string`          | Server-Only Secret    |
-| OPENAI_API_KEY                 | Optional          | N/A           | `string`          | Server-Only Secret    |
-| RESUME_BUCKET                  | Optional          | `resumes`     | `string`          | Server Config         |
-| COOKIE_SECURE                  | Optional          | `false`       | `boolean`         | Server Config         |
-| COOKIE_SAME_SITE               | Optional          | `lax`         | `CookieSameSite`  | Server Config         |
-| LOG_LEVEL                      | Optional          | `info`        | `LogLevel`        | Server Config         |
-| TRUST_PROXY_HOPS               | Optional          | `0`           | `number`          | Server Config         |
-| RATE_LIMIT_ENABLED             | Optional          | `true`        | `boolean`         | Server Config         |
-| RATE_LIMIT_WINDOW_MS           | Optional          | `60000`       | `number`          | Server Config         |
-| RATE_LIMIT_MAX_REQUESTS        | Optional          | `100`         | `number`          | Server Config         |
-| CORS_PREFLIGHT_MAX_AGE_SECONDS | Optional          | `600`         | `number`          | Server Config         |
+| Variable                                 | Required/Optional | Default       | Type              | Secret Classification |
+| ---------------------------------------- | ----------------- | ------------- | ----------------- | --------------------- |
+| NODE_ENV                                 | Optional          | `development` | `NodeEnvironment` | Public                |
+| PORT                                     | Optional          | `5000`        | `number`          | Public                |
+| SHUTDOWN_TIMEOUT_MS                      | Optional          | `10000`       | `number`          | Public                |
+| FRONTEND_URL                             | Required          | N/A           | `string`          | Public                |
+| SUPABASE_URL                             | Optional          | N/A           | `string`          | Server Config         |
+| SUPABASE_PUBLISHABLE_KEY                 | Optional          | N/A           | `string`          | Server Config         |
+| SUPABASE_SECRET_KEY                      | Optional          | N/A           | `string`          | Server-Only Secret    |
+| SUPABASE_SERVICE_ROLE_KEY                | Optional (Legacy) | N/A           | `string`          | Server-Only Secret    |
+| AI_PROVIDER                              | Optional          | `gemini`      | `AiProvider`      | Server Config         |
+| GEMINI_API_KEY                           | Optional          | N/A           | `string`          | Server-Only Secret    |
+| OPENAI_API_KEY                           | Optional          | N/A           | `string`          | Server-Only Secret    |
+| RESUME_BUCKET                            | Optional          | `resumes`     | `string`          | Server Config         |
+| COOKIE_SECURE                            | Optional          | `false`       | `boolean`         | Server Config         |
+| COOKIE_SAME_SITE                         | Optional          | `lax`         | `CookieSameSite`  | Server Config         |
+| LOG_LEVEL                                | Optional          | `info`        | `LogLevel`        | Server Config         |
+| TRUST_PROXY_HOPS                         | Optional          | `0`           | `number`          | Server Config         |
+| RATE_LIMIT_IPV6_SUBNET                   | Optional          | `56`          | `number`          | Server Config         |
+| RATE_LIMIT_GLOBAL_ENABLED                | Optional          | `true`        | `boolean`         | Server Config         |
+| RATE_LIMIT_GLOBAL_WINDOW_MS              | Optional          | `900000`      | `number`          | Server Config         |
+| RATE_LIMIT_GLOBAL_MAX_REQUESTS           | Optional          | `100`         | `number`          | Server Config         |
+| RATE_LIMIT_AUTH_CREDENTIALS_ENABLED      | Optional          | `true`        | `boolean`         | Server Config         |
+| RATE_LIMIT_AUTH_CREDENTIALS_WINDOW_MS    | Optional          | `900000`      | `number`          | Server Config         |
+| RATE_LIMIT_AUTH_CREDENTIALS_MAX_REQUESTS | Optional          | `5`           | `number`          | Server Config         |
+| RATE_LIMIT_AUTH_SESSION_ENABLED          | Optional          | `true`        | `boolean`         | Server Config         |
+| RATE_LIMIT_AUTH_SESSION_WINDOW_MS        | Optional          | `900000`      | `number`          | Server Config         |
+| RATE_LIMIT_AUTH_SESSION_MAX_REQUESTS     | Optional          | `10`          | `number`          | Server Config         |
+| REQUEST_JSON_BODY_LIMIT_BYTES            | Optional          | `102400`      | `number`          | Server Config         |
+| REQUEST_MAX_URL_LENGTH                   | Optional          | `2048`        | `number`          | Server Config         |
+| REQUEST_MAX_QUERY_PARAMETERS             | Optional          | `50`          | `number`          | Server Config         |
+| CORS_PREFLIGHT_MAX_AGE_SECONDS           | Optional          | `600`         | `number`          | Server Config         |
 
 ## 7. Secret Classification
 

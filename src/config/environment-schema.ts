@@ -74,6 +74,14 @@ const environmentBaseSchema = z.object({
     parseInteger,
     z.number().int().min(1).max(1000).default(10),
   ),
+  AUTH_SESSION_RATE_LIMIT_WINDOW_MS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1000).max(3600000).default(60000),
+  ),
+  AUTH_SESSION_RATE_LIMIT_MAX_REQUESTS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1).max(1000).default(30),
+  ),
 
   // Logging
   LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
@@ -81,6 +89,7 @@ const environmentBaseSchema = z.object({
   // Security
   TRUST_PROXY_HOPS: z.preprocess(parseInteger, z.number().int().min(0).max(5).default(0)),
   RATE_LIMIT_ENABLED: z.preprocess(parseBoolean, z.boolean().default(true)),
+  RATE_LIMIT_IPV6_SUBNET: z.preprocess(parseInteger, z.number().int().min(32).max(64).default(56)),
   RATE_LIMIT_WINDOW_MS: z.preprocess(
     parseInteger,
     z.number().int().min(1000).max(3600000).default(60000),
@@ -92,6 +101,38 @@ const environmentBaseSchema = z.object({
   CORS_PREFLIGHT_MAX_AGE_SECONDS: z.preprocess(
     parseInteger,
     z.number().int().min(0).max(86400).default(600),
+  ),
+
+  // API Boundaries
+  API_JSON_BODY_LIMIT_BYTES: z.preprocess(
+    parseInteger,
+    z.number().int().min(1024).max(1048576).default(65536),
+  ),
+  API_MAX_URL_LENGTH: z.preprocess(
+    parseInteger,
+    z.number().int().min(512).max(16384).default(4096),
+  ),
+  API_MAX_QUERY_PARAMETERS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1).max(200).default(50),
+  ),
+
+  // HTTP Server Timeouts
+  SERVER_REQUEST_TIMEOUT_MS: z.preprocess(
+    parseInteger,
+    z.number().int().min(5000).max(120000).default(30000),
+  ),
+  SERVER_HEADERS_TIMEOUT_MS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1000).max(60000).default(10000),
+  ),
+  SERVER_KEEP_ALIVE_TIMEOUT_MS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1000).max(30000).default(5000),
+  ),
+  SERVER_MAX_HEADERS_COUNT: z.preprocess(
+    parseInteger,
+    z.number().int().min(20).max(500).default(100),
   ),
 });
 
@@ -149,6 +190,31 @@ export const environmentSchema = environmentBaseSchema.superRefine(
             "A privileged key is required. Provide exactly one of SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY.",
         });
       }
+    }
+
+    if (val.SERVER_KEEP_ALIVE_TIMEOUT_MS >= val.SERVER_HEADERS_TIMEOUT_MS) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["SERVER_KEEP_ALIVE_TIMEOUT_MS"],
+        message: "SERVER_KEEP_ALIVE_TIMEOUT_MS must be less than SERVER_HEADERS_TIMEOUT_MS.",
+      });
+    }
+
+    if (val.SERVER_HEADERS_TIMEOUT_MS > val.SERVER_REQUEST_TIMEOUT_MS) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["SERVER_HEADERS_TIMEOUT_MS"],
+        message:
+          "SERVER_HEADERS_TIMEOUT_MS must be less than or equal to SERVER_REQUEST_TIMEOUT_MS.",
+      });
+    }
+
+    if (val.NODE_ENV === "production" && !val.RATE_LIMIT_ENABLED) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["RATE_LIMIT_ENABLED"],
+        message: "RATE_LIMIT_ENABLED must be true when NODE_ENV=production.",
+      });
     }
   },
 );

@@ -16,9 +16,8 @@ export function createTestApplicationConfig(
       origin: "http://localhost:5173",
     },
     authSession: {
-      refreshCookieMaxAgeSeconds: 604800,
-      rateLimit: { windowMs: 900000, maxRequests: 5 },
-      emailConfirmationRedirectUrl: "http://localhost:3000/auth/callback",
+      refreshCookieMaxAgeSeconds: 3600,
+      emailConfirmationRedirectUrl: "http://localhost:5173/auth/callback",
     },
     supabase: {
       configured: true,
@@ -43,18 +42,30 @@ export function createTestApplicationConfig(
     security: {
       trustProxyHops: 0,
       cors: {
-        allowedOrigins: ["http://localhost:5173"],
+        allowedOrigins: Object.freeze(["http://localhost:5173"]),
         credentials: true,
         preflightMaxAgeSeconds: 600,
-      },
-      rateLimit: {
-        enabled: false,
-        windowMs: 60000,
-        maxRequests: 100,
       },
       helmet: {
         enableHsts: false,
       },
+    },
+    rateLimits: {
+      ipv6Subnet: 56,
+      globalApi: { enabled: false, windowMs: 900000, maxRequests: 100 },
+      authCredentials: { enabled: false, windowMs: 900000, maxRequests: 5 },
+      authSession: { enabled: false, windowMs: 900000, maxRequests: 10 },
+    },
+    requestBoundaries: {
+      jsonBodyLimitBytes: 102400,
+      maxUrlLength: 2048,
+      maxQueryParameters: 50,
+    },
+    httpServer: {
+      requestTimeoutMs: 30000,
+      headersTimeoutMs: 60000,
+      keepAliveTimeoutMs: 5000,
+      maxHeadersCount: 100,
     },
     ...overrides,
   };

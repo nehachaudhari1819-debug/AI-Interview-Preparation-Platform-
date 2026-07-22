@@ -17,17 +17,38 @@ export type ConfiguredSupabaseConfig = {
 
 export type SupabaseConfig = UnconfiguredSupabaseConfig | ConfiguredSupabaseConfig;
 
+export type RateLimitPolicyConfig = {
+  enabled: boolean;
+  windowMs: number;
+  maxRequests: number;
+};
+
+export type RateLimitSecurityConfig = {
+  ipv6Subnet: number;
+  globalApi: RateLimitPolicyConfig;
+  authCredentials: RateLimitPolicyConfig;
+  authSession: RateLimitPolicyConfig;
+};
+
+export type RequestBoundaryConfig = {
+  jsonBodyLimitBytes: number;
+  maxUrlLength: number;
+  maxQueryParameters: number;
+};
+
+export type HttpServerSecurityConfig = {
+  requestTimeoutMs: number;
+  headersTimeoutMs: number;
+  keepAliveTimeoutMs: number;
+  maxHeadersCount: number;
+};
+
 export type SecurityConfig = {
   trustProxyHops: number;
   cors: {
     allowedOrigins: readonly string[];
     credentials: true;
     preflightMaxAgeSeconds: number;
-  };
-  rateLimit: {
-    enabled: boolean;
-    windowMs: number;
-    maxRequests: number;
   };
   helmet: {
     enableHsts: boolean;
@@ -36,11 +57,6 @@ export type SecurityConfig = {
 
 export type AuthSessionConfig = {
   refreshCookieMaxAgeSeconds: number;
-
-  rateLimit: {
-    windowMs: number;
-    maxRequests: number;
-  };
 
   emailConfirmationRedirectUrl: string;
 };
@@ -74,6 +90,9 @@ export type ApplicationConfig = {
     level: LogLevel;
   };
   security: SecurityConfig;
+  rateLimits: Readonly<RateLimitSecurityConfig>;
+  requestBoundaries: Readonly<RequestBoundaryConfig>;
+  httpServer: Readonly<HttpServerSecurityConfig>;
   authSession: AuthSessionConfig;
 };
 
@@ -137,21 +156,41 @@ export function createApplicationConfig(environment: ValidatedEnvironment): Appl
         credentials: true as const,
         preflightMaxAgeSeconds: environment.CORS_PREFLIGHT_MAX_AGE_SECONDS,
       },
-      rateLimit: {
-        enabled: environment.RATE_LIMIT_ENABLED,
-        windowMs: environment.RATE_LIMIT_WINDOW_MS,
-        maxRequests: environment.RATE_LIMIT_MAX_REQUESTS,
-      },
       helmet: {
         enableHsts: environment.NODE_ENV === "production",
       },
     },
-    authSession: {
-      refreshCookieMaxAgeSeconds: environment.AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS,
-      rateLimit: {
+    rateLimits: {
+      ipv6Subnet: environment.RATE_LIMIT_IPV6_SUBNET,
+      globalApi: {
+        enabled: environment.RATE_LIMIT_ENABLED,
+        windowMs: environment.RATE_LIMIT_WINDOW_MS,
+        maxRequests: environment.RATE_LIMIT_MAX_REQUESTS,
+      },
+      authCredentials: {
+        enabled: environment.RATE_LIMIT_ENABLED,
         windowMs: environment.AUTH_RATE_LIMIT_WINDOW_MS,
         maxRequests: environment.AUTH_RATE_LIMIT_MAX_REQUESTS,
       },
+      authSession: {
+        enabled: environment.RATE_LIMIT_ENABLED,
+        windowMs: environment.AUTH_SESSION_RATE_LIMIT_WINDOW_MS,
+        maxRequests: environment.AUTH_SESSION_RATE_LIMIT_MAX_REQUESTS,
+      },
+    },
+    requestBoundaries: {
+      jsonBodyLimitBytes: environment.API_JSON_BODY_LIMIT_BYTES,
+      maxUrlLength: environment.API_MAX_URL_LENGTH,
+      maxQueryParameters: environment.API_MAX_QUERY_PARAMETERS,
+    },
+    httpServer: {
+      requestTimeoutMs: environment.SERVER_REQUEST_TIMEOUT_MS,
+      headersTimeoutMs: environment.SERVER_HEADERS_TIMEOUT_MS,
+      keepAliveTimeoutMs: environment.SERVER_KEEP_ALIVE_TIMEOUT_MS,
+      maxHeadersCount: environment.SERVER_MAX_HEADERS_COUNT,
+    },
+    authSession: {
+      refreshCookieMaxAgeSeconds: environment.AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS,
       emailConfirmationRedirectUrl: new URL("/auth/callback", environment.FRONTEND_URL).toString(),
     },
   };

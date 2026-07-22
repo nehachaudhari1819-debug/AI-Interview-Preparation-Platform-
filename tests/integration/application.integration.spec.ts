@@ -113,6 +113,6 @@ describe("Application Integration", () => {
     const body = parseErrorEnvelope(response.text);
 
     expect(response.status).toBe(400);
-    expect(body.code).toBe(ERROR_CODES.INVALID_JSON);
+    expect(body.code).toBe(ERROR_CODES.MALFORMED_JSON);
   });
 });

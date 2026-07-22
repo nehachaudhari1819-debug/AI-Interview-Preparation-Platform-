@@ -7,7 +7,12 @@ describe("Rate Limit Envelope", () => {
     const config = createTestApplicationConfig({
       security: {
         ...createTestApplicationConfig().security,
-        rateLimit: { enabled: true, windowMs: 1000, maxRequests: 1 },
+        cors: { allowedOrigins: [], credentials: true, preflightMaxAgeSeconds: 600 },
+        helmet: { enableHsts: false },
+      },
+      rateLimits: {
+        ...createTestApplicationConfig().rateLimits,
+        globalApi: { enabled: true, windowMs: 1000, maxRequests: 1 },
       },
     });
     const app = createApp({ config });

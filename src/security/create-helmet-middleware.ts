@@ -22,14 +22,27 @@ export function createHelmetMiddleware(config: Readonly<ApplicationConfig>): Req
           preload: false,
         }
       : false,
+    crossOriginOpenerPolicy: {
+      policy: "same-origin",
+    },
     crossOriginResourcePolicy: {
       policy: "cross-origin",
     },
+    originAgentCluster: true,
     referrerPolicy: {
       policy: "no-referrer",
     },
     frameguard: {
       action: "deny",
     },
+    xContentTypeOptions: true,
+    dnsPrefetchControl: {
+      allow: false,
+    },
+    ieNoOpen: true, // Corresponds to X-Download-Options
+    permittedCrossDomainPolicies: {
+      permittedPolicies: "none",
+    },
+    xPoweredBy: false,
   });
 }

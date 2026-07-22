@@ -10,12 +10,7 @@ export const CORS_ALLOWED_METHODS = [
   "OPTIONS",
 ] as const;
 
-export const CORS_ALLOWED_HEADERS = [
-  "Authorization",
-  "Content-Type",
-  "X-Request-ID",
-  "X-CSRF-Token",
-] as const;
+export const CORS_ALLOWED_HEADERS = ["Authorization", "Content-Type", "X-Request-ID"] as const;
 
 export const CORS_EXPOSED_HEADERS = [
   "X-Request-ID",

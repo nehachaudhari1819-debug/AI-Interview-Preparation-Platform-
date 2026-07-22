@@ -2,16 +2,21 @@ import type { Server } from "node:http";
 
 import { createApp } from "./app.js";
 import { createSafeConfigSummary, loadApplicationConfig } from "./config/index.js";
+import type { ApplicationConfig } from "./config/app-config.js";
+import { createHttpServer } from "./server/create-http-server.js";
 import { ConfigurationError } from "./errors/configuration.error.js";
 
 export type StartServerOptions = {
   app: ReturnType<typeof createApp>;
   port: number;
   shutdownTimeoutMs: number;
+  config: Readonly<ApplicationConfig>;
 };
 
 export function startServer(options: StartServerOptions): Server {
-  const server = options.app.listen(options.port, () => {
+  const server = createHttpServer(options.app, options.config);
+
+  server.listen(options.port, () => {
     console.log(`Server listening on port ${String(options.port)}`);
   });
 
@@ -62,6 +67,7 @@ function bootstrap(): void {
       app,
       port: config.runtime.port,
       shutdownTimeoutMs: config.runtime.shutdownTimeoutMs,
+      config,
     });
   } catch (error: unknown) {
     if (error instanceof ConfigurationError) {

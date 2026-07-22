@@ -36,15 +36,13 @@ function createMockConfig(env: Partial<ValidatedEnvironment>): Readonly<Applicat
     security: {
       trustProxyHops: 0,
       cors: { allowedOrigins: [], credentials: true, preflightMaxAgeSeconds: 600 },
-      rateLimit: { enabled: true, windowMs: 60000, maxRequests: 100 },
       helmet: { enableHsts: false },
     },
     authSession: {
       refreshCookieMaxAgeSeconds: 3600,
-      rateLimit: { windowMs: 60000, maxRequests: 10 },
       emailConfirmationRedirectUrl: "http://localhost:5173/auth/callback",
     },
-  };
+  } as unknown as Readonly<ApplicationConfig>;
 }
 
 describe("Auth Cookie Utilities", () => {

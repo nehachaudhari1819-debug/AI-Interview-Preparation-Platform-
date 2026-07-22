@@ -32,12 +32,27 @@ describe("Supabase Secret Redaction", () => {
         credentials: true,
         preflightMaxAgeSeconds: 86400,
       },
-      rateLimit: { enabled: true, windowMs: 900000, maxRequests: 100 },
       helmet: { enableHsts: true },
+    },
+    rateLimits: {
+      ipv6Subnet: 56,
+      globalApi: { enabled: true, windowMs: 900000, maxRequests: 100 },
+      authCredentials: { enabled: true, windowMs: 900000, maxRequests: 5 },
+      authSession: { enabled: true, windowMs: 900000, maxRequests: 10 },
+    },
+    requestBoundaries: {
+      jsonBodyLimitBytes: 102400,
+      maxUrlLength: 2048,
+      maxQueryParameters: 50,
+    },
+    httpServer: {
+      requestTimeoutMs: 30000,
+      headersTimeoutMs: 60000,
+      keepAliveTimeoutMs: 5000,
+      maxHeadersCount: 100,
     },
     authSession: {
       refreshCookieMaxAgeSeconds: 604800,
-      rateLimit: { windowMs: 900000, maxRequests: 5 },
       emailConfirmationRedirectUrl: "http://localhost:3000/auth/callback",
     },
     supabase: {
@@ -47,7 +62,7 @@ describe("Supabase Secret Redaction", () => {
       privilegedKey: FAKE_SECRET,
       privilegedKeyType: "secret",
     },
-  } as ApplicationConfig;
+  } as unknown as ApplicationConfig;
 
   let consoleLogSpy: any;
   let consoleErrorSpy: any;

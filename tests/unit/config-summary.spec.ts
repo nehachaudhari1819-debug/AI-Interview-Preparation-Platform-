@@ -3,7 +3,7 @@ import type { ApplicationConfig } from "../../src/config/app-config.js";
 
 describe("Safe Config Summary", () => {
   it("includes safe operational settings and excludes secrets", () => {
-    const config: ApplicationConfig = {
+    const config = {
       runtime: {
         nodeEnv: "development",
         isDevelopment: true,
@@ -14,9 +14,8 @@ describe("Safe Config Summary", () => {
       },
       frontend: { origin: "http://localhost:5173" },
       authSession: {
-        refreshCookieMaxAgeSeconds: 604800,
-        rateLimit: { windowMs: 900000, maxRequests: 5 },
-        emailConfirmationRedirectUrl: "http://localhost:3000/auth/callback",
+        refreshCookieMaxAgeSeconds: 3600,
+        emailConfirmationRedirectUrl: "http://localhost:5173/auth/callback",
       },
       supabase: {
         configured: true,
@@ -36,14 +35,30 @@ describe("Safe Config Summary", () => {
         cors: {
           allowedOrigins: ["http://localhost:5173"],
           credentials: true,
-          preflightMaxAgeSeconds: 86400,
+          preflightMaxAgeSeconds: 600,
         },
-        rateLimit: { enabled: true, windowMs: 900000, maxRequests: 100 },
-        helmet: { enableHsts: true },
+        helmet: { enableHsts: false },
       },
       cookies: { secure: false, sameSite: "lax" },
       logging: { level: "info" },
-    };
+      rateLimits: {
+        ipv6Subnet: 56,
+        globalApi: { enabled: true, windowMs: 900000, maxRequests: 100 },
+        authCredentials: { enabled: true, windowMs: 900000, maxRequests: 5 },
+        authSession: { enabled: true, windowMs: 900000, maxRequests: 10 },
+      },
+      requestBoundaries: {
+        jsonBodyLimitBytes: 102400,
+        maxUrlLength: 2048,
+        maxQueryParameters: 50,
+      },
+      httpServer: {
+        requestTimeoutMs: 30000,
+        headersTimeoutMs: 60000,
+        keepAliveTimeoutMs: 5000,
+        maxHeadersCount: 100,
+      },
+    } as unknown as ApplicationConfig;
 
     const summary = createSafeConfigSummary(config);
 
