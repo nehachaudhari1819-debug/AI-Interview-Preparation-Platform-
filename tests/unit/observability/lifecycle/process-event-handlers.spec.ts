@@ -176,9 +176,9 @@ describe("process-event-handlers", () => {
   });
 
   it("does not call process.exit() directly", () => {
-    const exitSpy = jest.spyOn(process, "exit").mockImplementation((() => {
+    const exitSpy = jest.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("exited");
-    }) as unknown as (code?: number) => never);
+    });
     unregister = registerProcessEventHandlers({
       shutdownController,
       lifecycle,

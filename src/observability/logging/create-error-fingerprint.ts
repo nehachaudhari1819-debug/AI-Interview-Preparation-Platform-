@@ -5,9 +5,10 @@ export function createErrorFingerprint(error: unknown): string {
   let canonicalRepresentation = "unknown_error";
 
   if (error instanceof AppError) {
-    canonicalRepresentation = `${error.name}:${error.code}:${error.statusCode}`;
+    canonicalRepresentation = `${error.name}:${String(error.code)}:${String(error.statusCode)}`;
   } else if (error instanceof Error) {
-    const code = (error as any).code ? String((error as any).code) : "";
+    const errorRecord = error as Record<string, unknown>;
+    const code = errorRecord.code ? String(errorRecord.code) : "";
     const stack = error.stack ?? "";
     canonicalRepresentation = `${error.name}:${code}:${stack}`;
   } else if (typeof error === "string") {

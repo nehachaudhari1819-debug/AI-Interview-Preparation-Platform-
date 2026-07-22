@@ -8,7 +8,7 @@ describe("Application Logger", () => {
     let output = "";
     const stream = new Writable({
       write(chunk, enc, cb) {
-        output += chunk.toString();
+        output += String(chunk);
         cb();
       },
     });
@@ -39,7 +39,7 @@ describe("Application Logger", () => {
     let output = "";
     const stream = new Writable({
       write(chunk, enc, cb) {
-        output += chunk.toString();
+        output += String(chunk);
         cb();
       },
     });

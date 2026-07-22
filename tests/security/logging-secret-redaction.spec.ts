@@ -11,7 +11,7 @@ describe("logging-secret-redaction.security", () => {
     logOutput = [];
     const logStream = new Writable({
       write(chunk, encoding, callback) {
-        logOutput.push(chunk.toString());
+        logOutput.push(String(chunk));
         callback();
       },
     });

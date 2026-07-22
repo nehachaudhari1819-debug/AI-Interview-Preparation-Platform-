@@ -1,5 +1,5 @@
-import { pino } from "pino";
-import type { DestinationStream, Logger } from "pino";
+import pino from "pino";
+import type { DestinationStream, Logger, LoggerOptions } from "pino";
 import type { ApplicationConfig } from "../../config/app-config.js";
 import { LOG_REDACTION_PATHS } from "./logging-redaction.constants.js";
 
@@ -12,7 +12,7 @@ export function createApplicationLogger({
   config,
   destination,
 }: CreateApplicationLoggerOptions): Logger {
-  const options: pino.LoggerOptions = {
+  const options: LoggerOptions = {
     level: config.observability.logLevel,
     base: {
       service: config.observability.serviceName,

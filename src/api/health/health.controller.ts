@@ -2,9 +2,9 @@ import type { Request, Response } from "express";
 import type { HealthService } from "./health.service.js";
 
 export type HealthController = {
-  getLiveness(this: void, req: Request, res: Response): void;
-  getReadiness(this: void, req: Request, res: Response): void;
-  getConfig(this: void, req: Request, res: Response): void;
+  getLiveness(req: Request, res: Response): void;
+  getReadiness(req: Request, res: Response): void;
+  getConfig(req: Request, res: Response): void;
 };
 
 export type CreateHealthControllerOptions = {

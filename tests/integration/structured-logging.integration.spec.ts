@@ -18,7 +18,7 @@ describe("structured-logging.integration", () => {
     const logStream = new Writable({
       write(chunk, encoding, callback) {
         try {
-          logOutput.push(JSON.parse(chunk.toString()));
+          logOutput.push(JSON.parse(String(chunk)));
         } catch {
           // Ignore invalid JSON
         }

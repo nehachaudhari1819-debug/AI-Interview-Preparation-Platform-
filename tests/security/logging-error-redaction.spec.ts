@@ -11,7 +11,7 @@ describe("logging-error-redaction.security", () => {
     logOutput = [];
     const logStream = new Writable({
       write(chunk, encoding, callback) {
-        logOutput.push(JSON.parse(chunk.toString()));
+        logOutput.push(JSON.parse(String(chunk)));
         callback();
       },
     });

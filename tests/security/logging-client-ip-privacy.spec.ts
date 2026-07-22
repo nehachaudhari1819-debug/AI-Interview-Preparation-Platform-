@@ -12,13 +12,14 @@ describe("logging-client-ip-privacy.security", () => {
   let app: express.Express;
   let logOutput: string[] = [];
   let observability: ReturnType<typeof bootstrapObservability>;
-  let configOverrides: any = {};
+  let configOverrides:
+    Partial<import("../../../src/config/app-config.js").ApplicationConfig> | undefined;
 
   const setupApp = () => {
     logOutput = [];
     const logStream = new Writable({
       write(chunk, encoding, callback) {
-        logOutput.push(chunk.toString());
+        logOutput.push(String(chunk));
         callback();
       },
     });

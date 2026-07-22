@@ -14,7 +14,7 @@ export type CreateRequestLoggingMiddlewareOptions = {
 export function createRequestLoggingMiddleware({
   config,
   logger,
-  clock = performance.now,
+  clock = () => performance.now(),
 }: CreateRequestLoggingMiddlewareOptions): RequestHandler {
   return function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
     const requestId = req.id as string | undefined;
@@ -58,16 +58,15 @@ export function createRequestLoggingMiddleware({
       }
 
       const clientId = createClientIdentity(req.ip, config);
-      const authenticationState = req.securityContext?.authenticated
-        ? "authenticated"
-        : "anonymous";
+      const securityContext = req.securityContext as { authenticated?: boolean } | undefined;
+      const authenticationState = securityContext?.authenticated ? "authenticated" : "anonymous";
 
       const logData: Record<string, any> = {
         event: LOG_EVENTS.httpRequestCompleted,
         requestId,
         method: req.method,
         path: req.path,
-        route: req.route?.path ?? "unmatched",
+        route: (req.route as { path?: string })?.path ?? "unmatched",
         statusCode,
         durationMs,
         outcome,
@@ -88,16 +87,15 @@ export function createRequestLoggingMiddleware({
 
       const durationMs = Math.round(clock() - startTime);
       const clientId = createClientIdentity(req.ip, config);
-      const authenticationState = req.securityContext?.authenticated
-        ? "authenticated"
-        : "anonymous";
+      const securityContext = req.securityContext as { authenticated?: boolean } | undefined;
+      const authenticationState = securityContext?.authenticated ? "authenticated" : "anonymous";
 
       const logData: Record<string, any> = {
         event: LOG_EVENTS.httpRequestAborted,
         requestId,
         method: req.method,
         path: req.path,
-        route: req.route?.path ?? "unmatched",
+        route: (req.route as { path?: string })?.path ?? "unmatched",
         statusCode: res.statusCode,
         durationMs,
         outcome: "aborted",

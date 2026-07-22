@@ -1,4 +1,5 @@
 import type { Server } from "node:http";
+import type { DestinationStream } from "pino";
 import type { ApplicationConfig } from "../config/app-config.js";
 import { createApplicationLogger } from "./logging/index.js";
 import type { ApplicationLogger } from "./logging/index.js";
@@ -17,7 +18,7 @@ import type {
 export type ObservabilityDependencies = {
   config: Readonly<ApplicationConfig>;
   server: Server;
-  destination?: import("pino").DestinationStream;
+  destination?: DestinationStream;
 };
 
 export type ObservabilitySystem = {
