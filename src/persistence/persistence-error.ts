@@ -33,7 +33,10 @@ export class PersistenceError extends Error {
    */
   static is(err: unknown, code?: PersistenceErrorCode): err is PersistenceError {
     if (err instanceof PersistenceError) {
-      return code ? err.code === code : true;
+      if (code !== undefined) {
+        return err.code === code;
+      }
+      return true;
     }
     return false;
   }

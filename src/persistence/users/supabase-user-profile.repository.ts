@@ -1,8 +1,9 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../database.types.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../database.types.ts";
 import { PersistenceError, PersistenceErrorCode } from "../persistence-error.ts";
-import { UserProfileRepository } from "./user-profile.repository.ts";
-import { UserProfile, UserProfileSchema, UserProfileUpdate } from "./user-profile.types.ts";
+import type { UserProfileRepository } from "./user-profile.repository.ts";
+import { UserProfileSchema } from "./user-profile.types.ts";
+import type { UserProfile, UserProfileUpdate } from "./user-profile.types.ts";
 
 export class SupabaseUserProfileRepository implements UserProfileRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -41,7 +42,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .eq("id", id)
       .maybeSingle();
 
-    if (error) {
+    if (error !== null) {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
         "Failed to query user profile",
@@ -85,7 +86,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       .select()
       .maybeSingle();
 
-    if (error) {
+    if (error !== null) {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
         "Failed to update user profile",
@@ -105,13 +106,11 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
     return this.mapDatabaseRowToDomain(data);
   }
 
-  async isActive(id: string): Promise<boolean> {
+  async isActive(_id: string): Promise<boolean> {
     try {
       const { data, error } = await this.supabase.rpc("is_active_user");
 
-      // is_active_user acts on auth.uid() automatically.
-      // But we double check the id here for interface consistency.
-      if (error) return false;
+      if (error !== null) return false;
       return data === true;
     } catch {
       return false;

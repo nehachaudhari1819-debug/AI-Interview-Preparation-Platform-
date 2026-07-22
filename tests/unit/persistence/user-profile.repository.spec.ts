@@ -1,8 +1,8 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseUserProfileRepository } from "../../../src/persistence/users/supabase-user-profile.repository";
 import { PersistenceError, PersistenceErrorCode } from "../../../src/persistence/persistence-error";
-import { Database } from "../../../src/persistence/database.types";
+import type { Database } from "../../../src/persistence/database.types";
 
 describe("SupabaseUserProfileRepository", () => {
   let mockSupabaseClient: jest.Mocked<SupabaseClient<Database>>;
@@ -39,7 +39,7 @@ describe("SupabaseUserProfileRepository", () => {
       const mockMaybeSingle = jest.fn().mockResolvedValue({ data: mockData, error: null } as never);
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as never);
 
       const result = await repository.findById(mockData.id);
 
@@ -52,7 +52,7 @@ describe("SupabaseUserProfileRepository", () => {
       const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null } as never);
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as never);
 
       await expect(repository.findById("123")).rejects.toThrowError(
         new PersistenceError(
@@ -69,7 +69,7 @@ describe("SupabaseUserProfileRepository", () => {
         .mockResolvedValue({ data: null, error: mockError } as never);
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as never);
 
       await expect(repository.findById("123")).rejects.toThrowError(
         new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed to query user profile"),
@@ -92,7 +92,7 @@ describe("SupabaseUserProfileRepository", () => {
     });
 
     it("returns false when rpc errors out securely", async () => {
-      mockSupabaseClient.rpc.mockRejectedValue(new Error("Network Error") as never);
+      mockSupabaseClient.rpc.mockRejectedValue(new Error("Network Error"));
       const result = await repository.isActive("123");
       expect(result).toBe(false); // Fail closed securely
     });

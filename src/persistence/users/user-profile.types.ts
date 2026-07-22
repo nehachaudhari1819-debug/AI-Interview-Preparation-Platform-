@@ -5,7 +5,9 @@ import { z } from "zod";
  * Matches the public.users database schema.
  */
 export const UserProfileSchema = z.object({
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   id: z.string().uuid(),
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   email: z.string().email(),
   fullName: z.string().min(1).max(100),
   college: z.string().max(150).nullable(),
@@ -14,6 +16,7 @@ export const UserProfileSchema = z.object({
   experienceLevel: z.enum(["fresher", "beginner", "intermediate", "advanced"]).nullable(),
   preferredRoles: z.array(z.string()).default([]),
   bio: z.string().max(500).nullable(),
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   avatarUrl: z.string().url().nullable(),
   role: z.enum(["student", "admin"]),
   accountStatus: z.enum(["active", "suspended", "deletion_pending", "deleted"]),
@@ -38,6 +41,7 @@ export const UserProfileUpdateSchema = z.object({
     .optional(),
   preferredRoles: z.array(z.string()).optional(),
   bio: z.string().max(500).nullable().optional(),
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   avatarUrl: z.string().url().nullable().optional(),
 });
 
