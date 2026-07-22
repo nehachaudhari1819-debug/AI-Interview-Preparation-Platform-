@@ -37,11 +37,18 @@ jobs:
           timeout 60s bash -c 'until curl -s http://127.0.0.1:54321/auth/v1/health | grep -q "name"; do sleep 2; done' || (echo "Supabase readiness timeout" && exit 1)
           echo "Supabase is ready."
 
-      - name: Generate test environment file
+      - name: Verify and Generate test environment file
         run: |
+          echo "Generating .env.test from Supabase..."
           npx supabase status -o env > .env.test
-          echo "Generated .env.test with contents:"
-          cat .env.test
+          
+          # Verify required variables are present
+          if ! grep -q "API_URL" .env.test; then
+            echo "ERROR: API_URL not found in .env.test"
+            cat .env.test
+            exit 1
+          fi
+          echo "Test environment successfully generated."
 
       - name: Reset database from zero
         run: npm run db:reset
