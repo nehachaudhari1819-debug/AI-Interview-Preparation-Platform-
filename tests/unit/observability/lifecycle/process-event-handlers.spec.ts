@@ -90,7 +90,7 @@ describe("process-event-handlers", () => {
 
     expect(lifecycle.markFailed).toHaveBeenCalledWith("uncaught_exception");
     expect(logger.fatal).toHaveBeenCalled();
-    const logCall = (logger.fatal as any).mock.calls[0][0] as any;
+    const logCall = (logger.fatal as any).mock.calls[0][0];
     expect(logCall.event).toBe("process.uncaught_exception");
     expect(logCall.error).toBeDefined();
     expect(logCall.error.name).toBe("Error");
@@ -111,7 +111,7 @@ describe("process-event-handlers", () => {
 
     expect(lifecycle.markFailed).toHaveBeenCalledWith("unhandled_rejection");
     expect(logger.fatal).toHaveBeenCalled();
-    const logCall = (logger.fatal as any).mock.calls[0][0] as any;
+    const logCall = (logger.fatal as any).mock.calls[0][0];
     expect(logCall.event).toBe("process.unhandled_rejection");
     expect(logCall.error).toBeDefined();
     expect(logCall.error.name).toBe("Error");
@@ -137,7 +137,7 @@ describe("process-event-handlers", () => {
       Promise.reject(new Error("Something failed")),
     );
 
-    const logCall = (logger.fatal as any).mock.calls[0][0] as any;
+    const logCall = (logger.fatal as any).mock.calls[0][0];
     expect(logCall.error.category).toBe("unexpected");
     expect(logCall.error.password).toBeUndefined();
     expect(logCall.error.cookie).toBeUndefined();

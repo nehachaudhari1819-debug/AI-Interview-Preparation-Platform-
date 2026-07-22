@@ -39,7 +39,7 @@ describe("Request Logging Middleware", () => {
 
     expect(mockLogger.info).toHaveBeenCalled();
     const callArgs = (mockLogger.info as any).mock.calls[0];
-    expect((callArgs[0] as any).event).toBe("http.request.completed");
+    expect(callArgs[0].event).toBe("http.request.completed");
   });
 
   it("logs aborted requests and ignores subsequent finish", () => {
@@ -58,7 +58,7 @@ describe("Request Logging Middleware", () => {
 
     expect(mockLogger.warn).toHaveBeenCalled();
     const callArgs = (mockLogger.warn as any).mock.calls[0];
-    expect((callArgs[0] as any).event).toBe("http.request.aborted");
+    expect(callArgs[0].event).toBe("http.request.aborted");
 
     // ensure finish after close does not log again
     res.emit("finish");

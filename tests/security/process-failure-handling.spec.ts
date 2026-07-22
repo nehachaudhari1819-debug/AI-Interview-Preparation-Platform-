@@ -69,7 +69,7 @@ describe("process-failure-handling.security", () => {
     expect(shutdownController.shutdown).toHaveBeenCalledWith("uncaught_exception", 1);
 
     expect(logger.fatal).toHaveBeenCalled();
-    const callArgs = (logger.fatal as any).mock.calls[0][0] as any;
+    const callArgs = (logger.fatal as any).mock.calls[0][0];
 
     expect(callArgs.event).toBe("process.uncaught_exception");
     expect(callArgs.error.password).toBeUndefined();
