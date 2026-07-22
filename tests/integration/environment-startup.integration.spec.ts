@@ -59,7 +59,7 @@ describe("Environment Startup Integration", () => {
     const server = startServer({
       // app: mockApp,
       port: 0, // Use ephemeral port to avoid EADDRINUSE conflicts
-      shutdownTimeoutMs: 10,
+      // shutdownTimeoutMs: 10,
       config,
     });
 

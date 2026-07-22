@@ -20,7 +20,7 @@ describe("Safe Error Serializer", () => {
   });
 
   it("preserves safe category and status for structured errors", () => {
-    const error = new ConfigurationError("Bad config", []);
+    const error = new ConfigurationError([{ variable: "test", message: "Bad config" }]);
     const result = safeErrorSerializer(error);
 
     expect(result.category).toBe("startup");
