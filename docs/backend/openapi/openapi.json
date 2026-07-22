@@ -1,0 +1,910 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Interview Preparation Platform API",
+    "description": "Backend API for the AI Interview Preparation Platform for Engineering Students",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://api.example.com",
+      "description": "Production server (example)"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Operational"
+        ],
+        "summary": "Liveness probe",
+        "description": "Returns a 200 OK status if the application process is running.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/LivenessSuccess"
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Operational"
+        ],
+        "summary": "Readiness probe",
+        "description": "Returns a 200 OK status if the application is ready to accept traffic. Returns 503 if unavailable.",
+        "operationId": "getHealthReady",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ReadinessSuccess"
+          },
+          "503": {
+            "$ref": "#/components/responses/ReadinessServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register a new user",
+        "description": "Registers a new user. Returns a session if auto-confirm is enabled, otherwise returns a pending verification status.",
+        "operationId": "registerUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/RegistrationSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Authenticate a user",
+        "description": "Authenticates a user with email and password, returning an access token and setting a secure HttpOnly refresh cookie.",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/LoginSuccess"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Refresh session",
+        "description": "Exchanges a valid refresh cookie for a new access token.",
+        "operationId": "refreshSession",
+        "security": [
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/LoginSuccess"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Logout user",
+        "description": "Logs out the user and clears the session cookie.",
+        "operationId": "logoutUser",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/LogoutSuccess"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get current user profile",
+        "description": "Retrieves the authenticated user's profile information.",
+        "operationId": "getCurrentUser",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MeSuccess"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiMeta": {
+        "type": "object",
+        "required": [
+          "requestId"
+        ],
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "A unique identifier for the request, useful for tracing and debugging.",
+            "example": "00000000-0000-4000-8000-000000000000"
+          }
+        }
+      },
+      "ApiFieldError": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "The name of the field that failed validation (if applicable)."
+          },
+          "message": {
+            "type": "string",
+            "description": "A human-readable explanation of the validation error."
+          }
+        }
+      },
+      "StandardErrorResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "code",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indicates that the request failed.",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "description": "A human-readable error message."
+          },
+          "code": {
+            "type": "string",
+            "description": "A machine-readable error code string."
+          },
+          "errors": {
+            "type": "array",
+            "description": "Detailed validation errors, if applicable.",
+            "items": {
+              "$ref": "#/components/schemas/ApiFieldError"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User's email address.",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "User's password (must be at least 8 characters).",
+            "example": "ExamplePass123!"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User's email address.",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "User's password.",
+            "example": "ExamplePass123!"
+          }
+        }
+      },
+      "SafeAuthUser": {
+        "type": "object",
+        "required": [
+          "id",
+          "isAnonymous"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User's unique identifier.",
+            "example": "11111111-2222-3333-4444-555555555555"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User's email address (if present).",
+            "example": "user@example.com"
+          },
+          "emailConfirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the email was confirmed."
+          },
+          "isAnonymous": {
+            "type": "boolean",
+            "description": "Whether the user is an anonymous guest.",
+            "example": false
+          }
+        }
+      },
+      "AuthenticatedSessionResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "accessToken",
+          "tokenType",
+          "expiresIn",
+          "expiresAt",
+          "user"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "authenticated"
+            ],
+            "example": "authenticated"
+          },
+          "accessToken": {
+            "type": "string",
+            "description": "JWT Access Token for Bearer authentication.",
+            "example": "example-access-token"
+          },
+          "tokenType": {
+            "type": "string",
+            "enum": [
+              "Bearer"
+            ],
+            "example": "Bearer"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "description": "Seconds until the access token expires.",
+            "example": 3600
+          },
+          "expiresAt": {
+            "type": "integer",
+            "description": "UTC epoch seconds when the token expires.",
+            "example": 1700000000
+          },
+          "user": {
+            "$ref": "#/components/schemas/SafeAuthUser"
+          }
+        }
+      },
+      "RegistrationPendingResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "verification_required"
+            ],
+            "example": "verification_required"
+          },
+          "message": {
+            "type": "string",
+            "example": "Check your email to continue registration."
+          }
+        }
+      },
+      "RegistrationResult": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthenticatedSessionResponse"
+          },
+          {
+            "$ref": "#/components/schemas/RegistrationPendingResponse"
+          }
+        ]
+      },
+      "EmptySuccessResponse": {
+        "type": "object",
+        "description": "An empty success response object."
+      },
+      "LivenessResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "example": "ok"
+          }
+        }
+      },
+      "ReadinessReadyResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "state",
+          "uptime"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready"
+            ],
+            "example": "ready"
+          },
+          "state": {
+            "type": "string",
+            "description": "The application lifecycle state.",
+            "example": "ready"
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Milliseconds since the application entered the ready state.",
+            "example": 12500
+          }
+        }
+      },
+      "ReadinessUnavailableResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "state"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "unavailable"
+            ],
+            "example": "unavailable"
+          },
+          "state": {
+            "type": "string",
+            "description": "The application lifecycle state.",
+            "example": "shutting_down"
+          }
+        }
+      },
+      "ReadinessResponse": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ReadinessReadyResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ReadinessUnavailableResponse"
+          }
+        ]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request - The request was invalid or could not be served.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Validation failed",
+              "code": "VALIDATION_ERROR",
+              "errors": [
+                {
+                  "field": "email",
+                  "message": "Invalid email address"
+                }
+              ],
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - Authentication is required and has failed or has not yet been provided.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Unauthorized",
+              "code": "UNAUTHORIZED",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden - The request was a valid request, but the server is refusing to respond to it. The user might be logged in but does not have the necessary permissions for the resource.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Forbidden",
+              "code": "FORBIDDEN",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found - The requested resource could not be found.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Not found",
+              "code": "NOT_FOUND",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflict - The request could not be completed due to a conflict with the current state of the resource.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Resource already exists",
+              "code": "CONFLICT",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Too Many Requests - The user has sent too many requests in a given amount of time.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Retry-After": {
+            "description": "The number of seconds to wait before making a new request.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Limit": {
+            "description": "The maximum number of requests allowed in the current window.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Remaining": {
+            "description": "The number of requests remaining in the current window.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Reset": {
+            "description": "The time at which the current window resets, in UTC epoch seconds.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Too many requests, please try again later.",
+              "code": "RATE_LIMIT_EXCEEDED",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error - The server encountered an unexpected condition that prevented it from fulfilling the request.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "An unexpected error occurred",
+              "code": "INTERNAL_SERVER_ERROR",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Service Unavailable - The server is currently unable to handle the request due to a temporary overload or scheduled maintenance.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Retry-After": {
+            "description": "The number of seconds to wait before making a new request.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Service Unavailable",
+              "code": "SERVICE_UNAVAILABLE",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "RegistrationSuccess": {
+        "description": "Successful registration. May return a session or pending verification.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Set-Cookie": {
+            "description": "The HttpOnly refresh session cookie, if authenticated.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "enum": [
+                    true
+                  ],
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/components/schemas/RegistrationResult"
+                },
+                "meta": {
+                  "$ref": "#/components/schemas/ApiMeta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "LoginSuccess": {
+        "description": "Successful login. Returns an authenticated session.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Set-Cookie": {
+            "description": "The HttpOnly refresh session cookie.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "enum": [
+                    true
+                  ],
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/components/schemas/AuthenticatedSessionResponse"
+                },
+                "meta": {
+                  "$ref": "#/components/schemas/ApiMeta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "LogoutSuccess": {
+        "description": "Successfully logged out. Clears the refresh cookie.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Set-Cookie": {
+            "description": "Clears the auth_session cookie.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "enum": [
+                    true
+                  ],
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/components/schemas/EmptySuccessResponse"
+                },
+                "meta": {
+                  "$ref": "#/components/schemas/ApiMeta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MeSuccess": {
+        "description": "Successfully retrieved the current user.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "enum": [
+                    true
+                  ],
+                  "example": true
+                },
+                "data": {
+                  "$ref": "#/components/schemas/SafeAuthUser"
+                },
+                "meta": {
+                  "$ref": "#/components/schemas/ApiMeta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "LivenessSuccess": {
+        "description": "The application is alive.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/LivenessResponse"
+            }
+          }
+        }
+      },
+      "ReadinessSuccess": {
+        "description": "The application is ready to receive traffic.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ReadinessReadyResponse"
+            }
+          }
+        }
+      },
+      "ReadinessServiceUnavailable": {
+        "description": "The application is not ready to receive traffic.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ReadinessUnavailableResponse"
+            }
+          }
+        }
+      }
+    },
+    "headers": {
+      "RequestId": {
+        "description": "A unique identifier for the request, useful for tracing and debugging. Typically a UUID.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Provide the JWT access token as a Bearer token in the Authorization header."
+      },
+      "CookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "auth_session",
+        "description": "The HttpOnly refresh session cookie used to obtain a new access token."
+      }
+    }
+  }
+}
