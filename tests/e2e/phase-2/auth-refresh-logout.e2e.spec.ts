@@ -94,7 +94,7 @@ describe("Real Environment: POST /auth/refresh and POST /auth/logout", () => {
     // Testing the actual revocation (block) requires intentionally sleeping the test thread for >10s,
     // which introduces severe test bloat. Instead, we verify the concurrency grace period itself:
     // Reusing the token immediately should SUCCEED and return a valid session.
-    
+
     const loginRes = await request(app)
       .post("/api/v1/auth/login")
       .send({ email: identity.email, password: identity.password });
