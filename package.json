@@ -23,6 +23,14 @@
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --runInBand",
     "openapi:generate": "tsx src/openapi/generate.ts --write",
     "openapi:check": "tsx src/openapi/generate.ts --check",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:lint": "supabase db lint",
+    "db:test": "supabase test db",
+    "db:types:generate": "supabase gen types typescript --local > src/persistence/database.types.ts",
+    "db:types:check": "supabase gen types typescript --local > .temp.database.types.ts && node -e \"if(require('fs').readFileSync('src/persistence/database.types.ts', 'utf8') !== require('fs').readFileSync('.temp.database.types.ts', 'utf8')) { console.error('Database types are out of sync. Run npm run db:types:generate'); process.exit(1); }\" && node -e \"require('fs').unlinkSync('.temp.database.types.ts')\"",
+    "db:validate": "npm run db:lint && npm run db:test && npm run db:types:check",
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm run openapi:check && npm test && npm run build"
   },
   "dependencies": {
@@ -49,6 +57,7 @@
     "pino-pretty": "^11.3.0",
     "prettier": "^3.0.0",
     "supertest": "^7.0.0",
+    "supabase": "^1.200.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.0.0",

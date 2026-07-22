@@ -1,0 +1,35 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - backend
+  pull_request:
+    branches:
+      - backend
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Database Validation
+        run: npm run db:validate
+
+      - name: Project Validation
+        run: npm run validate
