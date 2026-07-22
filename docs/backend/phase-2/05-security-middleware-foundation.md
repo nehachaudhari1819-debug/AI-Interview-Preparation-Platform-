@@ -19,14 +19,18 @@ The middleware is registered in `src/app.ts` in the following strict order:
 2. Helmet (CSP, HSTS, cross-origin resource policies)
 3. Request ID (`requestIdMiddleware`)
 4. Request Security Context (`requestSecurityContextMiddleware`)
-5. CORS (`createCorsMiddleware`)
-6. Rate Limiting (`createApiRateLimitMiddleware`)
-7. Content-Type Guard (`createJsonContentTypeGuard`)
-8. JSON Parser (`express.json`)
-9. Cookie Parser (`cookieParserMiddleware`)
-10. Request Boundaries (Method Guard, Target Guard)
-11. API Router (`/api/v1`)
-12. Not Found & Error Handlers
+5. Request Logging (`createRequestLoggingMiddleware`)
+6. In-Flight Request Tracker (`createInFlightRequestMiddleware`)
+7. Shutdown Admission Control (`createShutdownAdmissionMiddleware`)
+8. Health Endpoints (`/health` Router)
+9. CORS (`createCorsMiddleware`)
+10. Rate Limiting (`createApiRateLimitMiddleware`)
+11. Content-Type Guard (`createJsonContentTypeGuard`)
+12. JSON Parser (`express.json`)
+13. Cookie Parser (`cookieParserMiddleware`)
+14. Request Boundaries (Method Guard, Target Guard)
+15. API Router (`/api/v1`)
+16. Not Found & Error Handlers
 
 - **Authentication Handlers**: `WWW-Authenticate: Bearer` challenge is now emitted by the Error Handler upon `AuthenticationError`.
 - **CSRF Token Issue/Verify**: Implemented (Route-level only, reserved for authenticated state-mutating requests).

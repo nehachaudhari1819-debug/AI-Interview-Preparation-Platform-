@@ -13,3 +13,7 @@ export type CookieSameSite = (typeof COOKIE_SAME_SITE_VALUES)[number];
 export const LOG_LEVELS = ["fatal", "error", "warn", "info", "debug", "trace", "silent"] as const;
 
 export type LogLevel = (typeof LOG_LEVELS)[number];
+
+export const CLIENT_IP_LOG_MODES = ["omit", "hash"] as const;
+
+export type ClientIpLogMode = (typeof CLIENT_IP_LOG_MODES)[number];

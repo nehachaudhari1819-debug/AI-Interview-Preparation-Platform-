@@ -37,6 +37,9 @@ Normalized `AuthError` from Supabase to unified `AppError` variants:
 
 ### Endpoints
 
+- `tests/unit/features/auth/auth.service.spec.ts`
+
+> **Note**: As of P2.9, all authentication API requests are subject to strict structured logging redaction policies. No plain text passwords, `Authorization` tokens, or raw `Cookie` headers are logged, ensuring credentials cannot leak into log aggregators.
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/refresh`

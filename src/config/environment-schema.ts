@@ -2,6 +2,7 @@ import { z } from "zod";
 import { emptyStringToUndefined, parseBoolean, parseInteger } from "./environment-parsers.js";
 import {
   AI_PROVIDERS,
+  CLIENT_IP_LOG_MODES,
   COOKIE_SAME_SITE_VALUES,
   LOG_LEVELS,
   NODE_ENVIRONMENTS,
@@ -85,6 +86,23 @@ const environmentBaseSchema = z.object({
 
   // Logging
   LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
+  LOG_PRETTY: z.preprocess(parseBoolean, z.boolean().optional()),
+  LOG_HEALTH_REQUESTS: z.preprocess(parseBoolean, z.boolean().default(false)),
+  LOG_CLIENT_IP_MODE: z.enum(CLIENT_IP_LOG_MODES).default("omit"),
+  LOG_CLIENT_IP_HASH_KEY: z.preprocess(emptyStringToUndefined, z.string().min(32).max(256).optional()),
+  APP_VERSION: z
+    .string()
+    .regex(/^[a-zA-Z0-9.\-_+]+$/)
+    .max(64)
+    .default(process.env.npm_package_version || "0.1.0"),
+  GIT_COMMIT_SHA: z
+    .string()
+    .regex(/^(unknown|[a-fA-F0-9]{7,40})$/)
+    .default("unknown"),
+  SHUTDOWN_GRACE_PERIOD_MS: z.preprocess(
+    parseInteger,
+    z.number().int().min(1000).max(120000).default(15000),
+  ),
 
   // Security
   TRUST_PROXY_HOPS: z.preprocess(parseInteger, z.number().int().min(0).max(5).default(0)),
@@ -214,6 +232,30 @@ export const environmentSchema = environmentBaseSchema.superRefine(
         code: "custom",
         path: ["RATE_LIMIT_ENABLED"],
         message: "RATE_LIMIT_ENABLED must be true when NODE_ENV=production.",
+      });
+    }
+
+    if (val.NODE_ENV === "production" && val.LOG_PRETTY === true) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["LOG_PRETTY"],
+        message: "LOG_PRETTY must be false when NODE_ENV=production.",
+      });
+    }
+
+    if (val.LOG_CLIENT_IP_MODE === "hash" && val.LOG_CLIENT_IP_HASH_KEY === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["LOG_CLIENT_IP_HASH_KEY"],
+        message: "LOG_CLIENT_IP_HASH_KEY is required when LOG_CLIENT_IP_MODE=hash.",
+      });
+    }
+
+    if (val.LOG_CLIENT_IP_MODE === "omit" && val.LOG_CLIENT_IP_HASH_KEY !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["LOG_CLIENT_IP_HASH_KEY"],
+        message: "LOG_CLIENT_IP_HASH_KEY must not be provided when LOG_CLIENT_IP_MODE=omit.",
       });
     }
   },

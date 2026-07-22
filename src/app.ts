@@ -5,6 +5,18 @@ import { errorHandlerMiddleware } from "./middleware/error-handler.middleware.js
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { requestIdMiddleware } from "./middleware/request-id.middleware.js";
 import { createApiV1Router } from "./routes/api-v1.router.js";
+import {
+  createRequestLoggingMiddleware,
+  createInFlightRequestMiddleware,
+  createShutdownAdmissionMiddleware,
+  type ObservabilitySystem,
+} from "./observability/index.js";
+import {
+  createHealthService,
+  createHealthController,
+  createHealthRouter,
+} from "./api/health/index.js";
+import type { SafeConfigSummary } from "./config/config-summary.js";
 
 import type { ApplicationConfig } from "./config/app-config.js";
 import {
@@ -23,6 +35,8 @@ import {
 export type CreateAppOptions = {
   config: Readonly<ApplicationConfig>;
   apiRouter?: Router;
+  observability: ObservabilitySystem;
+  configSummary: SafeConfigSummary;
 };
 
 export function createApp(options: CreateAppOptions): Express {
@@ -46,6 +60,24 @@ export function createApp(options: CreateAppOptions): Express {
 
   // 5. Add request security context
   app.use(requestSecurityContextMiddleware);
+
+  // 5.1 Add Request Logging and Lifecycle Middleware
+  app.use(createRequestLoggingMiddleware({
+    config: options.config,
+    logger: options.observability.logger,
+  }));
+  app.use(createInFlightRequestMiddleware({ tracker: options.observability.tracker }));
+  app.use(createShutdownAdmissionMiddleware({ lifecycle: options.observability.lifecycle }));
+
+  // Mount health endpoints
+  const healthService = createHealthService({
+    lifecycle: options.observability.lifecycle,
+    logger: options.observability.logger,
+    configSummary: options.configSummary,
+  });
+  const healthController = createHealthController({ healthService });
+  const healthRouter = createHealthRouter({ healthController });
+  app.use("/health", healthRouter);
 
   // 6. Apply Helmet
   app.use(createHelmetMiddleware(options.config));
