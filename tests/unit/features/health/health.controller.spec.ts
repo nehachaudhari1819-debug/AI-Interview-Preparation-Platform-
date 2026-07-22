@@ -20,7 +20,11 @@ describe("health.controller", () => {
       getReadiness: jest
         .fn<HealthService["getReadiness"]>()
         .mockReturnValue({ status: "ready", state: "ready", uptime: 1000 }),
-      getConfig: jest.fn<HealthService["getConfig"]>().mockReturnValue({} as any),
+      getConfig: jest
+        .fn<HealthService["getConfig"]>()
+        .mockReturnValue(
+          {} as unknown as import("../../../../src/config/config-summary.js").SafeConfigSummary,
+        ),
     };
   });
 
