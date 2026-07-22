@@ -73,6 +73,9 @@ export function createApp(options: CreateAppOptions): Express {
     app.use(createShutdownAdmissionMiddleware({ lifecycle: options.observability.lifecycle }));
   }
 
+  // 6. Apply Helmet (before health so it gets security headers)
+  app.use(createHelmetMiddleware(options.config));
+
   // Mount health endpoints
   if (options.observability && options.configSummary) {
     const healthService = createHealthService({
@@ -84,9 +87,6 @@ export function createApp(options: CreateAppOptions): Express {
     const healthRouter = createHealthRouter({ healthController });
     app.use("/health", healthRouter);
   }
-
-  // 6. Apply Helmet
-  app.use(createHelmetMiddleware(options.config));
 
   // 7. Apply CORS
   app.use(createCorsMiddleware(options.config));

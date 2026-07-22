@@ -40,6 +40,12 @@ describe("Graceful Shutdown Controller", () => {
   it("coordinates shutdown correctly", async () => {
     const server = createHttpServer(express(), {
       observability: { shutdownGracePeriodMs: 1000 },
+      httpServer: {
+        requestTimeoutMs: 30000,
+        headersTimeoutMs: 60000,
+        keepAliveTimeoutMs: 5000,
+        maxHeadersCount: 100,
+      },
     } as unknown as ApplicationConfig);
     const serverCloseSpy = jest.spyOn(server, "close").mockImplementation((cb) => {
       if (cb) cb();

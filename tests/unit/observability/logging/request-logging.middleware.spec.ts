@@ -16,16 +16,20 @@ describe("Request Logging Middleware", () => {
       debug: jest.fn(),
       trace: jest.fn(),
       silent: jest.fn(),
-      child: jest.fn() as any,
+      child: jest.fn().mockImplementation(() => mockLogger) as any,
       flush: jest.fn(),
     };
   });
 
   it("logs completed requests", () => {
-    const middleware = createRequestLoggingMiddleware({ config: {} as any, logger: mockLogger });
+    const middleware = createRequestLoggingMiddleware({
+      config: { observability: { logHealthRequests: false } } as any,
+      logger: mockLogger,
+    });
 
     const req = new EventEmitter() as Request;
     (req as any).path = "/api/test";
+    (req as any).context = { requestId: "req-123" };
 
     const res = new EventEmitter() as Response;
     (res as any).statusCode = 200;
@@ -43,10 +47,14 @@ describe("Request Logging Middleware", () => {
   });
 
   it("logs aborted requests and ignores subsequent finish", () => {
-    const middleware = createRequestLoggingMiddleware({ config: {} as any, logger: mockLogger });
+    const middleware = createRequestLoggingMiddleware({
+      config: { observability: { logHealthRequests: false } } as any,
+      logger: mockLogger,
+    });
 
     const req = new EventEmitter() as Request;
     (req as any).path = "/api/test";
+    (req as any).context = { requestId: "req-456" };
 
     const res = new EventEmitter() as Response;
 
@@ -54,7 +62,7 @@ describe("Request Logging Middleware", () => {
 
     middleware(req, res, next);
 
-    req.emit("close");
+    res.emit("close");
 
     expect(mockLogger.warn).toHaveBeenCalled();
     const callArgs = (mockLogger.warn as any).mock.calls[0];

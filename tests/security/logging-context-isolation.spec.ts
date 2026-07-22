@@ -7,6 +7,7 @@ import { bootstrapObservability } from "../../src/observability/index.js";
 import { createSafeConfigSummary } from "../../src/config/index.js";
 import { createHttpServer } from "../../src/server/create-http-server.js";
 import express, { Router } from "express";
+import { getRequestLogger } from "../../src/observability/logging/request-log-context.js";
 
 describe("logging-context-isolation.security", () => {
   let app: express.Express;
@@ -29,9 +30,10 @@ describe("logging-context-isolation.security", () => {
 
     const apiRouter = Router();
     apiRouter.get("/delay", async (req, res) => {
-      observability.logger.info("Inside delay before");
+      const logger = getRequestLogger() ?? observability.logger;
+      logger.info("Inside delay before");
       await new Promise((r) => setTimeout(r, parseInt(req.query.ms as string) || 10));
-      observability.logger.info("Inside delay after");
+      logger.info("Inside delay after");
       res.status(200).json({ ok: true });
     });
 

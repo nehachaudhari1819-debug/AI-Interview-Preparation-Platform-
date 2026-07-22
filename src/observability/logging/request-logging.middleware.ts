@@ -17,7 +17,7 @@ export function createRequestLoggingMiddleware({
   clock = () => performance.now(),
 }: CreateRequestLoggingMiddlewareOptions): RequestHandler {
   return function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
-    const requestId = (req as unknown as { id?: string }).id;
+    const requestId = (req as unknown as { context?: { requestId?: string } }).context?.requestId;
     if (!requestId) {
       next();
       return;
