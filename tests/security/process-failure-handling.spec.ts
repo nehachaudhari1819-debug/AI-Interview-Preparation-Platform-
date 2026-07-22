@@ -15,7 +15,9 @@ describe("process-failure-handling.security", () => {
   beforeEach(() => {
     shutdownController = {
       shutdown: jest.fn<GracefulShutdownController["shutdown"]>().mockResolvedValue(undefined),
-      isShuttingDown: jest.fn<GracefulShutdownController["isShuttingDown"]>().mockReturnValue(false),
+      isShuttingDown: jest
+        .fn<GracefulShutdownController["isShuttingDown"]>()
+        .mockReturnValue(false),
     };
 
     lifecycle = {
@@ -53,19 +55,24 @@ describe("process-failure-handling.security", () => {
   });
 
   it("handles uncaughtException safely", () => {
-    unregister = registerProcessEventHandlers({ shutdownController, lifecycle, logger, processTarget });
-    
+    unregister = registerProcessEventHandlers({
+      shutdownController,
+      lifecycle,
+      logger,
+      processTarget,
+    });
+
     const err = new Error("Fatal failure");
     (err as any).password = "secret-pass";
-    
+
     processTarget.emit("uncaughtException", err, "uncaughtException");
-    
+
     expect(lifecycle.markFailed).toHaveBeenCalledWith("uncaught_exception");
     expect(shutdownController.shutdown).toHaveBeenCalledWith("uncaught_exception", 1);
-    
+
     expect(logger.fatal).toHaveBeenCalled();
     const callArgs = logger.fatal.mock.calls[0][0] as Record<string, any>;
-    
+
     expect(callArgs.event).toBe("process.uncaught_exception");
     expect((callArgs.error as any).password).toBeUndefined();
     expect(lifecycle.markReady).not.toHaveBeenCalled();

@@ -1,4 +1,7 @@
-import type { ApplicationLifecycleSnapshot, ApplicationLifecycleState } from "./application-lifecycle.types.js";
+import type {
+  ApplicationLifecycleSnapshot,
+  ApplicationLifecycleState,
+} from "./application-lifecycle.types.js";
 
 export type ApplicationLifecycle = {
   getSnapshot(): Readonly<ApplicationLifecycleSnapshot>;
@@ -8,7 +11,9 @@ export type ApplicationLifecycle = {
   markFailed(reason: string): void;
 };
 
-export function createApplicationLifecycle(clock: () => string = () => new Date().toISOString()): ApplicationLifecycle {
+export function createApplicationLifecycle(
+  clock: () => string = () => new Date().toISOString(),
+): ApplicationLifecycle {
   let state: ApplicationLifecycleState = "starting";
   let isReady = false;
   const startedAt = clock();

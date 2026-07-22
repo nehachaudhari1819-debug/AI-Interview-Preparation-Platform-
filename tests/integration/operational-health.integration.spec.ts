@@ -16,7 +16,7 @@ describe("operational-health.integration", () => {
     const tempApp = express();
     const server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server });
-    
+
     app = createApp({ config, observability, configSummary: createSafeConfigSummary(config) });
     server.removeAllListeners("request");
     server.on("request", app);

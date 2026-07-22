@@ -24,14 +24,14 @@ describe("graceful-shutdown.integration", () => {
         appVersion: "1",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 5000,
-      }
+      },
     });
-    
+
     const tempApp = express();
     server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server });
     observability.unregisterProcessHandlers();
-    
+
     let finishLongRequest: () => void;
     const longRequestPromise = new Promise<void>((resolve) => {
       finishLongRequest = resolve;
@@ -43,8 +43,13 @@ describe("graceful-shutdown.integration", () => {
       res.status(200).json({ ok: true });
     });
 
-    app = createApp({ config, observability, configSummary: createSafeConfigSummary(config), apiRouter });
-    
+    app = createApp({
+      config,
+      observability,
+      configSummary: createSafeConfigSummary(config),
+      apiRouter,
+    });
+
     server.removeAllListeners("request");
     server.on("request", app);
     (app as any).finishLongRequest = finishLongRequest;
@@ -61,9 +66,9 @@ describe("graceful-shutdown.integration", () => {
   it("completes graceful shutdown lifecycle", async () => {
     const listenSpy = jest.spyOn(server, "listen");
     const closeSpy = jest.spyOn(server, "close");
-    
+
     startServer({ server, port: 0, observability });
-    
+
     // Wait for the server to actually listen
     await new Promise((resolve) => {
       if (server.listening) resolve(null);
@@ -76,7 +81,7 @@ describe("graceful-shutdown.integration", () => {
     await new Promise((resolve) => setTimeout(resolve, 50)); // Ensure it's in flight
 
     const shutdownPromise = observability.lifecycle.beginShutdown("test_shutdown");
-    
+
     const readyRes = await request(server).get("/health/ready");
     expect(readyRes.status).toBe(503);
 
@@ -88,7 +93,7 @@ describe("graceful-shutdown.integration", () => {
     expect(longRes.status).toBe(200);
 
     await shutdownPromise;
-    
+
     expect(closeSpy).toHaveBeenCalled();
     expect(server.listening).toBe(false);
   });

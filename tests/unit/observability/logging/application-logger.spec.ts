@@ -10,24 +10,24 @@ describe("Application Logger", () => {
       write(chunk, enc, cb) {
         output += chunk.toString();
         cb();
-      }
+      },
     });
 
     const config = createTestApplicationConfig({
-      observability: { 
-        logLevel: "error", 
-        pretty: false, 
-        logHealthRequests: false, 
-        clientIpMode: "omit", 
-        serviceName: "test", 
-        appVersion: "1.0", 
-        gitCommitSha: "abc", 
-        shutdownGracePeriodMs: 1000 
-      }
+      observability: {
+        logLevel: "error",
+        pretty: false,
+        logHealthRequests: false,
+        clientIpMode: "omit",
+        serviceName: "test",
+        appVersion: "1.0",
+        gitCommitSha: "abc",
+        shutdownGracePeriodMs: 1000,
+      },
     });
 
     const logger = createApplicationLogger({ config, destination: stream });
-    
+
     logger.info("This info log should be suppressed");
     expect(output).toBe("");
 
@@ -41,20 +41,20 @@ describe("Application Logger", () => {
       write(chunk, enc, cb) {
         output += chunk.toString();
         cb();
-      }
+      },
     });
 
     const config = createTestApplicationConfig({
-      observability: { 
-        logLevel: "info", 
-        pretty: false, 
-        logHealthRequests: false, 
-        clientIpMode: "omit", 
-        serviceName: "test-service", 
-        appVersion: "1.2.3", 
-        gitCommitSha: "deadbeef", 
-        shutdownGracePeriodMs: 1000 
-      }
+      observability: {
+        logLevel: "info",
+        pretty: false,
+        logHealthRequests: false,
+        clientIpMode: "omit",
+        serviceName: "test-service",
+        appVersion: "1.2.3",
+        gitCommitSha: "deadbeef",
+        shutdownGracePeriodMs: 1000,
+      },
     });
 
     const logger = createApplicationLogger({ config, destination: stream });

@@ -30,13 +30,13 @@ describe("health-information-disclosure.security", () => {
         appVersion: "1",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 5000,
-      }
+      },
     });
 
     const tempApp = express();
     const server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server });
-    
+
     app = createApp({ config, observability, configSummary: createSafeConfigSummary(config) });
     server.removeAllListeners("request");
     server.on("request", app);
@@ -55,7 +55,7 @@ describe("health-information-disclosure.security", () => {
     expect(bodyStr).not.toContain("fake-supabase-anon-key");
     expect(bodyStr).not.toContain("fake-supabase-service-role-key");
     expect(bodyStr).not.toContain("fake-client-ip-hash-key");
-    
+
     expect(res.body.hostname).toBeUndefined();
     expect(res.body.workingDirectory).toBeUndefined();
     expect(res.body.processArguments).toBeUndefined();

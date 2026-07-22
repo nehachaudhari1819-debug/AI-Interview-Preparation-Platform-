@@ -6,7 +6,7 @@ import { Request, Response } from "express";
 
 describe("Request Logging Middleware", () => {
   let mockLogger: jest.Mocked<ApplicationLogger>;
-  
+
   beforeEach(() => {
     mockLogger = {
       info: jest.fn(),
@@ -23,20 +23,20 @@ describe("Request Logging Middleware", () => {
 
   it("logs completed requests", () => {
     const middleware = createRequestLoggingMiddleware(mockLogger);
-    
+
     const req = new EventEmitter() as Request;
     (req as any).path = "/api/test";
-    
+
     const res = new EventEmitter() as Response;
     (res as any).statusCode = 200;
-    
+
     const next = jest.fn();
 
     middleware(req, res, next);
     expect(next).toHaveBeenCalled();
-    
+
     res.emit("finish");
-    
+
     expect(mockLogger.info).toHaveBeenCalled();
     const callArgs = mockLogger.info.mock.calls[0];
     expect((callArgs[0] as any).event).toBe("http.request.completed");
@@ -44,22 +44,22 @@ describe("Request Logging Middleware", () => {
 
   it("logs aborted requests and ignores subsequent finish", () => {
     const middleware = createRequestLoggingMiddleware(mockLogger);
-    
+
     const req = new EventEmitter() as Request;
     (req as any).path = "/api/test";
-    
+
     const res = new EventEmitter() as Response;
-    
+
     const next = jest.fn();
 
     middleware(req, res, next);
-    
+
     req.emit("close");
-    
+
     expect(mockLogger.warn).toHaveBeenCalled();
     const callArgs = mockLogger.warn.mock.calls[0];
     expect((callArgs[0] as any).event).toBe("http.request.aborted");
-    
+
     // ensure finish after close does not log again
     res.emit("finish");
     expect(mockLogger.info).not.toHaveBeenCalled();

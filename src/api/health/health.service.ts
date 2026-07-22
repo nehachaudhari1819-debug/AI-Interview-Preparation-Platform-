@@ -4,9 +4,8 @@ import type { SafeConfigSummary } from "../../config/config-summary.js";
 import type { ApplicationLogger } from "../../observability/logging/application-logger.types.js";
 import { LOG_EVENTS } from "../../observability/logging/logging-events.constants.js";
 
-export type HealthReadinessResponse = 
-  | { status: "ready"; state: string; uptime: number }
-  | { status: "unavailable"; state: string };
+export type HealthReadinessResponse =
+  { status: "ready"; state: string; uptime: number } | { status: "unavailable"; state: string };
 
 export type HealthService = {
   getLiveness(): { status: "ok" };
@@ -44,7 +43,7 @@ export function createHealthService({
           state: snapshot.state,
         };
       }
-      
+
       // Implicit check: If Supabase wasn't configured properly, the app wouldn't start.
       // But we can assert it based on the validated config.
       if (!configSummary.supabaseConfigured) {

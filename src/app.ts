@@ -62,10 +62,12 @@ export function createApp(options: CreateAppOptions): Express {
   app.use(requestSecurityContextMiddleware);
 
   // 5.1 Add Request Logging and Lifecycle Middleware
-  app.use(createRequestLoggingMiddleware({
-    config: options.config,
-    logger: options.observability.logger,
-  }));
+  app.use(
+    createRequestLoggingMiddleware({
+      config: options.config,
+      logger: options.observability.logger,
+    }),
+  );
   app.use(createInFlightRequestMiddleware({ tracker: options.observability.tracker }));
   app.use(createShutdownAdmissionMiddleware({ lifecycle: options.observability.lifecycle }));
 

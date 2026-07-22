@@ -1,5 +1,8 @@
 import { jest } from "@jest/globals";
-import { createApplicationLifecycle, type ApplicationLifecycle } from "../../../../src/observability/lifecycle/application-lifecycle.js";
+import {
+  createApplicationLifecycle,
+  type ApplicationLifecycle,
+} from "../../../../src/observability/lifecycle/application-lifecycle.js";
 
 describe("Application Lifecycle", () => {
   it("initializes in starting state", () => {
@@ -20,12 +23,12 @@ describe("Application Lifecycle", () => {
   it("transitions to shutting_down then stopped", () => {
     const lifecycle = createApplicationLifecycle();
     lifecycle.markReady();
-    
+
     lifecycle.beginShutdown("test_reason");
-    
+
     expect(lifecycle.getSnapshot().state).toBe("shutting_down");
     expect(lifecycle.getSnapshot().ready).toBe(false);
-    
+
     lifecycle.markStopped();
     expect(lifecycle.getSnapshot().state).toBe("stopped");
   });

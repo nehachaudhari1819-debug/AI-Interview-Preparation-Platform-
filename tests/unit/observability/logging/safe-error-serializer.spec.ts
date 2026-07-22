@@ -7,13 +7,13 @@ describe("Safe Error Serializer", () => {
     const error = new Error("Super secret failure");
     error.stack = "fake stack trace";
     (error as any).password = "123456";
-    
+
     const result = safeErrorSerializer(error);
-    
+
     expect(result.message).toBeUndefined();
     expect(result.stack).toBeUndefined();
     expect((result as any).password).toBeUndefined();
-    
+
     expect(result.type).toBe("Error");
     expect(result.category).toBe("unexpected");
     expect(result.fingerprint).toBeDefined();
@@ -22,7 +22,7 @@ describe("Safe Error Serializer", () => {
   it("preserves safe category and status for structured errors", () => {
     const error = new ConfigurationError("Bad config");
     const result = safeErrorSerializer(error);
-    
+
     expect(result.category).toBe("startup");
     expect(result.type).toBe("ConfigurationError");
   });
@@ -30,7 +30,7 @@ describe("Safe Error Serializer", () => {
   it("handles non-error objects gracefully", () => {
     const obj = { msg: "Something went wrong" };
     const result = safeErrorSerializer(obj as any);
-    
+
     expect(result.type).toBe("UnknownError");
     expect(result.category).toBe("unexpected");
     expect(result.fingerprint).toBeDefined();

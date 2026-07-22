@@ -61,7 +61,18 @@ describe("logging-secret-redaction.security", () => {
   });
 
   it("redacts request headers", () => {
-    logger.info({ req: { headers: { authorization: secrets.authorization, cookie: secrets.cookie, "set-cookie": secrets.set_cookie } } }, "Test log");
+    logger.info(
+      {
+        req: {
+          headers: {
+            authorization: secrets.authorization,
+            cookie: secrets.cookie,
+            "set-cookie": secrets.set_cookie,
+          },
+        },
+      },
+      "Test log",
+    );
     const out = logOutput.join("");
     expect(out).not.toContain(secrets.authorization);
     expect(out).not.toContain(secrets.cookie);

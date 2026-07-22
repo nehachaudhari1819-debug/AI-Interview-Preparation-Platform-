@@ -13,12 +13,12 @@ describe("Error Fingerprint", () => {
     const hash2 = generateErrorFingerprint(new RangeError("Test error"));
     expect(hash1).not.toBe(hash2);
   });
-  
+
   it("generates a hash robustly without throwing on missing properties", () => {
     const e1 = new Error("msg");
     e1.stack = undefined;
     expect(generateErrorFingerprint(e1)).toBeDefined();
-    
+
     const e2 = { message: "Not an error instance" };
     expect(generateErrorFingerprint(e2 as any)).toBeDefined();
   });

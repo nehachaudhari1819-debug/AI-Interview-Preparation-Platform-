@@ -49,14 +49,24 @@ describe("health.service", () => {
   });
 
   it("readiness is false during starting", () => {
-    lifecycle.getSnapshot.mockReturnValue({ state: "starting", ready: false, startedAt: "", updatedAt: "" });
+    lifecycle.getSnapshot.mockReturnValue({
+      state: "starting",
+      ready: false,
+      startedAt: "",
+      updatedAt: "",
+    });
     const service = createHealthService({ lifecycle, logger, configSummary: getConfigSummary() });
     const res = service.getReadiness();
     expect(res.status).toBe("unavailable");
   });
 
   it("readiness is true only during ready", () => {
-    lifecycle.getSnapshot.mockReturnValue({ state: "ready", ready: true, startedAt: new Date().toISOString(), updatedAt: "" });
+    lifecycle.getSnapshot.mockReturnValue({
+      state: "ready",
+      ready: true,
+      startedAt: new Date().toISOString(),
+      updatedAt: "",
+    });
     const service = createHealthService({ lifecycle, logger, configSummary: getConfigSummary() });
     const res = service.getReadiness(() => Date.now());
     expect(res.status).toBe("ready");
@@ -64,25 +74,45 @@ describe("health.service", () => {
   });
 
   it("readiness is false during shutting_down", () => {
-    lifecycle.getSnapshot.mockReturnValue({ state: "shutting_down", ready: false, startedAt: "", updatedAt: "" });
+    lifecycle.getSnapshot.mockReturnValue({
+      state: "shutting_down",
+      ready: false,
+      startedAt: "",
+      updatedAt: "",
+    });
     const service = createHealthService({ lifecycle, logger, configSummary: getConfigSummary() });
     expect(service.getReadiness().status).toBe("unavailable");
   });
 
   it("readiness is false during failed", () => {
-    lifecycle.getSnapshot.mockReturnValue({ state: "failed", ready: false, startedAt: "", updatedAt: "" });
+    lifecycle.getSnapshot.mockReturnValue({
+      state: "failed",
+      ready: false,
+      startedAt: "",
+      updatedAt: "",
+    });
     const service = createHealthService({ lifecycle, logger, configSummary: getConfigSummary() });
     expect(service.getReadiness().status).toBe("unavailable");
   });
 
   it("readiness is false during stopped", () => {
-    lifecycle.getSnapshot.mockReturnValue({ state: "stopped", ready: false, startedAt: "", updatedAt: "" });
+    lifecycle.getSnapshot.mockReturnValue({
+      state: "stopped",
+      ready: false,
+      startedAt: "",
+      updatedAt: "",
+    });
     const service = createHealthService({ lifecycle, logger, configSummary: getConfigSummary() });
     expect(service.getReadiness().status).toBe("unavailable");
   });
 
   it("Supabase readiness checks validated configuration only", () => {
-    lifecycle.getSnapshot.mockReturnValue({ state: "ready", ready: true, startedAt: new Date().toISOString(), updatedAt: "" });
+    lifecycle.getSnapshot.mockReturnValue({
+      state: "ready",
+      ready: true,
+      startedAt: new Date().toISOString(),
+      updatedAt: "",
+    });
     const summary = getConfigSummary();
     summary.supabaseConfigured = false; // Simulate validation failure or unconfigured state
 
@@ -98,7 +128,12 @@ describe("health.service", () => {
   });
 
   it("uptime can be injected", () => {
-    lifecycle.getSnapshot.mockReturnValue({ state: "ready", ready: true, startedAt: new Date(1000).toISOString(), updatedAt: "" });
+    lifecycle.getSnapshot.mockReturnValue({
+      state: "ready",
+      ready: true,
+      startedAt: new Date(1000).toISOString(),
+      updatedAt: "",
+    });
     const service = createHealthService({ lifecycle, logger, configSummary: getConfigSummary() });
     const res = service.getReadiness(() => 5000);
     expect((res as any).uptime).toBe(4000);

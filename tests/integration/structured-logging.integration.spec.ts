@@ -42,7 +42,7 @@ describe("structured-logging.integration", () => {
     const tempApp = express();
     const server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server, destination: logStream });
-    
+
     const apiRouter = Router();
     apiRouter.get("/success", (req, res) => {
       res.status(200).json({ message: "ok" });
@@ -50,9 +50,14 @@ describe("structured-logging.integration", () => {
     apiRouter.get("/error", () => {
       throw new Error("Test error message");
     });
-    
-    app = createApp({ config, observability, configSummary: createSafeConfigSummary(config), apiRouter });
-    
+
+    app = createApp({
+      config,
+      observability,
+      configSummary: createSafeConfigSummary(config),
+      apiRouter,
+    });
+
     server.removeAllListeners("request");
     server.on("request", app);
   });
@@ -71,7 +76,7 @@ describe("structured-logging.integration", () => {
 
     const completionLog = logOutput.find((log) => log.event === "http.request.completed");
     expect(completionLog).toBeDefined();
-    
+
     expect(completionLog.requestId).toBe(res.headers["x-request-id"]);
 
     expect(completionLog.method).toBe("GET");
@@ -81,7 +86,7 @@ describe("structured-logging.integration", () => {
     expect(completionLog.outcome).toBe("success");
 
     expect(completionLog.path).not.toContain("secret=123");
-    
+
     expect(completionLog.body).toBeUndefined();
     expect(completionLog.responseBody).toBeUndefined();
     expect(completionLog.req?.headers?.authorization).toBeUndefined();

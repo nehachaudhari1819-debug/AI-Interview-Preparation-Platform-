@@ -5,7 +5,11 @@ import { createApp } from "./app.js";
 import { createSafeConfigSummary, loadApplicationConfig } from "./config/index.js";
 import { createHttpServer } from "./server/create-http-server.js";
 import { ConfigurationError } from "./errors/configuration.error.js";
-import { bootstrapObservability, LOG_EVENTS, type ObservabilitySystem } from "./observability/index.js";
+import {
+  bootstrapObservability,
+  LOG_EVENTS,
+  type ObservabilitySystem,
+} from "./observability/index.js";
 
 export type StartServerOptions = {
   server: Server;
@@ -44,7 +48,7 @@ function bootstrap(): void {
     });
 
     const app = createApp({ config, observability, configSummary });
-    
+
     server.removeAllListeners("request");
     server.on("request", app);
 

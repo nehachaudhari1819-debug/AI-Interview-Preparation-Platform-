@@ -89,7 +89,10 @@ const environmentBaseSchema = z.object({
   LOG_PRETTY: z.preprocess(parseBoolean, z.boolean().optional()),
   LOG_HEALTH_REQUESTS: z.preprocess(parseBoolean, z.boolean().default(false)),
   LOG_CLIENT_IP_MODE: z.enum(CLIENT_IP_LOG_MODES).default("omit"),
-  LOG_CLIENT_IP_HASH_KEY: z.preprocess(emptyStringToUndefined, z.string().min(32).max(256).optional()),
+  LOG_CLIENT_IP_HASH_KEY: z.preprocess(
+    emptyStringToUndefined,
+    z.string().min(32).max(256).optional(),
+  ),
   APP_VERSION: z
     .string()
     .regex(/^[a-zA-Z0-9.\-_+]+$/)

@@ -1,17 +1,8 @@
-# P2.9 — Structured Logging, Observability & Operational Readiness
+# P2.9 — Structured Logging & Observability Foundation
 
 ## Overview
 
 This document outlines the structured logging, lifecycle management, and observability foundation for the AI Interview Preparation Platform Backend. The design ensures high visibility in production, enforces strict data privacy, and coordinates safe application shutdown.
-
-### Limitations
-
-- This project does not currently implement distributed tracing.
-- Metrics support is not included natively in this phase.
-- External log persistence and log rotation are delegated to the deployment environment.
-- The application relies on external orchestrators (like PM2 or Kubernetes) for automatic process restart.
-- Database dependency health checks only validate configuration readiness, not active network probing.
-- IP hashing is a privacy-conscious design choice, but does not by itself establish legal compliance frameworks like GDPR.
 
 ## 1. Structured Logging
 

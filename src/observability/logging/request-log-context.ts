@@ -8,10 +8,7 @@ export type RequestLogContext = {
 
 const requestLogContextStorage = new AsyncLocalStorage<RequestLogContext>();
 
-export function runWithRequestLogContext<T>(
-  context: RequestLogContext,
-  callback: () => T,
-): T {
+export function runWithRequestLogContext<T>(context: RequestLogContext, callback: () => T): T {
   return requestLogContextStorage.run(context, callback);
 }
 

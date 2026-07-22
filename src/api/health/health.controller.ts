@@ -11,7 +11,9 @@ export type CreateHealthControllerOptions = {
   healthService: HealthService;
 };
 
-export function createHealthController({ healthService }: CreateHealthControllerOptions): HealthController {
+export function createHealthController({
+  healthService,
+}: CreateHealthControllerOptions): HealthController {
   return {
     getLiveness(req, res) {
       res.setHeader("Cache-Control", "no-store");

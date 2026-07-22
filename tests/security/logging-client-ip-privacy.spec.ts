@@ -27,14 +27,19 @@ describe("logging-client-ip-privacy.security", () => {
     const tempApp = express();
     const server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server, destination: logStream });
-    
+
     const apiRouter = Router();
     apiRouter.get("/test", (req, res) => {
       res.status(200).json({ ok: true });
     });
-    
-    app = createApp({ config, observability, configSummary: createSafeConfigSummary(config), apiRouter });
-    
+
+    app = createApp({
+      config,
+      observability,
+      configSummary: createSafeConfigSummary(config),
+      apiRouter,
+    });
+
     server.removeAllListeners("request");
     server.on("request", app);
   };
@@ -66,7 +71,7 @@ describe("logging-client-ip-privacy.security", () => {
         .set("X-Forwarded-For", "192.168.1.1")
         .set("X-Real-IP", "10.0.0.1");
 
-      const log = logOutput.find(l => l.includes("http.request.completed"));
+      const log = logOutput.find((l) => l.includes("http.request.completed"));
       expect(log).not.toContain("192.168.1.1");
       expect(log).not.toContain("10.0.0.1");
       expect(log).not.toContain("clientId");
@@ -93,16 +98,14 @@ describe("logging-client-ip-privacy.security", () => {
     });
 
     it("hashes IP, excludes raw IP and hash key", async () => {
-      await request(app)
-        .get("/api/v1/test")
-        .set("X-Forwarded-For", "192.168.1.1");
+      await request(app).get("/api/v1/test").set("X-Forwarded-For", "192.168.1.1");
 
-      const log = logOutput.find(l => l.includes("http.request.completed")) as string;
+      const log = logOutput.find((l) => l.includes("http.request.completed")) as string;
       const parsed = JSON.parse(log);
-      
+
       expect(parsed.clientId).toBeDefined();
       expect(parsed.clientId.length).toBeGreaterThan(10);
-      
+
       expect(log).not.toContain("192.168.1.1");
       expect(log).not.toContain("fake-client-ip-hash-key-1234567890");
     });

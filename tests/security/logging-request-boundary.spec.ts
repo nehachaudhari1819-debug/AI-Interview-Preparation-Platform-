@@ -26,14 +26,19 @@ describe("logging-request-boundary.security", () => {
     const tempApp = express();
     const server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server, destination: logStream });
-    
+
     const apiRouter = Router();
     apiRouter.post("/test", (req, res) => {
       res.status(200).json({ responseBody: "secret_response" });
     });
-    
-    app = createApp({ config, observability, configSummary: createSafeConfigSummary(config), apiRouter });
-    
+
+    app = createApp({
+      config,
+      observability,
+      configSummary: createSafeConfigSummary(config),
+      apiRouter,
+    });
+
     server.removeAllListeners("request");
     server.on("request", app);
   });
@@ -49,9 +54,9 @@ describe("logging-request-boundary.security", () => {
       .set("Cookie", "session=xyz")
       .send({ body_secret: "123456", email: "test@example.com", password: "password123" });
 
-    const completionLog = logOutput.find(out => out.includes("http.request.completed"));
+    const completionLog = logOutput.find((out) => out.includes("http.request.completed"));
     expect(completionLog).toBeDefined();
-    
+
     expect(completionLog).not.toContain("body_secret");
     expect(completionLog).not.toContain("secret_response");
     expect(completionLog).not.toContain("secret_query");
@@ -59,7 +64,7 @@ describe("logging-request-boundary.security", () => {
     expect(completionLog).not.toContain("session=xyz");
     expect(completionLog).not.toContain("test@example.com");
     expect(completionLog).not.toContain("password123");
-    
+
     // Check allowlisted fields
     const parsed = JSON.parse(completionLog as string);
     expect(parsed.method).toBe("POST");

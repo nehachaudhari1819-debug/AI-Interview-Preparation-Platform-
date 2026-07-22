@@ -5,7 +5,11 @@ import { HTTP_STATUS } from "../constants/http.constants.js";
 import { AppError } from "../errors/app-error.js";
 import { AuthenticationError } from "../errors/authentication.error.js";
 import type { ApiErrorResponse } from "../types/api-response.types.js";
-import { safeErrorSerializer, LOG_EVENTS, getRequestLogger } from "../observability/logging/index.js";
+import {
+  safeErrorSerializer,
+  LOG_EVENTS,
+  getRequestLogger,
+} from "../observability/logging/index.js";
 
 type ExpressBodyParserError = Error & {
   status?: number;

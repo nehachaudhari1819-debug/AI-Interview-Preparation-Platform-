@@ -33,14 +33,14 @@ describe("graceful-shutdown.security", () => {
         appVersion: "1",
         gitCommitSha: "abc",
         shutdownGracePeriodMs: 50,
-      }
+      },
     });
 
     const tempApp = express();
     server = createHttpServer(tempApp, config);
     observability = bootstrapObservability({ config, server, destination: logStream });
     observability.unregisterProcessHandlers();
-    
+
     let longRequestResolve: () => void;
     const longRequestPromise = new Promise<void>((resolve) => {
       longRequestResolve = resolve;
@@ -52,8 +52,13 @@ describe("graceful-shutdown.security", () => {
       res.status(200).json({ ok: true });
     });
 
-    app = createApp({ config, observability, configSummary: createSafeConfigSummary(config), apiRouter });
-    
+    app = createApp({
+      config,
+      observability,
+      configSummary: createSafeConfigSummary(config),
+      apiRouter,
+    });
+
     server.removeAllListeners("request");
     server.on("request", app);
     (app as any).resolveLongRequest = longRequestResolve;
@@ -69,29 +74,29 @@ describe("graceful-shutdown.security", () => {
 
   it("forces connection closure and logs safely on timeout", async () => {
     await new Promise((resolve) => server.listen(0, () => resolve(null)));
-    
+
     request(server)
       .post("/api/v1/long")
       .set("Authorization", "Bearer my-secret")
       .send({ password: "my-password" });
-      
+
     await new Promise((resolve) => setTimeout(resolve, 10));
-    
+
     const shutdownPromise = observability.lifecycle.beginShutdown("test_timeout");
-    
+
     await shutdownPromise;
-    
+
     const logs = logOutput.join("");
-    
+
     expect(logs).toContain("application.shutdown.forced");
     expect(logs).toContain("test_timeout");
-    
+
     expect(logs).not.toContain("my-secret");
     expect(logs).not.toContain("my-password");
-    
-    const parsedLogs = logOutput.map(l => JSON.parse(l));
-    const forcedLog = parsedLogs.find(l => l.event === "application.shutdown.forced");
+
+    const parsedLogs = logOutput.map((l) => JSON.parse(l));
+    const forcedLog = parsedLogs.find((l) => l.event === "application.shutdown.forced");
     expect(forcedLog).toBeDefined();
-    expect(forcedLog.sockets).toBeUndefined(); 
+    expect(forcedLog.sockets).toBeUndefined();
   });
 });

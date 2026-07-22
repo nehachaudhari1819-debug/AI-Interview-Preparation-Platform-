@@ -16,11 +16,7 @@ export function createRequestLoggingMiddleware({
   logger,
   clock = performance.now,
 }: CreateRequestLoggingMiddlewareOptions): RequestHandler {
-  return function requestLoggingMiddleware(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) {
+  return function requestLoggingMiddleware(req: Request, res: Response, next: NextFunction) {
     const requestId = req.id as string | undefined;
     if (!requestId) {
       return next();
@@ -38,7 +34,11 @@ export function createRequestLoggingMiddleware({
       cleanup();
 
       if (!config.observability.logHealthRequests) {
-        if ((req.path === "/health" || req.path === "/health/ready") && res.statusCode >= 200 && res.statusCode < 400) {
+        if (
+          (req.path === "/health" || req.path === "/health/ready") &&
+          res.statusCode >= 200 &&
+          res.statusCode < 400
+        ) {
           return;
         }
       }
@@ -57,8 +57,10 @@ export function createRequestLoggingMiddleware({
       }
 
       const clientId = createClientIdentity(req.ip, config);
-      const authenticationState = req.securityContext?.authenticated ? "authenticated" : "anonymous";
-      
+      const authenticationState = req.securityContext?.authenticated
+        ? "authenticated"
+        : "anonymous";
+
       const logData: Record<string, any> = {
         event: LOG_EVENTS.httpRequestCompleted,
         requestId,
@@ -85,8 +87,10 @@ export function createRequestLoggingMiddleware({
 
       const durationMs = Math.round(clock() - startTime);
       const clientId = createClientIdentity(req.ip, config);
-      const authenticationState = req.securityContext?.authenticated ? "authenticated" : "anonymous";
-      
+      const authenticationState = req.securityContext?.authenticated
+        ? "authenticated"
+        : "anonymous";
+
       const logData: Record<string, any> = {
         event: LOG_EVENTS.httpRequestAborted,
         requestId,

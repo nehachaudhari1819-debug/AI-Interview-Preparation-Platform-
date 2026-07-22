@@ -5,12 +5,7 @@ import type { ApplicationLogger } from "../logging/application-logger.types.js";
 import { LOG_EVENTS } from "../logging/logging-events.constants.js";
 
 export type ShutdownReason =
-  | "SIGINT"
-  | "SIGTERM"
-  | "uncaught_exception"
-  | "unhandled_rejection"
-  | "startup_failure"
-  | "test";
+  "SIGINT" | "SIGTERM" | "uncaught_exception" | "unhandled_rejection" | "startup_failure" | "test";
 
 export type GracefulShutdownController = {
   shutdown(reason: ShutdownReason, exitCode: number): Promise<void>;
@@ -42,16 +37,22 @@ export function createGracefulShutdownController({
 }: CreateGracefulShutdownControllerOptions): GracefulShutdownController {
   const customSetTimeout = dependencies.setTimeout ?? globalThis.setTimeout;
   const customClearTimeout = dependencies.clearTimeout ?? globalThis.clearTimeout;
-  const setExitCode = dependencies.setExitCode ?? ((code: number) => { process.exitCode = code; });
-  const flushLogger = dependencies.flushLogger ?? (async () => {
-    try {
-      if (typeof logger.flush === "function") {
-        logger.flush();
+  const setExitCode =
+    dependencies.setExitCode ??
+    ((code: number) => {
+      process.exitCode = code;
+    });
+  const flushLogger =
+    dependencies.flushLogger ??
+    (async () => {
+      try {
+        if (typeof logger.flush === "function") {
+          logger.flush();
+        }
+      } catch {
+        // Ignore errors during final flush
       }
-    } catch {
-      // Ignore errors during final flush
-    }
-  });
+    });
 
   let shutdownPromise: Promise<void> | null = null;
 

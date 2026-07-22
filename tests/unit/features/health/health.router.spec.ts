@@ -1,6 +1,10 @@
 import request from "supertest";
 import express from "express";
-import { createHealthRouter, createHealthController, createHealthService } from "../../../../src/api/health/index.js";
+import {
+  createHealthRouter,
+  createHealthController,
+  createHealthService,
+} from "../../../../src/api/health/index.js";
 import type { ApplicationLifecycle } from "../../../../src/observability/lifecycle/application-lifecycle.js";
 import type { ApplicationLogger } from "../../../../src/observability/logging/application-logger.types.js";
 import { createTestApplicationConfig } from "../../../setup/test-helpers.js";
@@ -10,13 +14,18 @@ import { requestIdMiddleware } from "../../../../src/middleware/request-id.middl
 describe("health.router", () => {
   let app: express.Express;
   let lifecycleState: string = "ready";
-  
+
   beforeEach(() => {
     app = express();
     app.use(requestIdMiddleware);
 
     const lifecycle = {
-      getSnapshot: () => ({ state: lifecycleState, ready: lifecycleState === "ready", startedAt: new Date().toISOString(), updatedAt: "" }),
+      getSnapshot: () => ({
+        state: lifecycleState,
+        ready: lifecycleState === "ready",
+        startedAt: new Date().toISOString(),
+        updatedAt: "",
+      }),
       markReady: () => {},
       beginShutdown: () => {},
       markStopped: () => {},

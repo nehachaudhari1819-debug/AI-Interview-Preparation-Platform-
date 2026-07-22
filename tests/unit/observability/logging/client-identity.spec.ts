@@ -9,11 +9,11 @@ describe("Client Identity Serializer", () => {
       headers: {
         "x-forwarded-for": "10.0.0.1",
         "user-agent": "jest-test",
-      }
+      },
     };
-    
+
     const result = serialize(req as any);
-    
+
     expect(result.ip).toBeUndefined();
     expect(result.userAgent).toBe("jest-test");
     expect(JSON.stringify(result)).not.toContain("192.168.1.1");
@@ -26,11 +26,11 @@ describe("Client Identity Serializer", () => {
       ip: "192.168.1.1",
       headers: {
         "user-agent": "jest-test",
-      }
+      },
     };
-    
+
     const result = serialize(req as any);
-    
+
     expect(result.ip).toBeUndefined();
     expect(result.clientId).toBeDefined();
     expect(result.clientId.length).toBeGreaterThan(10);

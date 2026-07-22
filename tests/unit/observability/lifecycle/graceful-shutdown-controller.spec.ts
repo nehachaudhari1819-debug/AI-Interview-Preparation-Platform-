@@ -1,7 +1,16 @@
 import { jest } from "@jest/globals";
-import { createGracefulShutdownController, type GracefulShutdownController } from "../../../../src/observability/lifecycle/graceful-shutdown-controller.js";
-import { createApplicationLifecycle, type ApplicationLifecycle } from "../../../../src/observability/lifecycle/application-lifecycle.js";
-import { createInFlightRequestTracker, type InFlightRequestTracker } from "../../../../src/observability/lifecycle/in-flight-request-tracker.js";
+import {
+  createGracefulShutdownController,
+  type GracefulShutdownController,
+} from "../../../../src/observability/lifecycle/graceful-shutdown-controller.js";
+import {
+  createApplicationLifecycle,
+  type ApplicationLifecycle,
+} from "../../../../src/observability/lifecycle/application-lifecycle.js";
+import {
+  createInFlightRequestTracker,
+  type InFlightRequestTracker,
+} from "../../../../src/observability/lifecycle/in-flight-request-tracker.js";
 import type { ApplicationLogger } from "../../../../src/observability/logging/application-logger.types.js";
 import { createHttpServer } from "../../../../src/server/create-http-server.js";
 import express from "express";
@@ -28,7 +37,9 @@ describe("Graceful Shutdown Controller", () => {
   });
 
   it("coordinates shutdown correctly", async () => {
-    const server = createHttpServer(express(), { observability: { shutdownGracePeriodMs: 1000 } } as any);
+    const server = createHttpServer(express(), {
+      observability: { shutdownGracePeriodMs: 1000 },
+    } as any);
     const serverCloseSpy = jest.spyOn(server, "close").mockImplementation((cb) => {
       if (cb) cb();
       return server;
@@ -39,7 +50,7 @@ describe("Graceful Shutdown Controller", () => {
       tracker,
       logger: mockLogger,
       server,
-      gracePeriodMs: 1000
+      gracePeriodMs: 1000,
     });
 
     lifecycle.markReady();

@@ -17,7 +17,7 @@ describe("Request Log Context", () => {
   it("isolates separate asynchronous executions", async () => {
     const p1 = new Promise<void>((resolve) => {
       requestLogContext.run({ requestId: "id-1" }, async () => {
-        await new Promise(r => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, 10));
         expect(requestLogContext.getStore()?.requestId).toBe("id-1");
         resolve();
       });
@@ -25,7 +25,7 @@ describe("Request Log Context", () => {
 
     const p2 = new Promise<void>((resolve) => {
       requestLogContext.run({ requestId: "id-2" }, async () => {
-        await new Promise(r => setTimeout(r, 5));
+        await new Promise((r) => setTimeout(r, 5));
         expect(requestLogContext.getStore()?.requestId).toBe("id-2");
         resolve();
       });

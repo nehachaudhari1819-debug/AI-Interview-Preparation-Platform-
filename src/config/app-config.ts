@@ -1,5 +1,11 @@
 import type { ValidatedEnvironment } from "./environment-schema.js";
-import type { AiProvider, ClientIpLogMode, CookieSameSite, LogLevel, NodeEnvironment } from "./environment.types.js";
+import type {
+  AiProvider,
+  ClientIpLogMode,
+  CookieSameSite,
+  LogLevel,
+  NodeEnvironment,
+} from "./environment.types.js";
 import { loadEnvironment, type LoadEnvironmentOptions } from "./environment-loader.js";
 import { deepFreeze } from "../utils/deep-freeze.js";
 
@@ -161,7 +167,9 @@ export function createApplicationConfig(environment: ValidatedEnvironment): Appl
       pretty: environment.LOG_PRETTY ?? environment.NODE_ENV === "development",
       logHealthRequests: environment.LOG_HEALTH_REQUESTS,
       clientIpMode: environment.LOG_CLIENT_IP_MODE,
-      ...(environment.LOG_CLIENT_IP_HASH_KEY !== undefined ? { clientIpHashKey: environment.LOG_CLIENT_IP_HASH_KEY } : {}),
+      ...(environment.LOG_CLIENT_IP_HASH_KEY !== undefined
+        ? { clientIpHashKey: environment.LOG_CLIENT_IP_HASH_KEY }
+        : {}),
       serviceName: "ai-interview-preparation-platform-backend",
       appVersion: environment.APP_VERSION,
       gitCommitSha: environment.GIT_COMMIT_SHA,

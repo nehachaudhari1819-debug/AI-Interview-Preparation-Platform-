@@ -1,5 +1,11 @@
 import type { ApplicationConfig } from "./app-config.js";
-import type { AiProvider, ClientIpLogMode, CookieSameSite, LogLevel, NodeEnvironment } from "./environment.types.js";
+import type {
+  AiProvider,
+  ClientIpLogMode,
+  CookieSameSite,
+  LogLevel,
+  NodeEnvironment,
+} from "./environment.types.js";
 
 export type SafeConfigSummary = {
   nodeEnv: NodeEnvironment;
