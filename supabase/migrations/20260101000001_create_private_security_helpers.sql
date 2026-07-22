@@ -11,18 +11,20 @@ grant usage on schema private to service_role;
 -- 1. Helper: Check if the calling user is an active user
 create or replace function private.is_active_user()
 returns boolean
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
-  select exists (
+begin
+  return exists (
     select 1
     from public.users
     where id = (select auth.uid())
       and account_status = 'active'
       and deleted_at is null
   );
+end;
 $$;
 
 -- Secure execution privileges
@@ -33,12 +35,13 @@ grant execute on function private.is_active_user() to service_role;
 -- 2. Helper: Check if the calling user is an active admin
 create or replace function private.is_active_admin()
 returns boolean
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
-  select exists (
+begin
+  return exists (
     select 1
     from public.users
     where id = (select auth.uid())
@@ -46,6 +49,7 @@ as $$
       and account_status = 'active'
       and deleted_at is null
   );
+end;
 $$;
 
 -- Secure execution privileges
