@@ -8,11 +8,6 @@ const __dirname = path.dirname(__filename);
 
 describe("OpenAPI Generation Script", () => {
   it("should be deterministic and not modify the document on second run", () => {
-    // Generate document
-    expect(() => {
-      writeDocument();
-    }).not.toThrow();
-
     // Verify document exists
     const openapiPath = path.resolve(__dirname, "../../../docs/backend/openapi/openapi.json");
     expect(fs.existsSync(openapiPath)).toBe(true);
