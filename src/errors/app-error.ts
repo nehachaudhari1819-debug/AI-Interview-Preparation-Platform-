@@ -14,6 +14,7 @@ export class AppError extends Error {
   public readonly code: string;
   public readonly errors?: ApiFieldError[];
   public readonly isOperational: boolean;
+  public readonly isAppError = true;
 
   public constructor(options: AppErrorOptions) {
     super(options.message, {

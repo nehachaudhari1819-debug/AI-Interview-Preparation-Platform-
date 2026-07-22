@@ -31,8 +31,44 @@ jobs:
       - name: Start local Supabase
         run: npx supabase start
 
-      - name: Validate project
-        run: npm run validate
+      - name: Wait for Supabase readiness
+        run: |
+          echo "Waiting for Supabase API to be ready..."
+          timeout 60s bash -c 'until curl -s http://127.0.0.1:54321/auth/v1/health | grep -q "name"; do sleep 2; done' || (echo "Supabase readiness timeout" && exit 1)
+          echo "Supabase is ready."
+
+      - name: Reset database from zero
+        run: npm run db:reset
+
+      - name: Verify generated database types
+        run: npm run db:types:check
+
+      - name: Run database lint
+        run: npm run db:lint
+
+      - name: Run database pgTAP tests
+        run: npm run db:test
+
+      - name: Run Phase 2 real-environment tests
+        run: npm run test:e2e:phase2
+
+      - name: Run formatting check
+        run: npm run format:check
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Run OpenAPI freshness check
+        run: npm run openapi:check
+
+      - name: Run all application Jest tests
+        run: npm run test
+
+      - name: Run production build
+        run: npm run build
 
       - name: Stop local Supabase
         if: always()

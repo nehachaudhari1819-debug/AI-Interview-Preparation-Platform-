@@ -72,6 +72,16 @@ export function normalizeSupabaseAuthError(error: unknown): AuthProviderFailure 
     }
 
     if (status === 400 || status === 422) {
+      const errorWithMsg = authError as { message?: unknown };
+      const msg =
+        typeof errorWithMsg.message === "string" ? errorWithMsg.message.toLowerCase() : "";
+      if (msg.includes("invalid login credentials")) {
+        return {
+          success: false,
+          reason: "invalid_credentials",
+          ...(code ? { providerCode: code } : {}),
+        };
+      }
       return {
         success: false,
         reason: "invalid_request",

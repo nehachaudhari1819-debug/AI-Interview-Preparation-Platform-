@@ -95,7 +95,7 @@ describe("graceful-shutdown.security", () => {
     (app as any).onLongRequest = () => {
       inFlight = true;
     };
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+
     while (!inFlight) {
       await new Promise((resolve) => setTimeout(resolve, 5));
     }

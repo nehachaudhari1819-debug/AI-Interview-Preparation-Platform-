@@ -33,7 +33,7 @@ describe("requireSupabaseConfig", () => {
     } catch (e: unknown) {
       const err = e as ConfigurationError;
       expect(err).toBeInstanceOf(ConfigurationError);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       expect(err.issues[0]!.variable).toBe("SUPABASE_URL");
       expect(err.message).not.toContain("pk_test");
       expect(err.message).not.toContain("sk_test");

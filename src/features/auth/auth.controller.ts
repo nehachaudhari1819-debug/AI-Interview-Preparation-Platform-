@@ -24,10 +24,14 @@ export function createRegisterController(
       if (refreshToken) {
         setRefreshTokenCookie(res, config, refreshToken);
       }
+
+      const { accessToken, ...safeResult } = result;
+      void accessToken;
+
       return sendSuccess({
         response: res,
         statusCode: HTTP_STATUS.ACCEPTED,
-        data: result,
+        data: safeResult,
         requestId: req.context.requestId,
       });
     }
