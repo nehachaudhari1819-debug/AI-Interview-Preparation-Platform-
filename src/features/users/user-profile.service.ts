@@ -4,7 +4,6 @@ import { UserProfileNotFoundError } from "../../errors/user-profile-not-found.er
 import { AccountDisabledError } from "../../errors/account-disabled.error.js";
 import { AccountDeletedError } from "../../errors/account-deleted.error.js";
 import { PersistenceError, PersistenceErrorCode } from "../../persistence/persistence-error.js";
-import { ServiceUnavailableError } from "../../errors/service-unavailable.error.js";
 
 export class UserProfileService {
   public constructor(
