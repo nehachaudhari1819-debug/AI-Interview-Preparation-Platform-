@@ -86,8 +86,11 @@ describe("Security: User Profile Read Boundary", () => {
     });
 
     const service = createUserProfileService(mockRepo);
-    const serviceFactory = () => service;
-    const usersRouter = createUserProfileRouter({ config, serviceFactory, authMiddleware });
+    const serviceMiddleware = (req: any, res: any, next: any) => {
+      res.locals.userProfileService = service;
+      next();
+    };
+    const usersRouter = createUserProfileRouter({ config, serviceMiddleware, authMiddleware });
 
     const apiRouter = Router();
     apiRouter.use("/users", usersRouter);

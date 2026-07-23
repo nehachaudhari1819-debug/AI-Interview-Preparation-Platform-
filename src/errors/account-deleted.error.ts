@@ -4,6 +4,10 @@ import { ERROR_CODES } from "../constants/error-codes.constants.js";
 
 export class AccountDeletedError extends AppError {
   public constructor() {
-    super("This account has been deleted.", ERROR_CODES.ACCOUNT_DELETED, HTTP_STATUS.FORBIDDEN);
+    super({
+      message: "This account has been deleted.",
+      code: ERROR_CODES.ACCOUNT_DELETED,
+      statusCode: HTTP_STATUS.FORBIDDEN,
+    });
   }
 }

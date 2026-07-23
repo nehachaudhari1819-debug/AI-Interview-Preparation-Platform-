@@ -8,7 +8,7 @@ import {
   PersistenceError,
   PersistenceErrorCode,
 } from "../../../../src/persistence/persistence-error.js";
-import { ServiceUnavailableError } from "../../../../src/errors/service-unavailable.error.js";
+
 import type { UserProfile } from "../../../../src/features/users/user-profile.types.js";
 
 describe("UserProfileService", () => {
@@ -83,13 +83,11 @@ describe("UserProfileService", () => {
     );
   });
 
-  it("throws ServiceUnavailableError if repository throws OPERATION_FAILED", async () => {
+  it("lets PersistenceError bubble up if repository throws OPERATION_FAILED", async () => {
     mockRepository.findById.mockRejectedValue(
       new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed"),
     );
 
-    await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(
-      ServiceUnavailableError,
-    );
+    await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(PersistenceError);
   });
 });

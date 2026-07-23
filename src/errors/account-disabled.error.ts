@@ -4,6 +4,10 @@ import { ERROR_CODES } from "../constants/error-codes.constants.js";
 
 export class AccountDisabledError extends AppError {
   public constructor() {
-    super("This account has been disabled.", ERROR_CODES.ACCOUNT_DISABLED, HTTP_STATUS.FORBIDDEN);
+    super({
+      message: "This account has been disabled.",
+      code: ERROR_CODES.ACCOUNT_DISABLED,
+      statusCode: HTTP_STATUS.FORBIDDEN,
+    });
   }
 }

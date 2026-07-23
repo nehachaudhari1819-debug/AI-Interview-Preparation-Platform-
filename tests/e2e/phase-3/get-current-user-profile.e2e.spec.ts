@@ -55,9 +55,7 @@ describe("E2E: Get Current User Profile API", () => {
       .set("Authorization", `Bearer ${validAccessToken}`)
       .expect(HTTP_STATUS.OK);
 
-    expect(response.headers["cache-control"]).toBe(
-      "no-store, no-cache, must-revalidate, proxy-revalidate",
-    );
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.body.success).toBe(true);
     expect(response.body.data.user).toBeDefined();
     expect(response.body.data.user.email).toBe(userIdentity.email);
@@ -69,9 +67,7 @@ describe("E2E: Get Current User Profile API", () => {
   it("GET /api/v1/users/me returns 401 when token is missing and contains no-store", async () => {
     const response = await request(app).get("/api/v1/users/me").expect(HTTP_STATUS.UNAUTHORIZED);
 
-    expect(response.headers["cache-control"]).toBe(
-      "no-store, no-cache, must-revalidate, proxy-revalidate",
-    );
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.body.code).toBe("AUTHENTICATION_REQUIRED");
   });
 
@@ -81,9 +77,7 @@ describe("E2E: Get Current User Profile API", () => {
       .set("Authorization", `Bearer invalid-token`)
       .expect(HTTP_STATUS.UNAUTHORIZED);
 
-    expect(response.headers["cache-control"]).toBe(
-      "no-store, no-cache, must-revalidate, proxy-revalidate",
-    );
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.body.code).toBe("INVALID_ACCESS_TOKEN");
   });
 
