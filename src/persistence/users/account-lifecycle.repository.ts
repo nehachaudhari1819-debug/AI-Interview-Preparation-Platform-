@@ -14,7 +14,7 @@ export type AtomicSoftDeleteInput = {
 };
 
 export type AtomicSoftDeleteResult = {
-  status: "success" | "conflict" | "completed" | "failed";
+  status: "success" | "conflict" | "completed" | "failed" | "processing";
   responseStatus?: number;
   responseBody?: unknown;
   reason?: string;
@@ -31,7 +31,14 @@ export interface AccountLifecycleRepository {
   softDeleteOwnAccount(userId: string): Promise<AccountLifecycleResult>;
 
   /**
-   * Atomically executes the idempotency reservation, soft deletion, audit logging, and idempotency completion.
+   * Prepares the soft deletion by locking the row, reserving idempotency, soft-deleting, and logging an audit event.
    */
-  executeAtomicSoftDelete(input: AtomicSoftDeleteInput): Promise<AtomicSoftDeleteResult>;
+  prepareSoftDelete(input: AtomicSoftDeleteInput): Promise<AtomicSoftDeleteResult>;
+
+  /**
+   * Finalizes the soft deletion by marking idempotency as completed.
+   */
+  finalizeSoftDelete(
+    input: Omit<AtomicSoftDeleteInput, "requestId" | "requestHash">,
+  ): Promise<AtomicSoftDeleteResult>;
 }

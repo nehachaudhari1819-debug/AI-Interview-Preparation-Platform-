@@ -475,10 +475,12 @@ Performance indexing tailored to common API reads:
 
 * **Interviews / Responses**: Default behavior is **Soft Delete** (`deleted_at` timestamp). Frontend queries must filter `deleted_at IS NULL`.
 * **Resumes**: Hard delete storage objects, soft delete analysis record. `extracted_text` must be purged 30 days after completion for data minimization.
-* **Account Deletion**: Request sets `account_status = 'deletion_pending'`. A background job enforces:
-    * Deletion of Supabase Auth record.
-    * Hard deletion of `public.users` (cascading to interviews, responses, PII).
-    * Preservation of `audit_logs` (anonymized via `ON DELETE SET NULL`).
+* **Account Deletion**: Request immediately transitions account to a soft-deleted state.
+    * **Contract Override (Phase 3.5)**: The original Phase 1 requirement for `deletion_pending` transitioning to background hard deletion is superseded. 
+    * `public.users.account_status` is set to `deleted` and `deleted_at` is populated.
+    * `auth.users` and `public.users` identities are explicitly preserved.
+    * Cascading hard deletion of relational data (interviews, responses, PII) is deferred to a future lifecycle phase.
+    * `audit_logs` records the deactivation event immutably.
 * **Raw AI Logs** (`raw_result` JSONB): Retention limited to 14 days for debug tracing. A chron job purges them to save cost.
 
 ---

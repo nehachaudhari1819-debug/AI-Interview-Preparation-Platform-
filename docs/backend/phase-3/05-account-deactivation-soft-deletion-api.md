@@ -1,7 +1,7 @@
 # 1. Title and status
 
 **Title:** Phase 3.5 Account Deactivation and Soft-Deletion API
-**Status:** FORMALLY COMPLETED
+**Status:** IMPLEMENTED — REVIEW PENDING
 
 # 2. Purpose
 
@@ -83,7 +83,7 @@ The service role client is completely isolated inside the `supabase-account-life
 
 # 16. Session-revocation architecture
 
-The `AccountSessionRevocationGateway` accepts the user's `accessToken` to perform a `client.auth.signOut({ scope: "global" })` call. This securely drops refresh sessions on the provider side without requiring admin rights.
+The `AccountSessionRevocationGateway` accepts the user's `accessToken` to perform a `client.auth.admin.signOut(accessToken, "global")` call. This securely drops refresh sessions on the provider side across all devices. Provider failures are strictly caught and handled without exposing raw tokens or user IDs to application logs.
 
 # 17. Refresh-cookie clearing
 
@@ -99,13 +99,19 @@ An immutable `ACCOUNT_DEACTIVATED` event is appended to `public.audit_logs`.
 
 # 20. Failure ordering and recovery
 
-1. Idempotency reserved.
-2. Soft deletion applied.
-3. Audit recorded.
-4. Provider sessions revoked.
-5. Idempotency completed.
+1. **Prepare Phase (RPC)**:
+   - Lock user row (`SELECT FOR UPDATE`).
+   - Recheck idempotency. Reject already deleted accounts.
+   - Reserve idempotency.
+   - Soft deletion applied.
+   - Audit recorded.
+   - Return indicating `session_revocation_required`.
+2. **Service Phase**:
+   - Provider sessions revoked. (If this fails, the operation throws, leaving idempotency safely in `processing`).
+3. **Finalize Phase (RPC)**:
+   - Idempotency completed and safe replay response stored.
 
-Failure in intermediate steps leaves the idempotency record in a state allowing safe retry if not logically fatal.
+Failure in intermediate steps leaves the idempotency record in a state allowing safe retry if not logically fatal. A retry while in `processing` will resume at the session revocation and finalization phase without duplicating the soft-deletion or audit log inserts.
 
 # 21. Controller architecture
 
