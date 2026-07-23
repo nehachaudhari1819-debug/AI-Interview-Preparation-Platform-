@@ -1,4 +1,4 @@
-import type { UserProfile } from "./user-profile.types.js";
+import type { UserProfile, UpdateUserProfileInput } from "./user-profile.types.js";
 import type { UserProfileRepository } from "../../persistence/users/user-profile.repository.js";
 import { UserProfileNotFoundError } from "../../errors/user-profile-not-found.error.js";
 import { AccountDisabledError } from "../../errors/account-disabled.error.js";
@@ -51,7 +51,7 @@ export class UserProfileService {
    */
   public async updateCurrentUserProfile(
     userId: string,
-    input: import("./user-profile.types.js").UpdateUserProfileInput,
+    input: UpdateUserProfileInput,
   ): Promise<UserProfile> {
     try {
       return await this.repository.updateOwnProfile(userId, input);
