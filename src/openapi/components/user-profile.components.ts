@@ -47,4 +47,61 @@ export const userProfileSchemas: Record<string, SchemaObject> = {
       updatedAt: { type: "string", format: "date-time" },
     },
   },
+  UpdateUserProfileRequest: {
+    type: "object",
+    description: "Request body for updating the current user profile. Accepts partial updates.",
+    additionalProperties: false,
+    minProperties: 1,
+    properties: {
+      fullName: {
+        type: "string",
+        minLength: 1,
+        maxLength: 100,
+        description: "The full name of the user.",
+      },
+      college: {
+        type: "string",
+        maxLength: 150,
+        nullable: true,
+      },
+      branch: {
+        type: "string",
+        maxLength: 100,
+        nullable: true,
+      },
+      graduationYear: {
+        type: "integer",
+        minimum: 2000,
+        maximum: 2100,
+        nullable: true,
+      },
+      experienceLevel: {
+        type: "string",
+        enum: ["fresher", "beginner", "intermediate", "advanced"],
+        nullable: true,
+      },
+      preferredRoles: {
+        type: "array",
+        items: {
+          type: "string",
+          minLength: 1,
+          maxLength: 50,
+        },
+        maxItems: 10,
+        nullable: true,
+      },
+      bio: {
+        type: "string",
+        maxLength: 500,
+        nullable: true,
+      },
+      avatarUrl: {
+        type: "string",
+        format: "uri",
+        maxLength: 2048,
+        description: "Must be a valid HTTPS URL.",
+        nullable: true,
+      },
+    },
+  },
 };

@@ -128,4 +128,80 @@ describe("UserProfile API Integration", () => {
     expect(res.status).toBe(HTTP_STATUS.NOT_FOUND);
     expect(res.body.code).toBe("USER_PROFILE_NOT_FOUND");
   });
+
+  describe("PATCH /api/v1/users/me", () => {
+    it("returns 200 and the updated profile successfully", async () => {
+      mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+      mockRepo.updateOwnProfile.mockResolvedValue({ ...validProfile, fullName: "Updated Name" });
+
+      const res = await request(app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", "Bearer valid-token")
+        .send({ fullName: "Updated Name" });
+
+      expect(res.status).toBe(HTTP_STATUS.OK);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.user.fullName).toBe("Updated Name");
+      expect(res.header["cache-control"]).toContain("no-store");
+      expect(mockRepo.updateOwnProfile).toHaveBeenCalledWith(validClaims.sub, {
+        fullName: "Updated Name",
+      });
+    });
+
+    it("returns 422 for empty update object", async () => {
+      mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+
+      const res = await request(app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", "Bearer valid-token")
+        .send({});
+
+      expect(res.status).toBe(HTTP_STATUS.UNPROCESSABLE_ENTITY);
+      expect(res.body.code).toBe("VALIDATION_ERROR");
+      expect(mockRepo.updateOwnProfile).not.toHaveBeenCalled();
+    });
+
+    it("returns 422 for unknown fields", async () => {
+      mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+
+      const res = await request(app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", "Bearer valid-token")
+        .send({ unknownField: "test" });
+
+      expect(res.status).toBe(HTTP_STATUS.UNPROCESSABLE_ENTITY);
+      expect(res.body.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("returns 422 for protected fields like email or id", async () => {
+      mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+
+      const resId = await request(app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", "Bearer valid-token")
+        .send({ id: "123" });
+      expect(resId.status).toBe(HTTP_STATUS.UNPROCESSABLE_ENTITY);
+
+      const resEmail = await request(app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", "Bearer valid-token")
+        .send({ email: "test@example.com" });
+      expect(resEmail.status).toBe(HTTP_STATUS.UNPROCESSABLE_ENTITY);
+    });
+
+    it("returns 404 if profile missing or hidden by RLS", async () => {
+      mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+      mockRepo.updateOwnProfile.mockRejectedValue(
+        new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "Not found"),
+      );
+
+      const res = await request(app)
+        .patch("/api/v1/users/me")
+        .set("Authorization", "Bearer valid-token")
+        .send({ fullName: "Updated Name" });
+
+      expect(res.status).toBe(HTTP_STATUS.NOT_FOUND);
+      expect(res.body.code).toBe("USER_PROFILE_NOT_FOUND");
+    });
+  });
 });

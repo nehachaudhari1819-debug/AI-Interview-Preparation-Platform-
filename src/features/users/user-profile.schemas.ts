@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ValidationError } from "../../errors/validation.error.js";
 import {
   normalizeOptionalString,
   normalizePreferredRoles,
@@ -122,3 +123,15 @@ export const UpdateUserProfileInputSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one approved editable field must be present",
   });
+
+/**
+ * Parses and validates a raw request body into the UpdateUserProfileInput domain type.
+ * Throws ValidationError if validation fails.
+ */
+export function parseUpdateUserProfileRequest(body: unknown) {
+  const result = UpdateUserProfileInputSchema.safeParse(body);
+  if (!result.success) {
+    throw new ValidationError("Request validation failed.", result.error.issues);
+  }
+  return result.data;
+}

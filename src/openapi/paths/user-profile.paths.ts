@@ -56,5 +56,69 @@ export const userProfilePaths: Record<string, PathItemObject> = {
         "503": { $ref: "#/components/responses/ServiceUnavailable" },
       },
     },
+    patch: {
+      tags: ["Users"],
+      summary: "Update current user profile",
+      description:
+        "Partially updates the authenticated user's profile. Rejects unknown or protected fields. Omitted fields remain unchanged.",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        description: "The partial profile data to update.",
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              $ref: "#/components/schemas/UpdateUserProfileRequest",
+            },
+          },
+        },
+      },
+      responses: {
+        "200": {
+          description: "Successful response containing the updated user profile.",
+          headers: {
+            "Cache-Control": {
+              description: "Directives for caching mechanisms in both requests and responses.",
+              schema: {
+                type: "string",
+                example: "no-store, no-cache, must-revalidate, proxy-revalidate",
+              },
+            },
+            "X-Request-ID": { $ref: "#/components/headers/RequestId" },
+          },
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "object",
+                    properties: {
+                      user: {
+                        $ref: "#/components/schemas/UserProfileResponse",
+                      },
+                    },
+                    required: ["user"],
+                  },
+                  meta: {
+                    $ref: "#/components/schemas/ApiMeta",
+                  },
+                },
+                required: ["success", "data", "meta"],
+              },
+            },
+          },
+        },
+        "400": { $ref: "#/components/responses/BadRequest" },
+        "401": { $ref: "#/components/responses/Unauthorized" },
+        "404": { $ref: "#/components/responses/NotFound" },
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" },
+        "422": { $ref: "#/components/responses/ValidationError" },
+        "429": { $ref: "#/components/responses/TooManyRequests" },
+        "500": { $ref: "#/components/responses/InternalServerError" },
+        "503": { $ref: "#/components/responses/ServiceUnavailable" },
+      },
+    },
   },
 };

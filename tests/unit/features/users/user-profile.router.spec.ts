@@ -33,6 +33,7 @@ describe("UserProfileRouter", () => {
   beforeEach(() => {
     mockService = {
       getCurrentUserProfile: jest.fn<any>(),
+      updateCurrentUserProfile: jest.fn<any>(),
     } as unknown as jest.Mocked<UserProfileService>;
 
     mockAuthMiddleware = (req, res, next) => {
@@ -58,6 +59,7 @@ describe("UserProfileRouter", () => {
     });
 
     app = express();
+    app.use(express.json());
     app.use("/api/v1/users", router);
   });
 
@@ -71,5 +73,23 @@ describe("UserProfileRouter", () => {
     expect(response.status).toBe(HTTP_STATUS.OK);
     expect(response.body.success).toBe(true);
     expect(response.body.data.user.id).toBe(validProfile.id);
+  });
+
+  it("PATCH /api/v1/users/me returns 200 with the updated profile", async () => {
+    const updatedProfile = { ...validProfile, fullName: "Updated Name" };
+    mockService.updateCurrentUserProfile.mockResolvedValue(updatedProfile);
+
+    const response = await request(app)
+      .patch("/api/v1/users/me")
+      .set("Authorization", "Bearer valid-token")
+      .send({ fullName: "Updated Name" });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.user.fullName).toBe("Updated Name");
+    expect(mockService.updateCurrentUserProfile).toHaveBeenCalledWith(
+      "d290f1ee-6c54-4b01-90e6-d701748f0851",
+      { fullName: "Updated Name" },
+    );
   });
 });

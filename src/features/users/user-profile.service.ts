@@ -44,6 +44,27 @@ export class UserProfileService {
       throw error;
     }
   }
+
+  /**
+   * Updates the current user profile with partial fields.
+   * Maps not found errors to safe application errors.
+   */
+  public async updateCurrentUserProfile(
+    userId: string,
+    input: import("./user-profile.types.js").UpdateUserProfileInput,
+  ): Promise<UserProfile> {
+    try {
+      return await this.repository.updateOwnProfile(userId, input);
+    } catch (error) {
+      if (
+        error instanceof PersistenceError &&
+        error.code === PersistenceErrorCode.RECORD_NOT_FOUND
+      ) {
+        throw new UserProfileNotFoundError();
+      }
+      throw error;
+    }
+  }
 }
 
 export function createUserProfileService(repository: UserProfileRepository): UserProfileService {

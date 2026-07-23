@@ -3,7 +3,7 @@ import type { RequestHandler } from "express";
 import type { ApplicationConfig } from "../../config/app-config.js";
 import { createAuthenticationMiddleware } from "../../auth/create-authentication-middleware.js";
 import { authNoStoreMiddleware } from "../auth/auth-no-store.middleware.js";
-import { createGetMeController } from "./user-profile.controller.js";
+import { createGetMeController, createUpdateMeController } from "./user-profile.controller.js";
 
 import { createUserProfileServiceMiddleware } from "./user-profile.middleware.js";
 
@@ -26,6 +26,14 @@ export function createUserProfileRouter(options: {
     authMiddleware,
     serviceMiddleware,
     createGetMeController(),
+  );
+
+  router.patch(
+    "/me",
+    authNoStoreMiddleware,
+    authMiddleware,
+    serviceMiddleware,
+    createUpdateMeController(),
   );
 
   return router;

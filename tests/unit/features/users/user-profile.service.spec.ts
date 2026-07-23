@@ -90,4 +90,37 @@ describe("UserProfileService", () => {
 
     await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(PersistenceError);
   });
+
+  describe("updateCurrentUserProfile", () => {
+    it("returns updated profile on success", async () => {
+      const updates = { fullName: "Updated Test User" };
+      const updatedProfile = { ...validProfile, fullName: "Updated Test User" };
+      mockRepository.updateOwnProfile.mockResolvedValue(updatedProfile);
+
+      const result = await service.updateCurrentUserProfile(validProfile.id, updates);
+
+      expect(result).toEqual(updatedProfile);
+      expect(mockRepository.updateOwnProfile).toHaveBeenCalledWith(validProfile.id, updates);
+    });
+
+    it("throws UserProfileNotFoundError if repository throws RECORD_NOT_FOUND", async () => {
+      mockRepository.updateOwnProfile.mockRejectedValue(
+        new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "Not found"),
+      );
+
+      await expect(
+        service.updateCurrentUserProfile(validProfile.id, { fullName: "Test" }),
+      ).rejects.toThrow(UserProfileNotFoundError);
+    });
+
+    it("lets PersistenceError bubble up if repository throws OPERATION_FAILED", async () => {
+      mockRepository.updateOwnProfile.mockRejectedValue(
+        new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed"),
+      );
+
+      await expect(
+        service.updateCurrentUserProfile(validProfile.id, { fullName: "Test" }),
+      ).rejects.toThrow(PersistenceError);
+    });
+  });
 });
