@@ -208,14 +208,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      finalize_soft_delete_account: {
-        Args: {
-          p_user_id: string
-          p_idempotency_key: string
-          p_operation: string
-        }
-        Returns: Json
-      }
+      finalize_soft_delete_account:
+        | {
+            Args: {
+              p_user_id: string
+              p_idempotency_key: string
+              p_operation: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_user_id: string
+              p_idempotency_key: string
+              p_operation: string
+              p_request_id?: string
+            }
+            Returns: Json
+          }
       prepare_soft_delete_account: {
         Args: {
           p_user_id: string
