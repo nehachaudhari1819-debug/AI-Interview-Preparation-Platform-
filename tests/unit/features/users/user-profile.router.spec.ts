@@ -50,8 +50,11 @@ describe("UserProfileRouter", () => {
 
     const router = createUserProfileRouter({
       config,
-      serviceFactory: () => mockService,
       authMiddleware: mockAuthMiddleware,
+      serviceMiddleware: (req, res, next) => {
+        res.locals.userProfileService = mockService;
+        next();
+      },
     });
 
     app = express();

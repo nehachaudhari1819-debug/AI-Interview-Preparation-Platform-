@@ -5,21 +5,27 @@ import { authNoStoreMiddleware } from "../auth/auth-no-store.middleware.js";
 import { createGetMeController } from "./user-profile.controller.js";
 import type { UserProfileService } from "./user-profile.service.js";
 
+import { createUserProfileServiceMiddleware } from "./user-profile.middleware.js";
+
 export function createUserProfileRouter(options: {
   config: Readonly<ApplicationConfig>;
-  serviceFactory: (token: string) => UserProfileService;
   authMiddleware?: ReturnType<typeof createAuthenticationMiddleware>;
+  serviceMiddleware?: express.RequestHandler;
 }): Router {
   const router = Router();
 
   const authMiddleware =
     options.authMiddleware ?? createAuthenticationMiddleware({ config: options.config });
 
+  const serviceMiddleware =
+    options.serviceMiddleware ?? createUserProfileServiceMiddleware(options.config);
+
   router.get(
     "/me",
-    authMiddleware,
     authNoStoreMiddleware,
-    createGetMeController(options.serviceFactory),
+    authMiddleware,
+    serviceMiddleware,
+    createGetMeController(),
   );
 
   return router;

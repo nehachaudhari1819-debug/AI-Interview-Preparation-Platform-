@@ -56,9 +56,7 @@ describe("GetMeController", () => {
     statusMock = jest.fn().mockReturnValue({ json: jsonMock });
 
     req = {
-      headers: {
-        authorization: "Bearer valid-token",
-      },
+      headers: {},
       context: {
         requestId: "req-123",
         authentication: {
@@ -70,14 +68,16 @@ describe("GetMeController", () => {
 
     res = {
       status: statusMock as any,
-      locals: {},
+      locals: {
+        userProfileService: mockService,
+      },
     };
   });
 
   it("returns 200 with the mapped profile", async () => {
     mockService.getCurrentUserProfile.mockResolvedValue(validProfile);
 
-    const handler = createGetMeController(() => mockService);
+    const handler = createGetMeController();
     await handler(req as Request, res as Response, jest.fn());
 
     expect(mockService.getCurrentUserProfile).toHaveBeenCalledWith(validPrincipal.userId);

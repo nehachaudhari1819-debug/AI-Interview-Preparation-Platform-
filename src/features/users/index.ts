@@ -5,4 +5,5 @@ export * from "./user-profile-api.types.js";
 export * from "./user-profile-response.mapper.js";
 export * from "./user-profile.service.js";
 export * from "./user-profile.controller.js";
+export * from "./user-profile.middleware.js";
 export * from "./user-profile.router.js";

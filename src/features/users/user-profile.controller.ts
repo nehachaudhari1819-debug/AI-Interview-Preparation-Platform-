@@ -7,17 +7,15 @@ import { requireAuthenticatedPrincipal } from "../../auth/require-authenticated-
 import type { UserProfileService } from "./user-profile.service.js";
 import { mapUserProfileToResponse } from "./user-profile-response.mapper.js";
 
-export function createGetMeController(serviceFactory: (token: string) => UserProfileService) {
+export function createGetMeController() {
   return asyncHandler(async (req: Request, res: Response) => {
     const principal = requireAuthenticatedPrincipal(req);
+    const service = res.locals.userProfileService as UserProfileService;
 
-    const tokenResult = extractBearerToken(req.headers.authorization);
-
-    if (tokenResult.status !== "present") {
-      throw new Error("Access token missing from authenticated request context");
+    if (!service) {
+      throw new Error("UserProfileService not found in request context");
     }
 
-    const service = serviceFactory(tokenResult.token);
     const profile = await service.getCurrentUserProfile(principal.userId);
     const safeResponse = mapUserProfileToResponse(profile);
 

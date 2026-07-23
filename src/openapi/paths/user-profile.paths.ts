@@ -10,11 +10,22 @@ export const userProfilePaths: Record<string, PathItemObject> = {
       responses: {
         "200": {
           description: "Successful response containing the user profile.",
+          headers: {
+            "Cache-Control": {
+              description: "Directives for caching mechanisms in both requests and responses.",
+              schema: {
+                type: "string",
+                example: "no-store, no-cache, must-revalidate, proxy-revalidate",
+              },
+            },
+            "X-Request-ID": { $ref: "#/components/headers/RequestId" },
+          },
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
+                  success: { type: "boolean", example: true },
                   data: {
                     type: "object",
                     properties: {
@@ -24,29 +35,21 @@ export const userProfilePaths: Record<string, PathItemObject> = {
                     },
                     required: ["user"],
                   },
+                  meta: {
+                    $ref: "#/components/schemas/ApiMeta",
+                  },
                 },
+                required: ["success", "data", "meta"],
               },
             },
           },
         },
-        "401": {
-          description: "Authentication is missing or invalid.",
-        },
-        "403": {
-          description: "The user account is inactive or pending deletion.",
-        },
-        "404": {
-          description: "The user profile could not be found.",
-        },
-        "429": {
-          description: "Rate limit exceeded.",
-        },
-        "500": {
-          description: "Internal server error.",
-        },
-        "503": {
-          description: "Service unavailable (e.g., persistence layer unreachable).",
-        },
+        "401": { $ref: "#/components/responses/Unauthorized" },
+        "403": { $ref: "#/components/responses/Forbidden" },
+        "404": { $ref: "#/components/responses/NotFound" },
+        "429": { $ref: "#/components/responses/TooManyRequests" },
+        "500": { $ref: "#/components/responses/InternalServerError" },
+        "503": { $ref: "#/components/responses/ServiceUnavailable" },
       },
     },
   },

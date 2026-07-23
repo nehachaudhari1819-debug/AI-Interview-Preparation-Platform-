@@ -1,7 +1,8 @@
 import type { UserProfile } from "./user-profile.types.js";
 import type { UserProfileRepository } from "../../persistence/users/user-profile.repository.js";
 import { UserProfileNotFoundError } from "../../errors/user-profile-not-found.error.js";
-import { AccountInactiveError } from "../../errors/account-inactive.error.js";
+import { AccountDisabledError } from "../../errors/account-disabled.error.js";
+import { AccountDeletedError } from "../../errors/account-deleted.error.js";
 import { PersistenceError, PersistenceErrorCode } from "../../persistence/persistence-error.js";
 import { ServiceUnavailableError } from "../../errors/service-unavailable.error.js";
 
@@ -17,13 +18,17 @@ export class UserProfileService {
     try {
       const profile = await this.repository.findById(userId);
 
-      if (profile.accountStatus !== "active" || profile.deletedAt !== null) {
-        throw new AccountInactiveError();
+      if (profile.accountStatus !== "active") {
+        throw new AccountDisabledError();
+      }
+
+      if (profile.deletedAt !== null) {
+        throw new AccountDeletedError();
       }
 
       return profile;
     } catch (error) {
-      if (error instanceof AccountInactiveError) {
+      if (error instanceof AccountDisabledError || error instanceof AccountDeletedError) {
         throw error;
       }
 
@@ -31,10 +36,9 @@ export class UserProfileService {
         if (error.code === PersistenceErrorCode.RECORD_NOT_FOUND) {
           throw new UserProfileNotFoundError();
         }
-        throw new ServiceUnavailableError();
       }
 
-      throw new ServiceUnavailableError();
+      throw error;
     }
   }
 }
