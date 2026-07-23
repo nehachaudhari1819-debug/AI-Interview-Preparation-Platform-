@@ -10,7 +10,7 @@ import type { UserProfileRepository } from "../../src/persistence/users/user-pro
 import { createUserProfileService } from "../../src/features/users/user-profile.service.js";
 import type { UserProfile } from "../../src/features/users/user-profile.types.js";
 import { HTTP_STATUS } from "../../src/constants/http.constants.js";
-import { AccountInactiveError } from "../../src/errors/account-inactive.error.js";
+
 import { PersistenceError, PersistenceErrorCode } from "../../src/persistence/persistence-error.js";
 
 describe("UserProfile API Integration", () => {
@@ -97,7 +97,7 @@ describe("UserProfile API Integration", () => {
       .set("Authorization", "Bearer valid-token");
 
     expect(res.status).toBe(HTTP_STATUS.FORBIDDEN);
-    expect(res.body.code).toBe("ACCOUNT_INACTIVE");
+    expect(res.body.code).toBe("ACCOUNT_DISABLED");
   });
 
   it("returns 403 if account is pending deletion", async () => {
@@ -109,7 +109,7 @@ describe("UserProfile API Integration", () => {
       .set("Authorization", "Bearer valid-token");
 
     expect(res.status).toBe(HTTP_STATUS.FORBIDDEN);
-    expect(res.body.code).toBe("ACCOUNT_INACTIVE");
+    expect(res.body.code).toBe("ACCOUNT_DELETED");
   });
 
   it("returns 404 if profile not found", async () => {

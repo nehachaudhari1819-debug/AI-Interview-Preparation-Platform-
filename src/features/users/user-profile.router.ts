@@ -1,4 +1,5 @@
 import { Router } from "express";
+import type { RequestHandler } from "express";
 import type { ApplicationConfig } from "../../config/app-config.js";
 import { createAuthenticationMiddleware } from "../../auth/create-authentication-middleware.js";
 import { authNoStoreMiddleware } from "../auth/auth-no-store.middleware.js";
@@ -10,7 +11,7 @@ import { createUserProfileServiceMiddleware } from "./user-profile.middleware.js
 export function createUserProfileRouter(options: {
   config: Readonly<ApplicationConfig>;
   authMiddleware?: ReturnType<typeof createAuthenticationMiddleware>;
-  serviceMiddleware?: express.RequestHandler;
+  serviceMiddleware?: RequestHandler;
 }): Router {
   const router = Router();
 

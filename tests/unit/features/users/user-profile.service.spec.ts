@@ -1,7 +1,8 @@
 import { jest } from "@jest/globals";
 import { UserProfileService } from "../../../../src/features/users/user-profile.service.js";
 import type { UserProfileRepository } from "../../../../src/persistence/users/user-profile.repository.js";
-import { AccountInactiveError } from "../../../../src/errors/account-inactive.error.js";
+import { AccountDisabledError } from "../../../../src/errors/account-disabled.error.js";
+import { AccountDeletedError } from "../../../../src/errors/account-deleted.error.js";
 import { UserProfileNotFoundError } from "../../../../src/errors/user-profile-not-found.error.js";
 import {
   PersistenceError,
@@ -50,25 +51,25 @@ describe("UserProfileService", () => {
     expect(mockRepository.findById).toHaveBeenCalledWith(validProfile.id);
   });
 
-  it("throws AccountInactiveError if accountStatus is not active", async () => {
+  it("throws AccountDisabledError if accountStatus is not active", async () => {
     mockRepository.findById.mockResolvedValue({
       ...validProfile,
       accountStatus: "suspended",
     });
 
     await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(
-      AccountInactiveError,
+      AccountDisabledError,
     );
   });
 
-  it("throws AccountInactiveError if deletedAt is not null", async () => {
+  it("throws AccountDeletedError if deletedAt is not null", async () => {
     mockRepository.findById.mockResolvedValue({
       ...validProfile,
       deletedAt: new Date(),
     });
 
     await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(
-      AccountInactiveError,
+      AccountDeletedError,
     );
   });
 
