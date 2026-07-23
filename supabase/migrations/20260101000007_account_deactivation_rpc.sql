@@ -52,6 +52,10 @@ BEGIN
         END IF;
 
         IF v_reservation_status = 'failed' THEN
+            SELECT account_status::text INTO v_account_status FROM public.users WHERE id = p_user_id;
+            IF v_account_status = 'deleted' THEN
+                RETURN jsonb_build_object('status', 'failed', 'reason', 'account_already_deleted');
+            END IF;
             RETURN jsonb_build_object('status', 'failed');
         END IF;
 
@@ -111,9 +115,9 @@ BEGIN
         SELECT status::text INTO v_record_status
         FROM public.idempotency_records
         WHERE user_id = p_user_id AND operation = p_operation AND idempotency_key = p_idempotency_key;
-        
+
         -- We don't really care about fetching the actual response here because it's guaranteed to be the static deletion response
-        IF v_record_status != 'completed' THEN
+        IF v_record_status IS DISTINCT FROM 'completed' THEN
              RETURN jsonb_build_object('status', 'failed', 'reason', 'record_not_processing_nor_completed');
         END IF;
     END IF;
