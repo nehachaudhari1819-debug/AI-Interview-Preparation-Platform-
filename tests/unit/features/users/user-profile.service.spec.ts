@@ -4,6 +4,7 @@ import type { UserProfileRepository } from "../../../../src/persistence/users/us
 import { AccountDisabledError } from "../../../../src/errors/account-disabled.error.js";
 import { AccountDeletedError } from "../../../../src/errors/account-deleted.error.js";
 import { UserProfileNotFoundError } from "../../../../src/errors/user-profile-not-found.error.js";
+import { ServiceUnavailableError } from "../../../../src/errors/service-unavailable.error.js";
 import {
   PersistenceError,
   PersistenceErrorCode,
@@ -83,12 +84,12 @@ describe("UserProfileService", () => {
     );
   });
 
-  it("lets PersistenceError bubble up if repository throws OPERATION_FAILED", async () => {
+  it("throws ServiceUnavailableError if repository throws OPERATION_FAILED", async () => {
     mockRepository.findById.mockRejectedValue(
       new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed"),
     );
 
-    await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(PersistenceError);
+    await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(ServiceUnavailableError);
   });
 
   describe("updateCurrentUserProfile", () => {
@@ -113,14 +114,14 @@ describe("UserProfileService", () => {
       ).rejects.toThrow(UserProfileNotFoundError);
     });
 
-    it("lets PersistenceError bubble up if repository throws OPERATION_FAILED", async () => {
+    it("throws ServiceUnavailableError if repository throws OPERATION_FAILED", async () => {
       mockRepository.updateOwnProfile.mockRejectedValue(
         new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed"),
       );
 
       await expect(
         service.updateCurrentUserProfile(validProfile.id, { fullName: "Test" }),
-      ).rejects.toThrow(PersistenceError);
+      ).rejects.toThrow(ServiceUnavailableError);
     });
   });
 });
