@@ -23,8 +23,6 @@ export function normalizeRequiredString(value: string): string {
  * - Null normalizes to an empty array.
  * - Trims each item.
  * - Deduplicates values while preserving the first occurrence order.
- * - Removes empty strings (validation rejects them if present, but we should probably preserve empty strings so validation can reject them, or maybe the normalizer doesn't filter them so the schema can reject them as required by "Empty role strings after trimming must be rejected").
- * Actually, the requirement says "Empty role strings after trimming must be rejected". So we must return them so validation catches it, or throw an error? Validation should catch it.
  */
 export function normalizePreferredRoles(roles: string[] | null | undefined): string[] {
   if (roles === null || roles === undefined) {

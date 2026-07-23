@@ -29,10 +29,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
     }
 
     if (!data) {
-      throw new PersistenceError(
-        PersistenceErrorCode.RECORD_NOT_FOUND,
-        `User profile not found for id: ${id}`,
-      );
+      throw new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "User profile not found");
     }
 
     return mapUserProfileRowToDomain(data);
@@ -60,7 +57,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       // generally means the profile wasn't found OR the user lacks permission to update it.
       throw new PersistenceError(
         PersistenceErrorCode.RECORD_NOT_FOUND,
-        `User profile not found or access denied for id: ${id}`,
+        "User profile not found or access denied",
       );
     }
 

@@ -62,10 +62,7 @@ describe("SupabaseUserProfileRepository", () => {
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       await expect(repository.findById("123")).rejects.toThrowError(
-        new PersistenceError(
-          PersistenceErrorCode.RECORD_NOT_FOUND,
-          "User profile not found for id: 123",
-        ),
+        new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "User profile not found"),
       );
     });
 
@@ -129,7 +126,7 @@ describe("SupabaseUserProfileRepository", () => {
       await expect(repository.updateOwnProfile("123", {})).rejects.toThrowError(
         new PersistenceError(
           PersistenceErrorCode.RECORD_NOT_FOUND,
-          "User profile not found or access denied for id: 123",
+          "User profile not found or access denied",
         ),
       );
     });

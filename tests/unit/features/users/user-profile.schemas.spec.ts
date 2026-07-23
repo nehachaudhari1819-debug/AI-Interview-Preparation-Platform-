@@ -51,6 +51,33 @@ describe("User Profile Schemas", () => {
       expect(result.success).toBe(true);
     });
 
+    it("fails if unexpected keys are present", () => {
+      const profile = {
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        email: "test@example.com",
+        fullName: "Test User",
+        college: "Test College",
+        branch: "CS",
+        graduationYear: 2026,
+        experienceLevel: "beginner",
+        preferredRoles: ["developer"],
+        bio: "Test bio",
+        avatarUrl: "https://example.com/avatar.png",
+        role: "student",
+        accountStatus: "active",
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+        updatedAt: new Date("2026-01-01T00:00:00Z"),
+        deletedAt: null,
+        unexpectedKey: "should fail",
+      };
+
+      const result = UserProfileSchema.safeParse(profile);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].code).toBe("unrecognized_keys");
+      }
+    });
+
     it("rejects invalid UUID", () => {
       const result = UserProfileSchema.safeParse({ id: "invalid-uuid" });
       expect(result.success).toBe(false);

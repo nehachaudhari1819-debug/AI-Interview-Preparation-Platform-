@@ -24,34 +24,36 @@ const AccountStatusSchema = z.enum(["active", "suspended", "deletion_pending", "
  * Schema for validating an internal mapped domain profile.
  * Represents the canonical truth of a UserProfile.
  */
-export const UserProfileSchema = z.object({
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  id: z.string().uuid(),
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  email: z.string().email(),
-  fullName: z.string().min(1).max(100),
-  college: z.string().max(150).nullable(),
-  branch: z.string().max(100).nullable(),
-  graduationYear: z.number().int().min(2000).max(2100).nullable(),
-  experienceLevel: ExperienceLevelSchema.nullable(),
-  preferredRoles: z.array(z.string().min(1).max(50)).max(10),
-  bio: z.string().max(500).nullable(),
-  avatarUrl: z
-    .string()
+export const UserProfileSchema = z
+  .object({
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    .url()
-    .max(2048)
-    .refine((url) => url.startsWith("https://"), {
-      message: "Avatar URL must use HTTPS",
-    })
-    .nullable(),
-  role: RoleSchema,
+    id: z.string().uuid(),
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    email: z.string().email(),
+    fullName: z.string().min(1).max(100),
+    college: z.string().max(150).nullable(),
+    branch: z.string().max(100).nullable(),
+    graduationYear: z.number().int().min(2000).max(2100).nullable(),
+    experienceLevel: ExperienceLevelSchema.nullable(),
+    preferredRoles: z.array(z.string().min(1).max(50)).max(10),
+    bio: z.string().max(500).nullable(),
+    avatarUrl: z
+      .string()
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      .url()
+      .max(2048)
+      .refine((url) => url.startsWith("https://"), {
+        message: "Avatar URL must use HTTPS",
+      })
+      .nullable(),
+    role: RoleSchema,
 
-  accountStatus: AccountStatusSchema,
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
-});
+    accountStatus: AccountStatusSchema,
+    createdAt: z.date(),
+    updatedAt: z.date(),
+    deletedAt: z.date().nullable(),
+  })
+  .strict();
 
 /**
  * Schema for validating and normalizing editable input.
