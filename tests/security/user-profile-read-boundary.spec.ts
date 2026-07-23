@@ -105,7 +105,7 @@ describe("Security: User Profile Read Boundary", () => {
     const res = await request(app).get("/api/v1/users/me").set("Authorization", "Bearer token");
 
     expect(res.status).toBe(HTTP_STATUS.FORBIDDEN);
-    expect(res.body.code).toBe("ACCOUNT_INACTIVE");
+    expect(res.body.code).toBe("ACCOUNT_DISABLED");
   });
 
   it("prevents reading profile of a user pending deletion", async () => {
@@ -115,7 +115,7 @@ describe("Security: User Profile Read Boundary", () => {
     const res = await request(app).get("/api/v1/users/me").set("Authorization", "Bearer token");
 
     expect(res.status).toBe(HTTP_STATUS.FORBIDDEN);
-    expect(res.body.code).toBe("ACCOUNT_INACTIVE");
+    expect(res.body.code).toBe("ACCOUNT_DELETED");
   });
 
   it("strips internal domain fields from the response payload", async () => {

@@ -18,7 +18,9 @@
   "paths": {
     "/health": {
       "get": {
-        "tags": ["Operational"],
+        "tags": [
+          "Operational"
+        ],
         "summary": "Liveness probe",
         "description": "Returns a 200 OK status if the application process is running.",
         "operationId": "getHealth",
@@ -31,7 +33,9 @@
     },
     "/health/ready": {
       "get": {
-        "tags": ["Operational"],
+        "tags": [
+          "Operational"
+        ],
         "summary": "Readiness probe",
         "description": "Returns a 200 OK status if the application is ready to accept traffic. Returns 503 if unavailable.",
         "operationId": "getHealthReady",
@@ -47,7 +51,9 @@
     },
     "/api/v1/auth/register": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Register a new user",
         "description": "Registers a new user. Returns a session if auto-confirm is enabled, otherwise returns a pending verification status.",
         "operationId": "registerUser",
@@ -79,7 +85,9 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Authenticate a user",
         "description": "Authenticates a user with email and password, returning an access token and setting a secure HttpOnly refresh cookie.",
         "operationId": "loginUser",
@@ -111,7 +119,9 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Refresh session",
         "description": "Exchanges a valid refresh cookie for a new access token.",
         "operationId": "refreshSession",
@@ -135,7 +145,9 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Logout user",
         "description": "Logs out the user and clears the session cookie.",
         "operationId": "logoutUser",
@@ -148,7 +160,9 @@
     },
     "/api/v1/auth/me": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Get current user profile",
         "description": "Retrieves the authenticated user's profile information.",
         "operationId": "getCurrentUser",
@@ -169,7 +183,9 @@
     },
     "/api/v1/users/me": {
       "get": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Get current user profile",
         "description": "Retrieves the canonical profile of the currently authenticated active user.",
         "security": [
@@ -208,13 +224,19 @@
                           "$ref": "#/components/schemas/UserProfileResponse"
                         }
                       },
-                      "required": ["user"]
+                      "required": [
+                        "user"
+                      ]
                     },
                     "meta": {
                       "$ref": "#/components/schemas/ApiMeta"
                     }
                   },
-                  "required": ["success", "data", "meta"]
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ]
                 }
               }
             }
@@ -245,7 +267,9 @@
     "schemas": {
       "ApiMeta": {
         "type": "object",
-        "required": ["requestId"],
+        "required": [
+          "requestId"
+        ],
         "properties": {
           "requestId": {
             "type": "string",
@@ -257,7 +281,9 @@
       },
       "ApiFieldError": {
         "type": "object",
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "properties": {
           "field": {
             "type": "string",
@@ -271,7 +297,12 @@
       },
       "StandardErrorResponse": {
         "type": "object",
-        "required": ["success", "message", "code", "meta"],
+        "required": [
+          "success",
+          "message",
+          "code",
+          "meta"
+        ],
         "properties": {
           "success": {
             "type": "boolean",
@@ -300,7 +331,10 @@
       },
       "RegisterRequest": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -318,7 +352,10 @@
       },
       "LoginRequest": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -336,7 +373,10 @@
       },
       "SafeAuthUser": {
         "type": "object",
-        "required": ["id", "isAnonymous"],
+        "required": [
+          "id",
+          "isAnonymous"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -364,11 +404,20 @@
       },
       "AuthenticatedSessionResponse": {
         "type": "object",
-        "required": ["status", "accessToken", "tokenType", "expiresIn", "expiresAt", "user"],
+        "required": [
+          "status",
+          "accessToken",
+          "tokenType",
+          "expiresIn",
+          "expiresAt",
+          "user"
+        ],
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["authenticated"],
+            "enum": [
+              "authenticated"
+            ],
             "example": "authenticated"
           },
           "accessToken": {
@@ -378,7 +427,9 @@
           },
           "tokenType": {
             "type": "string",
-            "enum": ["Bearer"],
+            "enum": [
+              "Bearer"
+            ],
             "example": "Bearer"
           },
           "expiresIn": {
@@ -398,11 +449,16 @@
       },
       "RegistrationPendingResponse": {
         "type": "object",
-        "required": ["status", "message"],
+        "required": [
+          "status",
+          "message"
+        ],
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["verification_required"],
+            "enum": [
+              "verification_required"
+            ],
             "example": "verification_required"
           },
           "message": {
@@ -427,22 +483,32 @@
       },
       "LivenessResponse": {
         "type": "object",
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["ok"],
+            "enum": [
+              "ok"
+            ],
             "example": "ok"
           }
         }
       },
       "ReadinessReadyResponse": {
         "type": "object",
-        "required": ["status", "state", "uptime"],
+        "required": [
+          "status",
+          "state",
+          "uptime"
+        ],
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["ready"],
+            "enum": [
+              "ready"
+            ],
             "example": "ready"
           },
           "state": {
@@ -459,11 +525,16 @@
       },
       "ReadinessUnavailableResponse": {
         "type": "object",
-        "required": ["status", "state"],
+        "required": [
+          "status",
+          "state"
+        ],
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["unavailable"],
+            "enum": [
+              "unavailable"
+            ],
             "example": "unavailable"
           },
           "state": {
@@ -528,7 +599,12 @@
           },
           "experienceLevel": {
             "type": "string",
-            "enum": ["fresher", "beginner", "intermediate", "advanced"],
+            "enum": [
+              "fresher",
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
             "nullable": true
           },
           "preferredRoles": {
@@ -548,11 +624,19 @@
           },
           "role": {
             "type": "string",
-            "enum": ["student", "admin"]
+            "enum": [
+              "student",
+              "admin"
+            ]
           },
           "accountStatus": {
             "type": "string",
-            "enum": ["active", "suspended", "deletion_pending", "deleted"]
+            "enum": [
+              "active",
+              "suspended",
+              "deletion_pending",
+              "deleted"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -803,11 +887,17 @@
           "application/json": {
             "schema": {
               "type": "object",
-              "required": ["success", "data", "meta"],
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
               "properties": {
                 "success": {
                   "type": "boolean",
-                  "enum": [true],
+                  "enum": [
+                    true
+                  ],
                   "example": true
                 },
                 "data": {
@@ -838,11 +928,17 @@
           "application/json": {
             "schema": {
               "type": "object",
-              "required": ["success", "data", "meta"],
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
               "properties": {
                 "success": {
                   "type": "boolean",
-                  "enum": [true],
+                  "enum": [
+                    true
+                  ],
                   "example": true
                 },
                 "data": {
@@ -873,11 +969,17 @@
           "application/json": {
             "schema": {
               "type": "object",
-              "required": ["success", "data", "meta"],
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
               "properties": {
                 "success": {
                   "type": "boolean",
-                  "enum": [true],
+                  "enum": [
+                    true
+                  ],
                   "example": true
                 },
                 "data": {
@@ -902,11 +1004,17 @@
           "application/json": {
             "schema": {
               "type": "object",
-              "required": ["success", "data", "meta"],
+              "required": [
+                "success",
+                "data",
+                "meta"
+              ],
               "properties": {
                 "success": {
                   "type": "boolean",
-                  "enum": [true],
+                  "enum": [
+                    true
+                  ],
                   "example": true
                 },
                 "data": {
