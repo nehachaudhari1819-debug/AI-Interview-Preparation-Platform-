@@ -18,10 +18,10 @@ export class AccountDeletionService {
     // For this endpoint with no body, the hash can just be empty or static, but we'll hash the operation to be safe
     const requestHash = crypto.createHash("sha256").update(operation).digest("hex");
 
-    let rpcResult;
+    let prepareResult;
     try {
-      // 1-3. Execute Atomic RPC (Reserve Idempotency, Soft-Delete, Audit, Complete Idempotency)
-      rpcResult = await this.deps.lifecycleRepo.executeAtomicSoftDelete({
+      // 1. Prepare Soft Deletion (Lock, Reserve, Delete, Audit)
+      prepareResult = await this.deps.lifecycleRepo.prepareSoftDelete({
         userId: input.userId,
         idempotencyKey: input.idempotencyKey,
         requestId: input.requestId,
@@ -30,9 +30,6 @@ export class AccountDeletionService {
       });
     } catch (error: unknown) {
       if (PersistenceError.is(error)) {
-        // We do not have granular 'RECORD_NOT_FOUND' out of the RPC currently if the user simply didn't exist,
-        // but the RPC doesn't fail, it just updates 0 rows.
-        // We will assume 503 for all DB failures as before
         throw new AppError({
           statusCode: 503,
           code: "SERVICE_UNAVAILABLE",
@@ -42,7 +39,7 @@ export class AccountDeletionService {
       throw error;
     }
 
-    if (rpcResult.status === "conflict") {
+    if (prepareResult.status === "conflict") {
       throw new AppError({
         statusCode: 409,
         code: "IDEMPOTENCY_CONFLICT",
@@ -50,7 +47,21 @@ export class AccountDeletionService {
       });
     }
 
-    if (rpcResult.status === "failed") {
+    if (prepareResult.status === "failed") {
+      if (prepareResult.reason === "account_already_deleted") {
+        throw new AppError({
+          statusCode: 403,
+          code: "ACCOUNT_DELETED",
+          message: "Account is already deleted.",
+        });
+      }
+      if (prepareResult.reason === "user_not_found") {
+        throw new AppError({
+          statusCode: 404,
+          code: "USER_NOT_FOUND",
+          message: "User not found.",
+        });
+      }
       throw new AppError({
         statusCode: 500,
         code: "INTERNAL_SERVER_ERROR",
@@ -58,23 +69,47 @@ export class AccountDeletionService {
       });
     }
 
-    // Whether "processing", "completed", or "success", we have successfully processed it
-    // or it was already completed (idempotency replay).
-    // Now we must revoke sessions for safety. We do this even on replay to ensure no stale sessions exist.
-    try {
-      // 4. Revoke sessions via Supabase Auth Admin API
-      await this.deps.sessionGateway.revokeAllUserSessions({
-        accessToken: input.accessToken,
-        userId: input.userId,
-      });
-    } catch (error) {
-      // Log session revocation failure, but do not fail the soft-deletion response
-      // since the DB state is already permanently mutated successfully.
-      // A background job or the RLS policies will handle ongoing protections.
-      console.warn(`Failed to revoke sessions for user ${input.userId}`, error);
+    if (prepareResult.status === "completed") {
+      // Return the cached successful response
+      return prepareResult.responseBody as AccountDeletionResult;
     }
 
-    // Return the response body which contains the success status
-    return rpcResult.responseBody as AccountDeletionResult;
+    // At this point, status === "processing" and reason === "session_revocation_required"
+    // 2. Revoke sessions via Supabase Auth Admin API
+    // We MUST NOT swallow errors here. If this fails, the service throws, leaving the operation in processing.
+    await this.deps.sessionGateway.revokeAllUserSessions({
+      accessToken: input.accessToken,
+      userId: input.userId, // Although gateway might not use it directly in API, it accepts it.
+    });
+
+    // 3. Finalize the Soft Deletion
+    let finalizeResult;
+    try {
+      finalizeResult = await this.deps.lifecycleRepo.finalizeSoftDelete({
+        userId: input.userId,
+        idempotencyKey: input.idempotencyKey,
+        operation,
+      });
+    } catch (error: unknown) {
+      if (PersistenceError.is(error)) {
+        throw new AppError({
+          statusCode: 503,
+          code: "SERVICE_UNAVAILABLE",
+          message: "Service is temporarily unavailable.",
+        });
+      }
+      throw error;
+    }
+
+    if (finalizeResult.status === "completed") {
+      return finalizeResult.responseBody as AccountDeletionResult;
+    }
+
+    // Fallback if finalization somehow failed
+    throw new AppError({
+      statusCode: 500,
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to finalize account deletion.",
+    });
   }
 }

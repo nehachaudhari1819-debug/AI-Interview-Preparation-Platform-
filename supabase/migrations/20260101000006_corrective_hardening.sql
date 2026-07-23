@@ -31,6 +31,17 @@ security definer
 set search_path = ''
 as $$
 begin
+  -- Allow ON DELETE SET NULL cascades from public.users
+  if TG_OP = 'UPDATE' and old.actor_user_id is not null and new.actor_user_id is null then
+    if old.id = new.id and old.actor_type = new.actor_type and old.action = new.action 
+       and old.resource_type = new.resource_type and old.resource_id is not distinct from new.resource_id
+       and old.metadata = new.metadata and old.request_id is not distinct from new.request_id
+       and old.ip_address is not distinct from new.ip_address and old.user_agent is not distinct from new.user_agent
+       and old.created_at = new.created_at then
+       return new;
+    end if;
+  end if;
+
   raise exception 'audit logs are immutable';
 end;
 $$;

@@ -57,10 +57,10 @@ export function createSupabaseAccountLifecycleRepository(
       }
     },
 
-    async executeAtomicSoftDelete(input: AtomicSoftDeleteInput): Promise<AtomicSoftDeleteResult> {
+    async prepareSoftDelete(input: AtomicSoftDeleteInput): Promise<AtomicSoftDeleteResult> {
       try {
         const client = getClient();
-        const { data, error } = await client.rpc("soft_delete_account_atomic", {
+        const { data, error } = await client.rpc("prepare_soft_delete_account", {
           p_user_id: input.userId,
           p_idempotency_key: input.idempotencyKey,
           p_request_id: input.requestId,
@@ -69,13 +69,13 @@ export function createSupabaseAccountLifecycleRepository(
         });
 
         if (error) {
-          throw normalizeSupabaseError(error, { operation: "soft_delete_atomic" });
+          throw normalizeSupabaseError(error, { operation: "prepare_soft_delete" });
         }
 
         if (!data) {
           throw new PersistenceError(
             PersistenceErrorCode.OPERATION_FAILED,
-            "RPC soft_delete_account_atomic returned null.",
+            "RPC prepare_soft_delete_account returned null.",
           );
         }
 
@@ -92,15 +92,62 @@ export function createSupabaseAccountLifecycleRepository(
           ...(r.response_status ? { responseStatus: r.response_status } : {}),
           ...(r.response_body ? { responseBody: r.response_body } : {}),
           ...(r.reason ? { reason: r.reason } : {}),
-        } as AtomicSoftDeleteResult;
+        };
       } catch (err: unknown) {
         if (PersistenceError.is(err)) {
           throw err;
         }
-        console.error("RPC soft deletion failed:", err);
+        console.error("RPC prepare soft deletion failed:", err);
         throw new PersistenceError(
           PersistenceErrorCode.OPERATION_FAILED,
-          "Failed to execute atomic soft deletion RPC.",
+          "Failed to execute prepare soft deletion.",
+        );
+      }
+    },
+
+    async finalizeSoftDelete(
+      input: Omit<AtomicSoftDeleteInput, "requestId" | "requestHash">,
+    ): Promise<AtomicSoftDeleteResult> {
+      try {
+        const client = getClient();
+        const { data, error } = await client.rpc("finalize_soft_delete_account", {
+          p_user_id: input.userId,
+          p_idempotency_key: input.idempotencyKey,
+          p_operation: input.operation,
+        });
+
+        if (error) {
+          throw normalizeSupabaseError(error, { operation: "finalize_soft_delete" });
+        }
+
+        if (!data) {
+          throw new PersistenceError(
+            PersistenceErrorCode.OPERATION_FAILED,
+            "RPC finalize_soft_delete_account returned null.",
+          );
+        }
+
+        type RpcResponse = {
+          status: "processing" | "completed" | "success" | "failed" | "conflict";
+          response_status?: number;
+          response_body?: unknown;
+          reason?: string;
+        };
+        const r = data as unknown as RpcResponse;
+        return {
+          status: r.status,
+          ...(r.response_status ? { responseStatus: r.response_status } : {}),
+          ...(r.response_body ? { responseBody: r.response_body } : {}),
+          ...(r.reason ? { reason: r.reason } : {}),
+        };
+      } catch (err: unknown) {
+        if (PersistenceError.is(err)) {
+          throw err;
+        }
+        console.error("RPC finalize soft deletion failed:", err);
+        throw new PersistenceError(
+          PersistenceErrorCode.OPERATION_FAILED,
+          "Failed to execute finalize soft deletion.",
         );
       }
     },

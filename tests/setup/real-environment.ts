@@ -104,6 +104,7 @@ export async function cleanupTestUser(userId: string) {
   if (!userId) return;
   const { error } = await testAdminClient.auth.admin.deleteUser(userId);
   if (error) {
-    console.error(`Failed to cleanup test user ${userId}:`, error.message);
+    // Some Supabase errors don't have a message property or it's an object, so stringify the whole error to debug
+    console.error(`Failed to cleanup test user ${userId}:`, JSON.stringify(error, null, 2));
   }
 }
