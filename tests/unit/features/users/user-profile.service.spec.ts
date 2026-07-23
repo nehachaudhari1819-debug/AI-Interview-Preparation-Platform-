@@ -89,7 +89,9 @@ describe("UserProfileService", () => {
       new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed"),
     );
 
-    await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(ServiceUnavailableError);
+    await expect(service.getCurrentUserProfile(validProfile.id)).rejects.toThrow(
+      ServiceUnavailableError,
+    );
   });
 
   describe("updateCurrentUserProfile", () => {
