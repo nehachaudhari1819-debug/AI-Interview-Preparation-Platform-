@@ -114,7 +114,7 @@ Phase 3 defines exactly three endpoints:
 **Required failure scenarios:**
 
 - **Missing bearer token:** `401 Unauthorized` (`AUTHENTICATION_REQUIRED`)
-- **Malformed authorization header:** `401 Unauthorized` (`AUTHENTICATION_REQUIRED`)
+- **Malformed authorization header:** `401 Unauthorized` (`INVALID_AUTHORIZATION_HEADER`)
 - **Invalid access token:** `401 Unauthorized` (`INVALID_ACCESS_TOKEN`)
 - **Expired access token:** `401 Unauthorized` (`ACCESS_TOKEN_EXPIRED`)
 - **Profile not found:** `404 Not Found` (`USER_PROFILE_NOT_FOUND`)
@@ -127,6 +127,7 @@ Phase 3 defines exactly three endpoints:
 
 ```json
 {
+  "success": true,
   "data": {
     "user": {
       "id": "00000000-0000-4000-8000-000000000001",
@@ -180,16 +181,16 @@ Phase 3 defines exactly three endpoints:
 - `deletedAt`
 
 **Security contract:**
-The API must **reject** unknown and protected fields with a `400 Bad Request` schema validation error (`USER_PROFILE_UPDATE_INVALID` or `PROFILE_FIELD_NOT_EDITABLE`). Stripping protected fields silently is not permitted as it hides potential client issues or malicious intent.
+The API must **reject** unknown and protected fields with a `422 Unprocessable Entity` schema validation error (`VALIDATION_ERROR`). Stripping protected fields silently is not permitted as it hides potential client issues or malicious intent.
 
 # 13. PATCH semantic rules
 
 - **Partial Updates:** Supported. Clients may send only the fields they intend to change.
 - **Minimum Requirement:** At least one editable field must be present. Empty JSON objects are rejected.
-- **Unknown/Protected Keys:** Rejected explicitly (HTTP 400).
-- **Null Handling:** Allowed fields marked as nullable can be explicitly set to `null` to clear the value.
-- **Trimming:** String fields must be trimmed of leading and trailing whitespace. Empty strings (after trimming) are treated as invalid if the field is required, or potentially normalized to `null` if optional/nullable based on the schema rules.
-- **Preferred Roles:** Duplicates must be rejected or automatically normalized (deduplicated).
+- **Unknown/Protected Keys:** Rejected explicitly (HTTP 422 `VALIDATION_ERROR`).
+- **Null Handling:** Allowed fields marked as nullable can be explicitly set to `null` to clear the value. `preferredRoles` sent as `null` is automatically normalized to an empty array `[]`.
+- **Trimming:** String fields must be trimmed of leading and trailing whitespace. Empty strings (after trimming) are deterministically normalized to `null` for optional/nullable fields. If the field is required (`fullName`), an empty string is rejected with `VALIDATION_ERROR`.
+- **Preferred Roles:** Duplicates must be automatically deduplicated.
 - **Ownership:** Updates are strictly scoped to the authenticated user's ID.
 - **System Fields:** `updated_at` must be controlled by the database trigger or data access layer, not the client.
 - **Response:** The endpoint returns the normalized, fully updated profile object. No raw database rows are returned directly.
@@ -216,7 +217,7 @@ The API must **reject** unknown and protected fields with a `400 Bad Request` sc
 **Phase 3 behavior (Soft-delete/Deactivation):**
 
 - Soft-delete or deactivate the public profile.
-- Set `account_status` to `deletion_pending` or `deleted` (based on approved schema enum).
+- Set `account_status` to `deleted`.
 - Set `deleted_at` to the current timestamp.
 - Revoke active sessions (using Supabase admin client or session invalidation).
 - Record an immutable audit event for account deactivation.
@@ -232,6 +233,7 @@ The API must **reject** unknown and protected fields with a `400 Bad Request` sc
 
 - The request must include an `Idempotency-Key` header.
 - Repeated requests with the same key and same authenticated user return the original safe result (`200 OK`) without executing a duplicate deactivation flow.
+- To permit idempotent replays after the account becomes inactive, the idempotency middleware must run **after** token verification but **before** the account-status authorization check (which would normally block deleted users).
 - Reusing an idempotency key with conflicting operation data returns a `409 Conflict` (`IDEMPOTENCY_CONFLICT`).
 - Maximum length of Idempotency-Key: 255 characters. Format: UUID preferred but string accepted.
 - If the account is already deactivated/deleted and an idempotency key matches, return success. If the key is new or missing for an already deleted account, return `403 Forbidden` (`ACCOUNT_DELETED`).
@@ -266,20 +268,20 @@ Required database behavior (No RLS changes required during P3.1):
 
 Standardized error envelopes will be returned.
 
-| Condition               | HTTP Status | Stable Code                   | Safe Message                           | Retryable | Log Level |
-| :---------------------- | :---------- | :---------------------------- | :------------------------------------- | :-------- | :-------- |
-| Missing auth            | 401         | `AUTHENTICATION_REQUIRED`     | Authentication is required.            | No        | Warn/Info |
-| Invalid token           | 401         | `INVALID_ACCESS_TOKEN`        | Access token is invalid.               | No        | Warn      |
-| Expired token           | 401         | `ACCESS_TOKEN_EXPIRED`        | Access token has expired.              | Yes       | Info      |
-| Profile not found       | 404         | `USER_PROFILE_NOT_FOUND`      | User profile could not be found.       | No        | Error     |
-| Invalid update schema   | 400         | `USER_PROFILE_UPDATE_INVALID` | Profile update data is invalid.        | No        | Warn      |
-| Protected field edit    | 400         | `PROFILE_FIELD_NOT_EDITABLE`  | Attempted to update a protected field. | No        | Warn      |
-| Account disabled        | 403         | `ACCOUNT_DISABLED`            | This account has been disabled.        | No        | Info      |
-| Account deleted         | 403         | `ACCOUNT_DELETED`             | This account has been deleted.         | No        | Info      |
-| Missing idempotency key | 400         | `IDEMPOTENCY_KEY_REQUIRED`    | Idempotency-Key header is required.    | No        | Warn      |
-| Idempotency conflict    | 409         | `IDEMPOTENCY_CONFLICT`        | Idempotency key conflict.              | No        | Warn      |
-| Database unavailable    | 503         | `SERVICE_UNAVAILABLE`         | Service is temporarily unavailable.    | Yes       | Error     |
-| Unexpected error        | 500         | `INTERNAL_SERVER_ERROR`       | An unexpected error occurred.          | No        | Error     |
+| Condition               | HTTP Status | Stable Code                    | Safe Message                         | Retryable | Log Level |
+| :---------------------- | :---------- | :----------------------------- | :----------------------------------- | :-------- | :-------- |
+| Missing auth            | 401         | `AUTHENTICATION_REQUIRED`      | Authentication is required.          | No        | Warn/Info |
+| Malformed auth header   | 401         | `INVALID_AUTHORIZATION_HEADER` | Invalid authorization header format. | No        | Warn      |
+| Invalid token           | 401         | `INVALID_ACCESS_TOKEN`         | Access token is invalid.             | No        | Warn      |
+| Expired token           | 401         | `ACCESS_TOKEN_EXPIRED`         | Access token has expired.            | Yes       | Info      |
+| Profile not found       | 404         | `USER_PROFILE_NOT_FOUND`       | User profile could not be found.     | No        | Error     |
+| Invalid update schema   | 422         | `VALIDATION_ERROR`             | Profile update data is invalid.      | No        | Warn      |
+| Account disabled        | 403         | `ACCOUNT_DISABLED`             | This account has been disabled.      | No        | Info      |
+| Account deleted         | 403         | `ACCOUNT_DELETED`              | This account has been deleted.       | No        | Info      |
+| Missing idempotency key | 400         | `IDEMPOTENCY_KEY_REQUIRED`     | Idempotency-Key header is required.  | No        | Warn      |
+| Idempotency conflict    | 409         | `IDEMPOTENCY_CONFLICT`         | Idempotency key conflict.            | No        | Warn      |
+| Database unavailable    | 503         | `SERVICE_UNAVAILABLE`          | Service is temporarily unavailable.  | Yes       | Error     |
+| Unexpected error        | 500         | `INTERNAL_SERVER_ERROR`        | An unexpected error occurred.        | No        | Error     |
 
 _Sensitive information (e.g., raw database errors) must never appear in the safe message._
 
