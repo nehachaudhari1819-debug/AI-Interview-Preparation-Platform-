@@ -111,10 +111,11 @@ describe("E2E: Get Current User Profile API", () => {
       email: identity.email,
       password: identity.password,
     });
+    if (!loginRes.success) throw new Error("Failed to login");
 
     const response = await request(app)
       .get("/api/v1/users/me")
-      .set("Authorization", `Bearer ${loginRes.session!.accessToken}`)
+      .set("Authorization", `Bearer ${loginRes.session.accessToken}`)
       .expect(HTTP_STATUS.FORBIDDEN);
 
     expect(response.body.code).toBe("ACCOUNT_DISABLED");
@@ -138,10 +139,11 @@ describe("E2E: Get Current User Profile API", () => {
       email: identity.email,
       password: identity.password,
     });
+    if (!loginRes.success) throw new Error("Failed to login");
 
     const response = await request(app)
       .get("/api/v1/users/me")
-      .set("Authorization", `Bearer ${loginRes.session!.accessToken}`)
+      .set("Authorization", `Bearer ${loginRes.session.accessToken}`)
       .expect(HTTP_STATUS.FORBIDDEN);
 
     expect(response.body.code).toBe("ACCOUNT_DELETED");
