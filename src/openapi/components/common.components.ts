@@ -227,7 +227,8 @@ export const commonResponses: Record<string, ResponseObject> = {
     },
   },
   UnsupportedMediaType: {
-    description: "Unsupported Media Type - The request format is not supported (e.g. non-JSON payload).",
+    description:
+      "Unsupported Media Type - The request format is not supported (e.g. non-JSON payload).",
     headers: {
       "X-Request-ID": { $ref: "#/components/headers/RequestId" },
     },
@@ -255,9 +256,7 @@ export const commonResponses: Record<string, ResponseObject> = {
           success: false,
           message: "Validation failed",
           code: "VALIDATION_ERROR",
-          errors: [
-            { field: "email", message: "Invalid email format" },
-          ],
+          errors: [{ field: "email", message: "Invalid email format" }],
           meta: { requestId: "00000000-0000-4000-8000-000000000000" },
         },
       },
