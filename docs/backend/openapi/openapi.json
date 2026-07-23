@@ -171,7 +171,7 @@
       "get": {
         "tags": ["Users"],
         "summary": "Get current user profile",
-        "description": "Retrieves the canonical profile of the currently authenticated active user.",
+        "description": "Retrieves the canonical profile of the currently authenticated active user.\n\n**Note (P3.3):** Currently, RLS policies explicitly hide suspended or deleted user rows. Therefore, if an account is inactive, this endpoint returns `404 Not Found` instead of `403 Forbidden`. Exact inactive-status differentiation is deferred to Phase 3.6.",
         "security": [
           {
             "bearerAuth": []

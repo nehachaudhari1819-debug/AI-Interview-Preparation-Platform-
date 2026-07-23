@@ -6,10 +6,7 @@ import { AccountDeletedError } from "../../errors/account-deleted.error.js";
 import { PersistenceError, PersistenceErrorCode } from "../../persistence/persistence-error.js";
 
 export class UserProfileService {
-  public constructor(
-    private readonly repository: UserProfileRepository,
-    private readonly adminRepository?: UserProfileRepository,
-  ) {}
+  public constructor(private readonly repository: UserProfileRepository) {}
 
   /**
    * Retrieves the current user profile.
@@ -23,7 +20,11 @@ export class UserProfileService {
       if (profile.accountStatus === "suspended") {
         throw new AccountDisabledError();
       }
-      if (profile.accountStatus === "deleted" || profile.deletedAt !== null) {
+      if (
+        profile.accountStatus === "deleted" ||
+        profile.accountStatus === "deletion_pending" ||
+        profile.deletedAt !== null
+      ) {
         throw new AccountDeletedError();
       }
 
@@ -33,34 +34,11 @@ export class UserProfileService {
         error instanceof PersistenceError &&
         error.code === PersistenceErrorCode.RECORD_NOT_FOUND
       ) {
-        // Fallback: If RLS hides the profile because it is suspended/deleted,
-        // we use the admin repository to fetch the actual status to return the correct 403.
-        if (this.adminRepository) {
-          try {
-            const adminProfile = await this.adminRepository.findById(userId);
-            if (adminProfile.accountStatus === "suspended") {
-              throw new AccountDisabledError();
-            }
-            if (adminProfile.accountStatus === "deleted" || adminProfile.deletedAt !== null) {
-              throw new AccountDeletedError();
-            }
-          } catch (adminError) {
-            if (
-              adminError instanceof PersistenceError &&
-              adminError.code === PersistenceErrorCode.RECORD_NOT_FOUND
-            ) {
-              throw new UserProfileNotFoundError();
-            }
-            throw adminError;
-          }
-        }
+        // NOTE: In Phase 3.3, RLS policies explicitly hide inactive (suspended/deleted) rows.
+        // Therefore, we cannot differentiate between "account inactive" (403) and "not found" (404)
+        // using just the authenticated client.
+        // Exact inactive-status differentiation is deferred to P3.6, where RLS changes are authorized.
         throw new UserProfileNotFoundError();
-      }
-
-      if (error instanceof PersistenceError) {
-        if (error.code === PersistenceErrorCode.RECORD_NOT_FOUND) {
-          throw new UserProfileNotFoundError();
-        }
       }
 
       throw error;
@@ -68,9 +46,6 @@ export class UserProfileService {
   }
 }
 
-export function createUserProfileService(
-  repository: UserProfileRepository,
-  adminRepository?: UserProfileRepository,
-): UserProfileService {
-  return new UserProfileService(repository, adminRepository);
+export function createUserProfileService(repository: UserProfileRepository): UserProfileService {
+  return new UserProfileService(repository);
 }

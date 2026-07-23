@@ -20,7 +20,9 @@ To provide a secure, authenticated endpoint (`GET /api/v1/users/me`) for users t
 
 ### Authentication and Authorization
 
-The endpoint relies on `createAuthenticationMiddleware` to ensure a valid session exists. Additionally, `UserProfileService.getCurrentUserProfile` explicitly checks that `accountStatus === 'active'` and `deletedAt === null`. If either condition is violated, an `AccountInactiveError` (403 Forbidden) is thrown.
+The endpoint relies on `createAuthenticationMiddleware` to ensure a valid session exists. Additionally, `UserProfileService.getCurrentUserProfile` explicitly checks that `accountStatus === 'active'` and `deletedAt === null`. If either condition is violated (and the row is visible), an `AccountDisabledError` (403) or `AccountDeletedError` (403) is thrown.
+
+**Note on RLS (P3.6 Deferral):** During Phase 3.3, the RLS policies strictly hide suspended or deleted rows from the authenticated user. Therefore, an inactive account will currently return `404 USER_PROFILE_NOT_FOUND` instead of `403`. Exact inactive-status differentiation is deferred to Phase 3.6 where RLS updates are authorized.
 
 ### Response Data Sanitization
 
@@ -33,8 +35,9 @@ The route applies the `authNoStoreMiddleware` to inject `Cache-Control: no-store
 ## Error Behavior
 
 - **Missing/Invalid Token:** `401 AUTHENTICATION_REQUIRED` or `401 INVALID_ACCESS_TOKEN`
-- **Suspended/Deleted Account:** `403 ACCOUNT_INACTIVE`
-- **Profile Not Found:** `404 USER_PROFILE_NOT_FOUND`
+- **Suspended Account:** `403 ACCOUNT_DISABLED` (when visible)
+- **Deleted Account:** `403 ACCOUNT_DELETED` (when visible)
+- **Profile Not Found:** `404 USER_PROFILE_NOT_FOUND` (including inactive accounts hidden by RLS until P3.6)
 - **Provider Failure:** `503 SERVICE_UNAVAILABLE`
 
 ## Architecture and Integration
