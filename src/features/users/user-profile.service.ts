@@ -4,6 +4,7 @@ import { UserProfileNotFoundError } from "../../errors/user-profile-not-found.er
 import { AccountDisabledError } from "../../errors/account-disabled.error.js";
 import { AccountDeletedError } from "../../errors/account-deleted.error.js";
 import { PersistenceError, PersistenceErrorCode } from "../../persistence/persistence-error.js";
+import { ServiceUnavailableError } from "../../errors/service-unavailable.error.js";
 
 export class UserProfileService {
   public constructor(private readonly repository: UserProfileRepository) {}
@@ -40,6 +41,12 @@ export class UserProfileService {
         // Exact inactive-status differentiation is deferred to P3.6, where RLS changes are authorized.
         throw new UserProfileNotFoundError();
       }
+      if (
+        error instanceof PersistenceError &&
+        error.code === PersistenceErrorCode.OPERATION_FAILED
+      ) {
+        throw new ServiceUnavailableError();
+      }
 
       throw error;
     }
@@ -61,6 +68,12 @@ export class UserProfileService {
         error.code === PersistenceErrorCode.RECORD_NOT_FOUND
       ) {
         throw new UserProfileNotFoundError();
+      }
+      if (
+        error instanceof PersistenceError &&
+        error.code === PersistenceErrorCode.OPERATION_FAILED
+      ) {
+        throw new ServiceUnavailableError();
       }
       throw error;
     }

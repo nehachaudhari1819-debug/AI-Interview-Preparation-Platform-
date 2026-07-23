@@ -98,6 +98,7 @@ export const userProfileSchemas: Record<string, SchemaObject> = {
       avatarUrl: {
         type: "string",
         format: "uri",
+        pattern: "^https://",
         maxLength: 2048,
         description: "Must be a valid HTTPS URL.",
         nullable: true,
