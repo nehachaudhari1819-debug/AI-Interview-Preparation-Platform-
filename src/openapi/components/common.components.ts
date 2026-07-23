@@ -226,6 +226,43 @@ export const commonResponses: Record<string, ResponseObject> = {
       },
     },
   },
+  UnsupportedMediaType: {
+    description: "Unsupported Media Type - The request format is not supported (e.g. non-JSON payload).",
+    headers: {
+      "X-Request-ID": { $ref: "#/components/headers/RequestId" },
+    },
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/StandardErrorResponse" },
+        example: {
+          success: false,
+          message: "Unsupported Media Type",
+          code: "UNSUPPORTED_MEDIA_TYPE",
+          meta: { requestId: "00000000-0000-4000-8000-000000000000" },
+        },
+      },
+    },
+  },
+  ValidationError: {
+    description: "Unprocessable Entity - The request payload failed schema validation.",
+    headers: {
+      "X-Request-ID": { $ref: "#/components/headers/RequestId" },
+    },
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/StandardErrorResponse" },
+        example: {
+          success: false,
+          message: "Validation failed",
+          code: "VALIDATION_ERROR",
+          errors: [
+            { field: "email", message: "Invalid email format" },
+          ],
+          meta: { requestId: "00000000-0000-4000-8000-000000000000" },
+        },
+      },
+    },
+  },
 };
 
 export const commonHeaders: ComponentsObject["headers"] = {
