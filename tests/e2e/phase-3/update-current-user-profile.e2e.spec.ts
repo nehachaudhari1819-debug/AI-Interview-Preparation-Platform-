@@ -177,7 +177,9 @@ describe("E2E: Update Current User Profile API", () => {
       email: delIdentity.email,
       password: delIdentity.password,
     });
-    const inactiveToken = loginRes.session!.accessToken;
+
+    if (!loginRes.success) throw new Error("Login failed");
+    const inactiveToken = loginRes.session.accessToken;
 
     // soft-delete user directly in database via admin
     await testAdminClient

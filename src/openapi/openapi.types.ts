@@ -95,6 +95,7 @@ export interface SchemaObject {
   anyOf?: Array<SchemaObject | ReferenceObject>;
   allOf?: Array<SchemaObject | ReferenceObject>;
   example?: unknown;
+  pattern?: string;
 }
 
 export interface ReferenceObject {
