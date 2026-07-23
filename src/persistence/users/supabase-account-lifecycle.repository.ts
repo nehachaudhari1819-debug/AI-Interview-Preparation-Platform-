@@ -106,7 +106,7 @@ export function createSupabaseAccountLifecycleRepository(
     },
 
     async finalizeSoftDelete(
-      input: Omit<AtomicSoftDeleteInput, "requestId" | "requestHash">,
+      input: Omit<AtomicSoftDeleteInput, "requestHash">,
     ): Promise<AtomicSoftDeleteResult> {
       try {
         const client = getClient();
@@ -114,6 +114,7 @@ export function createSupabaseAccountLifecycleRepository(
           p_user_id: input.userId,
           p_idempotency_key: input.idempotencyKey,
           p_operation: input.operation,
+          p_request_id: input.requestId,
         });
 
         if (error) {

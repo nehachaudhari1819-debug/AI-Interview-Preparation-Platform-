@@ -39,6 +39,6 @@ export interface AccountLifecycleRepository {
    * Finalizes the soft deletion by marking idempotency as completed.
    */
   finalizeSoftDelete(
-    input: Omit<AtomicSoftDeleteInput, "requestId" | "requestHash">,
+    input: Omit<AtomicSoftDeleteInput, "requestHash">,
   ): Promise<AtomicSoftDeleteResult>;
 }

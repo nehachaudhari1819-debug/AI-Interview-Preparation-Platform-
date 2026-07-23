@@ -39,7 +39,8 @@ describe("Phase 3.5: DELETE /api/v1/users/me (Account Deactivation)", () => {
       password: identity.password,
       emailRedirectTo: "http://localhost:3000/callback",
     });
-    if (!result.success || !result.session) throw new Error("Failed to register test user");
+    if (!result.success || !result.session)
+      throw new Error("Failed to register test user: " + JSON.stringify(result));
     const session = result.session;
 
     testUsers.push(session.user.id);
@@ -59,11 +60,13 @@ describe("Phase 3.5: DELETE /api/v1/users/me (Account Deactivation)", () => {
       request(app)
         .delete("/api/v1/users/me")
         .set("Authorization", `Bearer ${session.accessToken}`)
-        .set("Idempotency-Key", idempotencyKey),
+        .set("Idempotency-Key", idempotencyKey)
+        .set("X-Request-ID", "00000000-0000-0000-0000-000000000001"),
       request(app)
         .delete("/api/v1/users/me")
         .set("Authorization", `Bearer ${session.accessToken}`)
-        .set("Idempotency-Key", idempotencyKey),
+        .set("Idempotency-Key", idempotencyKey)
+        .set("X-Request-ID", "00000000-0000-0000-0000-000000000002"),
     ]);
 
     expect(concurrentRes[0].statusCode).toBe(200);
@@ -131,7 +134,8 @@ describe("Phase 3.5: DELETE /api/v1/users/me (Account Deactivation)", () => {
       password: identity3.password,
       emailRedirectTo: "http://localhost:3000/callback",
     });
-    if (!result3.success || !result3.session) throw new Error("Failed to register test user 3");
+    if (!result3.success || !result3.session)
+      throw new Error("Failed to register test user 3: " + JSON.stringify(result3));
     const session = result3.session;
 
     testUsers.push(session.user.id);

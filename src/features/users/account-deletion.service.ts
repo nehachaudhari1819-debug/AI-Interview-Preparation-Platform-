@@ -89,6 +89,7 @@ export class AccountDeletionService {
         userId: input.userId,
         idempotencyKey: input.idempotencyKey,
         operation,
+        requestId: input.requestId,
       });
     } catch (error: unknown) {
       if (PersistenceError.is(error)) {
@@ -105,11 +106,13 @@ export class AccountDeletionService {
       return finalizeResult.responseBody as AccountDeletionResult;
     }
 
+    console.error("[DEBUG] fallback error finalizeResult:", finalizeResult);
+
     // Fallback if finalization somehow failed
     throw new AppError({
       statusCode: 500,
       code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to finalize account deletion.",
+      message: `Failed to finalize account deletion. Result: ${JSON.stringify(finalizeResult)}`,
     });
   }
 }

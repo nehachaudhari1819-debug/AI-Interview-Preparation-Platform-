@@ -5,7 +5,6 @@ import type {
   AccountSessionRevocationGateway,
   RevokeAllUserSessionsInput,
 } from "./account-session-revocation.gateway.js";
-import { AuthError } from "@supabase/supabase-js";
 
 export function createSupabaseAccountSessionRevocationGateway(
   config: Readonly<ApplicationConfig>,
@@ -19,16 +18,14 @@ export function createSupabaseAccountSessionRevocationGateway(
       const { error } = await client.auth.admin.signOut(input.accessToken, "global");
 
       if (error) {
-        // We might get an error if the session is already expired or invalid
-        // The SDK returns specific auth errors
-        if (error instanceof AuthError) {
-          if (error.status === 401 || error.status === 403 || error.status === 404) {
-            // Swallow these as the session is already invalid/gone
-            return;
-          }
+        const status = (error as unknown as { status?: number }).status;
+        if (status && [400, 401, 403, 404].includes(status)) {
+          // Swallow these as the session is already invalid/gone
+          return;
         }
+
         const normalized = normalizeSupabaseAuthError(error);
-        throw new Error(`Session revocation failed: ${normalized.reason}`);
+        throw new Error(`Session revocation failed: ${normalized.reason} (orig: ${error.message})`);
       }
     },
   };
