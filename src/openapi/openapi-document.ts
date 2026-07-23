@@ -9,6 +9,8 @@ import { authSchemas, authResponses } from "./components/auth.components.js";
 import { healthSchemas, healthResponses } from "./components/health.components.js";
 import { authPaths } from "./paths/auth.paths.js";
 import { healthPaths } from "./paths/health.paths.js";
+import { userProfileSchemas } from "./components/user-profile.components.js";
+import { userProfilePaths } from "./paths/user-profile.paths.js";
 
 export const openApiDocument: OpenApiDocument = {
   openapi: "3.1.0",
@@ -30,12 +32,14 @@ export const openApiDocument: OpenApiDocument = {
   paths: {
     ...healthPaths,
     ...authPaths,
+    ...userProfilePaths,
   },
   components: {
     schemas: {
       ...commonSchemas,
       ...authSchemas,
       ...healthSchemas,
+      ...userProfileSchemas,
     },
     responses: {
       ...commonResponses,

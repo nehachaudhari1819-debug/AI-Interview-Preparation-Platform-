@@ -69,10 +69,10 @@ describe("Real Environment: Profile Provisioning", () => {
 
     expect(error).toBeNull();
     expect(profile).toBeDefined();
-    expect(profile.id).toBe(userId);
-    expect(profile.email).toBe(identity.email);
-    expect(profile.role).toBe("student"); // Safe default
-    expect(profile.account_status).toBe("active"); // Safe default
+    expect(profile!.id).toBe(userId);
+    expect(profile!.email).toBe(identity.email);
+    expect(profile!.role).toBe("student"); // Safe default
+    expect(profile!.account_status).toBe("active"); // Safe default
   });
 
   it("safely rejects privilege escalation metadata during registration with 422", async () => {

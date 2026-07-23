@@ -29,6 +29,7 @@ describe("OpenAPI Route Coverage", () => {
       { path: "/api/v1/auth/refresh", method: "post" },
       { path: "/api/v1/auth/logout", method: "post" },
       { path: "/api/v1/auth/me", method: "get" },
+      { path: "/api/v1/users/me", method: "get" },
     ];
 
     for (const route of requiredRoutes) {
@@ -53,6 +54,7 @@ describe("OpenAPI Route Coverage", () => {
       "/api/v1/auth/refresh",
       "/api/v1/auth/logout",
       "/api/v1/auth/me",
+      "/api/v1/users/me",
     ];
 
     for (const documented of documentedPaths) {

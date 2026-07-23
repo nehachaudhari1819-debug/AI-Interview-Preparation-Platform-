@@ -166,6 +166,59 @@
           }
         }
       }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get current user profile",
+        "description": "Retrieves the canonical profile of the currently authenticated active user.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response containing the user profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/UserProfileResponse"
+                        }
+                      },
+                      "required": ["user"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is missing or invalid."
+          },
+          "403": {
+            "description": "The user account is inactive or pending deletion."
+          },
+          "404": {
+            "description": "The user profile could not be found."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "500": {
+            "description": "Internal server error."
+          },
+          "503": {
+            "description": "Service unavailable (e.g., persistence layer unreachable)."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -409,6 +462,87 @@
             "$ref": "#/components/schemas/ReadinessUnavailableResponse"
           }
         ]
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "description": "The safe public API representation of a user profile.",
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "college",
+          "branch",
+          "graduationYear",
+          "experienceLevel",
+          "preferredRoles",
+          "bio",
+          "avatarUrl",
+          "role",
+          "accountStatus",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "college": {
+            "type": "string",
+            "nullable": true
+          },
+          "branch": {
+            "type": "string",
+            "nullable": true
+          },
+          "graduationYear": {
+            "type": "integer",
+            "nullable": true
+          },
+          "experienceLevel": {
+            "type": "string",
+            "enum": ["fresher", "beginner", "intermediate", "advanced"],
+            "nullable": true
+          },
+          "preferredRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": ["student", "admin"]
+          },
+          "accountStatus": {
+            "type": "string",
+            "enum": ["active", "suspended", "deletion_pending", "deleted"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     },
     "responses": {

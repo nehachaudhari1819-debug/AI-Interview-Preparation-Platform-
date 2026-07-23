@@ -20,5 +20,5 @@ export function createPublicSupabaseClient(
 
   return clientFactory(config.url, config.publishableKey, {
     ...createServerAuthOptions(),
-  }) as ProjectSupabaseClient;
+  });
 }

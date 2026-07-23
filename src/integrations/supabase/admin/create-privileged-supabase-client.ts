@@ -21,5 +21,5 @@ export function createPrivilegedSupabaseClient(
   // Uses privilegedKey (which was validated by environment parser to be either SECRET or SERVICE_ROLE)
   return clientFactory(config.url, config.privilegedKey, {
     ...createServerAuthOptions(),
-  }) as ProjectSupabaseClient;
+  });
 }

@@ -75,5 +75,5 @@ export function createUserSupabaseClient(
         Authorization: `Bearer ${normalizedToken}`,
       },
     },
-  }) as ProjectSupabaseClient;
+  });
 }
