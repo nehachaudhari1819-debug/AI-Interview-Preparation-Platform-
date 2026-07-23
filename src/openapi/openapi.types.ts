@@ -81,6 +81,15 @@ export interface SchemaObject {
   properties?: Record<string, SchemaObject | ReferenceObject>;
   required?: string[];
   items?: SchemaObject | ReferenceObject;
+  minLength?: number;
+  maxLength?: number;
+  minimum?: number;
+  maximum?: number;
+  minItems?: number;
+  maxItems?: number;
+  minProperties?: number;
+  maxProperties?: number;
+  additionalProperties?: boolean | SchemaObject | ReferenceObject;
   enum?: unknown[];
   oneOf?: Array<SchemaObject | ReferenceObject>;
   anyOf?: Array<SchemaObject | ReferenceObject>;

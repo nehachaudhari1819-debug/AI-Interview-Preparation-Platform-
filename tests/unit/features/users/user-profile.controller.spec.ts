@@ -216,7 +216,7 @@ describe("UpdateMeController", () => {
 
     expect(mockService.updateCurrentUserProfile).not.toHaveBeenCalled();
     expect(nextMock).toHaveBeenCalledWith(expect.any(Error));
-    const error = nextMock.mock.calls[0][0];
-    expect(error.code).toBe("VALIDATION_ERROR");
+    const error = nextMock.mock.calls[0]?.[0] as any;
+    expect(error?.code).toBe("VALIDATION_ERROR");
   });
 });
