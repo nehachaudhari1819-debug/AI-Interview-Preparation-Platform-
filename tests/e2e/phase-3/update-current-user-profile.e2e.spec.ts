@@ -181,7 +181,7 @@ describe("E2E: Update Current User Profile API", () => {
 
     // soft-delete user directly in database via admin
     await testAdminClient
-      .from("user_profiles")
+      .from("users")
       .update({ account_status: "deleted", deleted_at: new Date().toISOString() })
       .eq("id", delUser.data.user!.id);
 
