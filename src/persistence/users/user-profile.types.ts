@@ -1,48 +1,17 @@
-import { z } from "zod";
-
 /**
- * Zod schema defining the domain boundaries of a User Profile.
- * Matches the public.users database schema.
+ * COMPATIBILITY EXPORT
+ * These types have been moved to the canonical domain layer in src/features/users/.
+ * This file remains temporarily to prevent breaking existing Phase 2 authentication logic
+ * and tests that directly import from this path.
+ *
+ * TODO(P3): Remove this file once all imports are migrated to the feature layer.
  */
-export const UserProfileSchema = z.object({
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  id: z.string().uuid(),
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  email: z.string().email(),
-  fullName: z.string().min(1).max(100),
-  college: z.string().max(150).nullable(),
-  branch: z.string().max(100).nullable(),
-  graduationYear: z.number().int().min(2000).max(2100).nullable(),
-  experienceLevel: z.enum(["fresher", "beginner", "intermediate", "advanced"]).nullable(),
-  preferredRoles: z.array(z.string()).default([]),
-  bio: z.string().max(500).nullable(),
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  avatarUrl: z.string().url().nullable(),
-  role: z.enum(["student", "admin"]),
-  accountStatus: z.enum(["active", "suspended", "deletion_pending", "deleted"]),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
-});
+export * from "../../features/users/user-profile.types.js";
+export * from "../../features/users/user-profile.schemas.js";
 
-export type UserProfile = z.infer<typeof UserProfileSchema>;
+import { UpdateUserProfileInputSchema } from "../../features/users/user-profile.schemas.js";
+import type { UpdateUserProfileInput } from "../../features/users/user-profile.types.js";
 
-/**
- * Fields that a user is allowed to update on their own profile
- */
-export const UserProfileUpdateSchema = z.object({
-  fullName: z.string().min(1).max(100).optional(),
-  college: z.string().max(150).nullable().optional(),
-  branch: z.string().max(100).nullable().optional(),
-  graduationYear: z.number().int().min(2000).max(2100).nullable().optional(),
-  experienceLevel: z
-    .enum(["fresher", "beginner", "intermediate", "advanced"])
-    .nullable()
-    .optional(),
-  preferredRoles: z.array(z.string()).optional(),
-  bio: z.string().max(500).nullable().optional(),
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  avatarUrl: z.string().url().nullable().optional(),
-});
-
-export type UserProfileUpdate = z.infer<typeof UserProfileUpdateSchema>;
+// Re-export UpdateUserProfileInput with the old name for backward compatibility
+export type UserProfileUpdate = UpdateUserProfileInput;
+export const UserProfileUpdateSchema = UpdateUserProfileInputSchema;

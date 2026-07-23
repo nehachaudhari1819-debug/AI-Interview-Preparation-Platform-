@@ -7,6 +7,9 @@ import {
 } from "../../../src/persistence/persistence-error.js";
 import type { Database } from "../../../src/persistence/database.types.js";
 
+const SAFE_PROFILE_COLUMNS =
+  "id, email, full_name, college, branch, graduation_year, experience_level, preferred_roles, bio, avatar_url, role, account_status, created_at, updated_at, deleted_at";
+
 describe("SupabaseUserProfileRepository", () => {
   let mockSupabaseClient: jest.Mocked<SupabaseClient<Database>>;
   let repository: SupabaseUserProfileRepository;
@@ -49,6 +52,7 @@ describe("SupabaseUserProfileRepository", () => {
       expect(result.id).toBe(mockData.id);
       expect(result.fullName).toBe(mockData.full_name);
       expect(mockSupabaseClient.from).toHaveBeenCalledWith("users");
+      expect(mockSelect).toHaveBeenCalledWith(SAFE_PROFILE_COLUMNS);
     });
 
     it("throws RECORD_NOT_FOUND when user is missing", async () => {
@@ -76,6 +80,75 @@ describe("SupabaseUserProfileRepository", () => {
 
       await expect(repository.findById("123")).rejects.toThrowError(
         new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed to query user profile"),
+      );
+    });
+  });
+
+  describe("updateOwnProfile", () => {
+    it("updates user profile successfully", async () => {
+      const updates = { fullName: "New Name" };
+      const mockData = {
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        email: "test@example.com",
+        full_name: "New Name",
+        college: null,
+        branch: null,
+        graduation_year: null,
+        experience_level: null,
+        preferred_roles: [],
+        bio: null,
+        avatar_url: null,
+        role: "student",
+        account_status: "active",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        deleted_at: null,
+      };
+
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: mockData, error: null } as never);
+      const mockSelect = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate });
+
+      const result = await repository.updateOwnProfile(mockData.id, updates);
+
+      expect(result.fullName).toBe("New Name");
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("users");
+      expect(mockUpdate).toHaveBeenCalledWith({ full_name: "New Name" });
+      expect(mockSelect).toHaveBeenCalledWith(SAFE_PROFILE_COLUMNS);
+    });
+
+    it("throws RECORD_NOT_FOUND when user is missing or access denied", async () => {
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null } as never);
+      const mockSelect = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate });
+
+      await expect(repository.updateOwnProfile("123", {})).rejects.toThrowError(
+        new PersistenceError(
+          PersistenceErrorCode.RECORD_NOT_FOUND,
+          "User profile not found or access denied for id: 123",
+        ),
+      );
+    });
+
+    it("throws OPERATION_FAILED when supabase throws", async () => {
+      const mockError = new Error("DB Error");
+      const mockMaybeSingle = jest
+        .fn()
+        .mockResolvedValue({ data: null, error: mockError } as never);
+      const mockSelect = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
+      const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate });
+
+      await expect(repository.updateOwnProfile("123", {})).rejects.toThrowError(
+        new PersistenceError(
+          PersistenceErrorCode.OPERATION_FAILED,
+          "Failed to update user profile",
+        ),
       );
     });
   });

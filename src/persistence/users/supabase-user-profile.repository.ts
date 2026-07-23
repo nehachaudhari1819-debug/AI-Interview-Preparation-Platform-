@@ -2,42 +2,22 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../database.types.js";
 import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js";
 import type { UserProfileRepository } from "./user-profile.repository.js";
-import { UserProfileSchema } from "./user-profile.types.js";
-import type { UserProfile, UserProfileUpdate } from "./user-profile.types.js";
+import type { UserProfile, UpdateUserProfileInput } from "../../features/users/index.js";
+import {
+  mapUserProfileRowToDomain,
+  mapUserProfileUpdateToDatabase,
+} from "./user-profile.mapper.js";
+
+const SAFE_PROFILE_COLUMNS =
+  "id, email, full_name, college, branch, graduation_year, experience_level, preferred_roles, bio, avatar_url, role, account_status, created_at, updated_at, deleted_at";
 
 export class SupabaseUserProfileRepository implements UserProfileRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
-  private mapDatabaseRowToDomain(row: Database["public"]["Tables"]["users"]["Row"]): UserProfile {
-    // Parse the date strings into JavaScript Date objects
-    const profile = {
-      ...row,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-      deletedAt: row.deleted_at ? new Date(row.deleted_at) : null,
-      fullName: row.full_name,
-      graduationYear: row.graduation_year,
-      experienceLevel: row.experience_level,
-      preferredRoles: row.preferred_roles ?? [],
-      avatarUrl: row.avatar_url,
-      accountStatus: row.account_status,
-    };
-
-    const parsed = UserProfileSchema.safeParse(profile);
-    if (!parsed.success) {
-      throw new PersistenceError(
-        PersistenceErrorCode.VALIDATION_FAILED,
-        "Database returned an invalid user profile format",
-      );
-    }
-
-    return parsed.data;
-  }
-
   async findById(id: string): Promise<UserProfile> {
     const { data, error } = await this.supabase
       .from("users")
-      .select("*")
+      .select(SAFE_PROFILE_COLUMNS)
       .eq("id", id)
       .maybeSingle();
 
@@ -55,33 +35,17 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       );
     }
 
-    return this.mapDatabaseRowToDomain(data);
+    return mapUserProfileRowToDomain(data);
   }
 
-  async updateOwnProfile(id: string, updates: UserProfileUpdate): Promise<UserProfile> {
-    // Map domain fields to DB schema fields
-    const dbUpdates: Database["public"]["Tables"]["users"]["Update"] = {
-      ...(updates.fullName !== undefined && { full_name: updates.fullName }),
-      ...(updates.college !== undefined && { college: updates.college }),
-      ...(updates.branch !== undefined && { branch: updates.branch }),
-      ...(updates.graduationYear !== undefined && {
-        graduation_year: updates.graduationYear,
-      }),
-      ...(updates.experienceLevel !== undefined && {
-        experience_level: updates.experienceLevel,
-      }),
-      ...(updates.preferredRoles !== undefined && {
-        preferred_roles: updates.preferredRoles,
-      }),
-      ...(updates.bio !== undefined && { bio: updates.bio }),
-      ...(updates.avatarUrl !== undefined && { avatar_url: updates.avatarUrl }),
-    };
+  async updateOwnProfile(id: string, updates: UpdateUserProfileInput): Promise<UserProfile> {
+    const dbUpdates = mapUserProfileUpdateToDatabase(updates);
 
     const { data, error } = await this.supabase
       .from("users")
       .update(dbUpdates)
       .eq("id", id)
-      .select()
+      .select(SAFE_PROFILE_COLUMNS)
       .maybeSingle();
 
     if (error !== null) {
@@ -100,7 +64,7 @@ export class SupabaseUserProfileRepository implements UserProfileRepository {
       );
     }
 
-    return this.mapDatabaseRowToDomain(data);
+    return mapUserProfileRowToDomain(data);
   }
 
   async isActive(id: string): Promise<boolean> {

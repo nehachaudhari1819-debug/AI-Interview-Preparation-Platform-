@@ -1,4 +1,4 @@
-import type { UserProfile, UserProfileUpdate } from "./user-profile.types.js";
+import type { UserProfile, UpdateUserProfileInput } from "../../features/users/index.js";
 
 /**
  * Interface defining the persistence operations for User Profiles.
@@ -17,7 +17,7 @@ export interface UserProfileRepository {
    * Throws a RECORD_NOT_FOUND PersistenceError if the profile does not exist.
    * Note: RLS ensures that the authenticated user client can only update their own row.
    */
-  updateOwnProfile(id: string, updates: UserProfileUpdate): Promise<UserProfile>;
+  updateOwnProfile(id: string, updates: UpdateUserProfileInput): Promise<UserProfile>;
 
   /**
    * Checks if a user profile exists and has an 'active' account status.

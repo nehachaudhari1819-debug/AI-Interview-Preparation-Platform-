@@ -1,7 +1,7 @@
 # 1. Title and status
 
 **Title:** Phase 3 User Profile Requirements and API Contract
-**Status:** PROPOSED (P3.1)
+**Status:** APPROVED (P3.1)
 
 # 2. Purpose
 
@@ -10,7 +10,9 @@ This document defines the complete backend contract for user-profile and account
 # 3. Approved baseline
 
 **Authorized branch:** `backend`
-**Authorized baseline commit:** `90292b4` (Phase 2 CI Success)
+**Approval baseline commit:** `deaed8fa37a7b6ff98e9cfa4b1687fe421e5711a`
+**CI:** Backend CI #21 — Success
+**P3.2 authorization recorded.**
 
 All specifications in this document assume the project's existing Phase 2 authentication and authorization middleware, global error handling, and database conventions remain unchanged.
 
