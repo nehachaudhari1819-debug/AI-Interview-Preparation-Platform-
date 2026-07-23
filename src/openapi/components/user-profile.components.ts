@@ -105,4 +105,21 @@ export const userProfileSchemas: Record<string, SchemaObject> = {
       },
     },
   },
+  AccountDeletionResponse: {
+    type: "object",
+    description: "Confirmation of successful account deactivation/soft-deletion.",
+    required: ["account"],
+    properties: {
+      account: {
+        type: "object",
+        required: ["status"],
+        properties: {
+          status: {
+            type: "string",
+            enum: ["deleted"],
+          },
+        },
+      },
+    },
+  },
 };

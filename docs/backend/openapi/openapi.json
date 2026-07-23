@@ -326,6 +326,96 @@
             "$ref": "#/components/responses/ServiceUnavailable"
           }
         }
+      },
+      "delete": {
+        "tags": ["Users", "Profile"],
+        "summary": "Deactivate and soft-delete current user account",
+        "description": "Soft-deletes the authenticated user's account, sets status to `deleted`, revokes active sessions, and clears the refresh cookie. Existing access JWT may remain valid until expiration. Requires `Idempotency-Key` header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Unique key (max 255 chars) to prevent duplicate deactivation execution.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response confirming account deactivation/soft-deletion.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Directives for caching mechanisms in both requests and responses.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store, no-cache, must-revalidate, proxy-revalidate"
+                }
+              },
+              "Set-Cookie": {
+                "description": "Sets expired refresh cookie to clear it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AccountDeletionResponse"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "required": ["success", "data", "meta"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
       }
     }
   },
@@ -707,6 +797,23 @@
             "maxLength": 2048,
             "description": "Must be a valid HTTPS URL.",
             "nullable": true
+          }
+        }
+      },
+      "AccountDeletionResponse": {
+        "type": "object",
+        "description": "Confirmation of successful account deactivation/soft-deletion.",
+        "required": ["account"],
+        "properties": {
+          "account": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["deleted"]
+              }
+            }
           }
         }
       }

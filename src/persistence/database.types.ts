@@ -208,7 +208,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      soft_delete_account_atomic: {
+        Args: {
+          p_user_id: string
+          p_idempotency_key: string
+          p_request_id: string
+          p_request_hash: string
+          p_operation: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       account_status_enum:

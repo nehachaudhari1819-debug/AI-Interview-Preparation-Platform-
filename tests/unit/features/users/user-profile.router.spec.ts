@@ -47,7 +47,12 @@ describe("UserProfileRouter", () => {
       next();
     };
 
-    const config = {} as ApplicationConfig;
+    const config = {
+      rateLimits: {
+        authSession: { enabled: false, windowMs: 60000, maxRequests: 100 },
+        ipv6Subnet: 56,
+      },
+    } as ApplicationConfig;
 
     const router = createUserProfileRouter({
       config,
