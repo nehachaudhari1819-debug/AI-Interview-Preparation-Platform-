@@ -103,14 +103,14 @@ describe("createRequireActiveAccountMiddleware", () => {
   });
 
   it("throws generic error if authentication is missing from context", async () => {
-    (mockRequest as any).context = undefined;
+    (mockRequest as any).context = { authentication: { state: "unauthenticated" } };
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
     await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
-    expect(nextFunction).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
-      })
+    expect(nextFunction).toHaveBeenCalledWith(expect.any(Error));
+    const err = (nextFunction as jest.Mock).mock.calls[0]?.[0] as Error | undefined;
+    expect(err?.message).toBe(
+      "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
     );
   });
 });
