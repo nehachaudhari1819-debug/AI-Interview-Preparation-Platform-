@@ -28,47 +28,51 @@ export function createIdempotencyMiddleware(
 
   return (req: Request, res: Response, next: NextFunction) => {
     // Only apply to authenticated requests to prevent arbitrary cache filling
-    if (req.context?.authentication?.state !== "authenticated") {
-      return next(
+    if (req.context.authentication.state !== "authenticated") {
+      next(
         new AppError({
           statusCode: HTTP_STATUS.UNAUTHORIZED,
           code: "AUTHENTICATION_REQUIRED",
           message: "Authentication is required for idempotency.",
         }),
       );
+      return;
     }
     const userId = req.context.authentication.principal.userId;
 
     // 1. Validate header
     const rawKey = req.headers["idempotency-key"];
     if (!rawKey) {
-      return next(
+      next(
         new AppError({
           statusCode: HTTP_STATUS.BAD_REQUEST,
           code: "IDEMPOTENCY_KEY_REQUIRED",
           message: "Idempotency-Key header is required.",
         }),
       );
+      return;
     }
 
     if (Array.isArray(rawKey)) {
-      return next(
+      next(
         new AppError({
           statusCode: HTTP_STATUS.BAD_REQUEST,
           code: "IDEMPOTENCY_KEY_INVALID",
           message: "Duplicate Idempotency-Key headers are not allowed.",
         }),
       );
+      return;
     }
 
     if (!isValidIdempotencyKey(rawKey)) {
-      return next(
+      next(
         new AppError({
           statusCode: HTTP_STATUS.BAD_REQUEST,
           code: "IDEMPOTENCY_KEY_INVALID",
           message: "Invalid Idempotency-Key header format.",
         }),
       );
+      return;
     }
     const idempotencyKey = rawKey;
 
@@ -92,13 +96,14 @@ export function createIdempotencyMiddleware(
       })
       .then((result) => {
         if (result.status === "conflict") {
-          return next(
+          next(
             new AppError({
               statusCode: HTTP_STATUS.CONFLICT,
               code: "IDEMPOTENCY_CONFLICT",
               message: "Idempotency key already exists with different request parameters.",
             }),
           );
+          return;
         }
 
         if (result.status === "completed") {
@@ -139,7 +144,7 @@ export function createIdempotencyMiddleware(
                   responseStatus: res.statusCode,
                   responseBody: responseBodyForIdempotency,
                 })
-                .catch((error) => {
+                .catch((error: unknown) => {
                   const logger = getRequestLogger(req);
                   logger.error(
                     { event: LOG_EVENTS.systemAuditFailed, error, idempotencyKey }, // Reusing event or create a new one? Better use a generic error
@@ -149,11 +154,12 @@ export function createIdempotencyMiddleware(
             }
           });
 
-          return next();
+          next();
+          return;
         }
 
         // Handle other statuses like failed
-        return next(
+        next(
           new AppError({
             statusCode: HTTP_STATUS.SERVICE_UNAVAILABLE,
             code: "SERVICE_UNAVAILABLE",
@@ -161,6 +167,8 @@ export function createIdempotencyMiddleware(
           }),
         );
       })
-      .catch((error) => next(error));
+      .catch((error: unknown) => {
+        next(error);
+      });
   };
 }

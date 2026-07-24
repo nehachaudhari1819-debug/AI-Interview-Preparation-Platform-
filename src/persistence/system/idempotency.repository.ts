@@ -2,6 +2,7 @@ import type { ApplicationConfig } from "../../config/app-config.js";
 import { createPrivilegedSupabaseClient } from "../../integrations/supabase/admin/create-privileged-supabase-client.js";
 import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js";
 import { normalizeSupabaseError } from "../../integrations/supabase/supabase-error-normalizer.js";
+import type { Json } from "../database.types.js";
 
 export type IdempotencyRecordStatus = "processing" | "completed" | "failed" | "conflict";
 
@@ -114,7 +115,7 @@ export function createSupabaseIdempotencyRepository(
           .update({
             status: "completed",
             response_status: input.responseStatus,
-            response_body: input.responseBody as any,
+            response_body: input.responseBody as Json,
           })
           .eq("user_id", input.userId)
           .eq("idempotency_key", input.idempotencyKey)

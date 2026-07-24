@@ -21,12 +21,13 @@ export function createAuditMiddleware(
       if (res.statusCode >= 200 && res.statusCode < 300) {
         // Extract actor from authenticated context
         const actorUserId =
-          req.context?.authentication?.state === "authenticated"
+          req.context.authentication.state === "authenticated"
             ? req.context.authentication.principal.userId
             : null;
 
-        const metadata = res.locals.auditMetadata ?? null;
-        const resourceId = res.locals.auditResourceId ?? actorUserId ?? null; // default to actor if self-action
+        const metadata = (res.locals.auditMetadata as Record<string, unknown> | undefined) ?? null;
+        const resourceId =
+          (res.locals.auditResourceId as string | undefined) ?? actorUserId ?? null; // default to actor if self-action
 
         // Asynchronously log to the database without blocking the response
         auditRepo
@@ -36,11 +37,11 @@ export function createAuditMiddleware(
             actorUserId,
             resourceId,
             metadata,
-            requestId: req.context?.requestId,
+            requestId: req.context.requestId,
             ipAddress: req.ip,
             userAgent: req.headers["user-agent"],
           })
-          .catch((error) => {
+          .catch((error: unknown) => {
             // Failed to write audit log - record error in application logs
             const logger = getRequestLogger(req);
             logger.error(
