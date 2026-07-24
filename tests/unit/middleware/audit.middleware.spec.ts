@@ -1,19 +1,22 @@
 import { jest } from "@jest/globals";
 import type { Request, Response, NextFunction } from "express";
 import { createAuditMiddleware } from "../../../src/middleware/audit.middleware.js";
-import * as auditRepoModule from "../../../src/persistence/system/audit.repository.js";
+import type { createSupabaseAuditRepository } from "../../../src/persistence/system/audit.repository.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
 
 describe("Audit Middleware", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
-  let mockAuditRepo: { logEvent: jest.Mock<any> };
+  let mockAuditRepo: { logEvent: jest.Mock<() => Promise<void>> };
+  let mockRepoFactory: jest.Mock<typeof createSupabaseAuditRepository>;
   const mockConfig = {} as ApplicationConfig;
 
   beforeEach(() => {
     mockAuditRepo = { logEvent: jest.fn<() => Promise<void>>().mockResolvedValue(undefined) };
-    jest.spyOn(auditRepoModule, "createSupabaseAuditRepository").mockReturnValue(mockAuditRepo);
+    mockRepoFactory = jest
+      .fn<typeof createSupabaseAuditRepository>()
+      .mockReturnValue(mockAuditRepo);
 
     mockRequest = {
       ip: "127.0.0.1",
@@ -53,14 +56,14 @@ describe("Audit Middleware", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.restoreAllMocks();
   });
 
   it("calls next() without blocking", () => {
-    const middleware = createAuditMiddleware(mockConfig, {
-      action: "TEST_ACTION",
-      resourceType: "test_resource",
-    });
+    const middleware = createAuditMiddleware(
+      mockConfig,
+      { action: "TEST_ACTION", resourceType: "test_resource" },
+      mockRepoFactory,
+    );
 
     middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
@@ -69,10 +72,11 @@ describe("Audit Middleware", () => {
   });
 
   it("logs audit event successfully on response finish", async () => {
-    const middleware = createAuditMiddleware(mockConfig, {
-      action: "PROFILE_UPDATED",
-      resourceType: "user",
-    });
+    const middleware = createAuditMiddleware(
+      mockConfig,
+      { action: "PROFILE_UPDATED", resourceType: "user" },
+      mockRepoFactory,
+    );
 
     middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
@@ -97,10 +101,11 @@ describe("Audit Middleware", () => {
   it("does not log audit event if response status is error", async () => {
     mockResponse.statusCode = 400;
 
-    const middleware = createAuditMiddleware(mockConfig, {
-      action: "TEST_ACTION",
-      resourceType: "test_resource",
-    });
+    const middleware = createAuditMiddleware(
+      mockConfig,
+      { action: "TEST_ACTION", resourceType: "test_resource" },
+      mockRepoFactory,
+    );
 
     middleware(mockRequest as Request, mockResponse as Response, nextFunction);
     (mockResponse as any).simulateFinish();
@@ -112,10 +117,11 @@ describe("Audit Middleware", () => {
   it("handles unauthenticated requests gracefully", async () => {
     mockRequest.context!.authentication = { state: "anonymous" };
 
-    const middleware = createAuditMiddleware(mockConfig, {
-      action: "ANON_ACTION",
-      resourceType: "anon_resource",
-    });
+    const middleware = createAuditMiddleware(
+      mockConfig,
+      { action: "ANON_ACTION", resourceType: "anon_resource" },
+      mockRepoFactory,
+    );
 
     middleware(mockRequest as Request, mockResponse as Response, nextFunction);
     (mockResponse as any).simulateFinish();

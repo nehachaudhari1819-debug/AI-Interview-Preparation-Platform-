@@ -1,14 +1,15 @@
 import { jest } from "@jest/globals";
 import type { Request, Response, NextFunction } from "express";
 import { createIdempotencyMiddleware } from "../../../src/middleware/idempotency.middleware.js";
-import * as idempotencyRepoModule from "../../../src/persistence/system/idempotency.repository.js";
+import type { createSupabaseIdempotencyRepository } from "../../../src/persistence/system/idempotency.repository.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
 
 describe("Idempotency Middleware", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
-  let mockRepo: { tryAcquire: jest.Mock<any>; complete: jest.Mock<any> };
+  let mockRepo: { tryAcquire: jest.Mock<any>; complete: jest.Mock<() => Promise<void>> };
+  let mockRepoFactory: jest.Mock<typeof createSupabaseIdempotencyRepository>;
   const mockConfig = {} as ApplicationConfig;
 
   beforeEach(() => {
@@ -16,8 +17,8 @@ describe("Idempotency Middleware", () => {
       tryAcquire: jest.fn(),
       complete: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
-    jest
-      .spyOn(idempotencyRepoModule, "createSupabaseIdempotencyRepository")
+    mockRepoFactory = jest
+      .fn<typeof createSupabaseIdempotencyRepository>()
       .mockReturnValue(mockRepo);
 
     mockRequest = {
@@ -54,12 +55,15 @@ describe("Idempotency Middleware", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.restoreAllMocks();
   });
 
   it("returns 401 if unauthenticated", async () => {
     mockRequest.context!.authentication = { state: "anonymous" };
-    const middleware = createIdempotencyMiddleware(mockConfig, { operation: "test" });
+    const middleware = createIdempotencyMiddleware(
+      mockConfig,
+      { operation: "test" },
+      mockRepoFactory,
+    );
 
     await new Promise<void>((resolve) => {
       middleware(mockRequest as Request, mockResponse as Response, (err) => {
@@ -72,7 +76,11 @@ describe("Idempotency Middleware", () => {
 
   it("returns 400 if idempotency key is missing", async () => {
     delete mockRequest.headers!["idempotency-key"];
-    const middleware = createIdempotencyMiddleware(mockConfig, { operation: "test" });
+    const middleware = createIdempotencyMiddleware(
+      mockConfig,
+      { operation: "test" },
+      mockRepoFactory,
+    );
 
     await new Promise<void>((resolve) => {
       middleware(mockRequest as Request, mockResponse as Response, (err) => {
@@ -86,7 +94,11 @@ describe("Idempotency Middleware", () => {
 
   it("returns 409 if tryAcquire returns conflict", async () => {
     mockRepo.tryAcquire.mockResolvedValue({ status: "conflict" });
-    const middleware = createIdempotencyMiddleware(mockConfig, { operation: "test" });
+    const middleware = createIdempotencyMiddleware(
+      mockConfig,
+      { operation: "test" },
+      mockRepoFactory,
+    );
 
     await new Promise<void>((resolve) => {
       middleware(mockRequest as Request, mockResponse as Response, (err) => {
@@ -104,7 +116,11 @@ describe("Idempotency Middleware", () => {
       responseStatus: 201,
       responseBody: JSON.stringify({ success: true }),
     });
-    const middleware = createIdempotencyMiddleware(mockConfig, { operation: "test" });
+    const middleware = createIdempotencyMiddleware(
+      mockConfig,
+      { operation: "test" },
+      mockRepoFactory,
+    );
 
     middleware(mockRequest as Request, mockResponse as Response, nextFunction);
 
@@ -118,7 +134,11 @@ describe("Idempotency Middleware", () => {
 
   it("overrides res.json and completes on finish if tryAcquire returns processing", async () => {
     mockRepo.tryAcquire.mockResolvedValue({ status: "processing" });
-    const middleware = createIdempotencyMiddleware(mockConfig, { operation: "test" });
+    const middleware = createIdempotencyMiddleware(
+      mockConfig,
+      { operation: "test" },
+      mockRepoFactory,
+    );
 
     middleware(mockRequest as Request, mockResponse as Response, nextFunction);
     await new Promise(process.nextTick);

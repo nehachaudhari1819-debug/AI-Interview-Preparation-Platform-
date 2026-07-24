@@ -11,8 +11,9 @@ export type AuditOptions = {
 export function createAuditMiddleware(
   config: Readonly<ApplicationConfig>,
   options: AuditOptions,
+  repoFactory: typeof createSupabaseAuditRepository = createSupabaseAuditRepository,
 ): RequestHandler {
-  const auditRepo = createSupabaseAuditRepository(config);
+  const auditRepo = repoFactory(config);
 
   return (req: Request, res: Response, next: NextFunction) => {
     // We want to log the audit event only after the response has successfully finished.

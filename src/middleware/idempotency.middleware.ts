@@ -23,8 +23,9 @@ export type IdempotencyOptions = {
 export function createIdempotencyMiddleware(
   config: Readonly<ApplicationConfig>,
   options: IdempotencyOptions,
+  repoFactory: typeof createSupabaseIdempotencyRepository = createSupabaseIdempotencyRepository,
 ): RequestHandler {
-  const repo = createSupabaseIdempotencyRepository(config);
+  const repo = repoFactory(config);
 
   return (req: Request, res: Response, next: NextFunction) => {
     // Only apply to authenticated requests to prevent arbitrary cache filling
