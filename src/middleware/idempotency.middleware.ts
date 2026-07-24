@@ -117,7 +117,9 @@ export function createIdempotencyMiddleware(
             } catch {
               /* ignore */
             }
+          }
           res.json(bodyToSend);
+          return;
           return;
         }
 
