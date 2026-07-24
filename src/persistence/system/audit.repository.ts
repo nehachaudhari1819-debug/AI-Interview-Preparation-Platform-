@@ -36,13 +36,13 @@ export function createSupabaseAuditRepository(
         const { error } = await client.from("audit_logs").insert({
           action: entry.action,
           resource_type: entry.resourceType,
-          actor_user_id: entry.actorUserId,
+          actor_user_id: entry.actorUserId ?? null,
           actor_type: entry.actorType ?? "user",
           resource_id: entry.resourceId ?? null,
           metadata: (entry.metadata as Json) ?? null,
           request_id: entry.requestId ?? null,
-          ip_address: entry.ipAddress,
-          user_agent: entry.userAgent,
+          ip_address: entry.ipAddress ?? null,
+          user_agent: entry.userAgent ?? null,
         });
 
         if (error) {
