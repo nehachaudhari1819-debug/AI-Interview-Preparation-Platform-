@@ -107,9 +107,10 @@ describe("createRequireActiveAccountMiddleware", () => {
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
     await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
-    expect(nextFunction).toHaveBeenCalledWith(expect.any(Error));
-    expect((nextFunction as jest.Mock).mock.calls[0][0].message).toBe(
-      "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
+    expect(nextFunction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
+      })
     );
   });
 });

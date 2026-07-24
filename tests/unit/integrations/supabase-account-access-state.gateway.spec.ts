@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 describe("SupabaseAccountAccessStateGateway", () => {
   it("returns the exact parsed state on success", async () => {
     const mockClient = {
-      rpc: jest.fn().mockResolvedValue({ data: "active", error: null }),
+      rpc: jest.fn<any>().mockResolvedValue({ data: "active", error: null }),
     } as unknown as SupabaseClient;
 
     const gateway = new SupabaseAccountAccessStateGateway(mockClient);
@@ -17,7 +17,7 @@ describe("SupabaseAccountAccessStateGateway", () => {
 
   it("returns 'missing' if the state is unknown", async () => {
     const mockClient = {
-      rpc: jest.fn().mockResolvedValue({ data: "some_weird_status", error: null }),
+      rpc: jest.fn<any>().mockResolvedValue({ data: "some_weird_status", error: null }),
     } as unknown as SupabaseClient;
 
     const gateway = new SupabaseAccountAccessStateGateway(mockClient);
@@ -28,7 +28,7 @@ describe("SupabaseAccountAccessStateGateway", () => {
 
   it("throws an error safely when RPC fails, without exposing raw data", async () => {
     const mockClient = {
-      rpc: jest.fn().mockResolvedValue({
+      rpc: jest.fn<any>().mockResolvedValue({
         data: null,
         error: { message: "connection timeout", details: "sensitive info", code: "5XX" },
       }),
