@@ -14,7 +14,7 @@ export function createRequireActiveAccountMiddleware(
 ): RequestHandler {
   return asyncHandler(async (request, _response, next) => {
     // 1. Ensure the user is authenticated from previous middleware
-    if (request.context?.authentication?.state !== "authenticated") {
+    if (request.context.authentication.state !== "authenticated") {
       throw new Error(
         "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
       );
@@ -35,7 +35,7 @@ export function createRequireActiveAccountMiddleware(
     }
 
     const extraction = extractBearerToken(headerValue);
-    if (extraction.status !== "success") {
+    if (extraction.status !== "present") {
       throw new Error("Invalid bearer token in require-active-account middleware");
     }
 
@@ -49,7 +49,7 @@ export function createRequireActiveAccountMiddleware(
     let state;
     try {
       state = await gateway.getCurrentAccountAccessState();
-    } catch (error) {
+    } catch (error: unknown) {
       // Wrap known/unknown dependency failures
       if (error instanceof Error && error.message.includes("Account state resolution failed")) {
         throw new ServiceUnavailableError("Authorization dependency unavailable");
@@ -60,7 +60,8 @@ export function createRequireActiveAccountMiddleware(
     // 4. Map the state to errors or allow
     switch (state) {
       case "active":
-        return next();
+        next();
+        return;
       case "disabled":
         throw new AccountDisabledError();
       case "deleted":
