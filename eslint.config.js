@@ -47,6 +47,12 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["node_modules/", "dist/", "coverage/", "src/persistence/database.types.ts"],
+    ignores: [
+      "node_modules/",
+      "dist/",
+      "coverage/",
+      "src/persistence/database.types.ts",
+      ".temp.database.types.ts",
+    ],
   },
 );
