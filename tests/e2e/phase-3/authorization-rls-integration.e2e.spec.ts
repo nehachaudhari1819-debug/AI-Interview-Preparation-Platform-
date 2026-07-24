@@ -87,7 +87,7 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
 
     beforeAll(() => {
       if (!appConfig.supabase.configured) throw new Error("Supabase is not configured");
-      clientA = createClient(appConfig.supabase.url, appConfig.supabase.anonKey, {
+      clientA = createClient(appConfig.supabase.url, appConfig.supabase.publishableKey, {
         global: { headers: { Authorization: `Bearer ${userA.token}` } },
       });
     });

@@ -34,7 +34,7 @@ describe("createRequireActiveAccountMiddleware", () => {
           state: "authenticated",
           principal: { id: "user-123", role: "student" } as any,
         },
-      },
+      } as any,
     };
     mockResponse = {};
     nextFunction = jest.fn();
