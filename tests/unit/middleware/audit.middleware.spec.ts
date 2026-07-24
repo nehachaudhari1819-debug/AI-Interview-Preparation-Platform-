@@ -1,13 +1,8 @@
 import { jest } from "@jest/globals";
 import type { Request, Response, NextFunction } from "express";
 import { createAuditMiddleware } from "../../../src/middleware/audit.middleware.js";
-import { createSupabaseAuditRepository } from "../../../src/persistence/system/audit.repository.js";
+import * as auditRepoModule from "../../../src/persistence/system/audit.repository.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
-
-// Mock the repository factory
-jest.mock("../../../src/persistence/system/audit.repository.js", () => ({
-  createSupabaseAuditRepository: jest.fn(),
-}));
 
 describe("Audit Middleware", () => {
   let mockRequest: Partial<Request>;
@@ -18,7 +13,9 @@ describe("Audit Middleware", () => {
 
   beforeEach(() => {
     mockAuditRepo = { logEvent: jest.fn<() => Promise<void>>().mockResolvedValue(undefined) };
-    (createSupabaseAuditRepository as jest.Mock).mockReturnValue(mockAuditRepo);
+    jest
+      .spyOn(auditRepoModule, "createSupabaseAuditRepository")
+      .mockReturnValue(mockAuditRepo as any);
 
     mockRequest = {
       ip: "127.0.0.1",
@@ -58,6 +55,7 @@ describe("Audit Middleware", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it("calls next() without blocking", () => {

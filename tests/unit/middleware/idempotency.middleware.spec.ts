@@ -1,12 +1,8 @@
 import { jest } from "@jest/globals";
 import type { Request, Response, NextFunction } from "express";
 import { createIdempotencyMiddleware } from "../../../src/middleware/idempotency.middleware.js";
-import { createSupabaseIdempotencyRepository } from "../../../src/persistence/system/idempotency.repository.js";
+import * as idempotencyRepoModule from "../../../src/persistence/system/idempotency.repository.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
-
-jest.mock("../../../src/persistence/system/idempotency.repository.js", () => ({
-  createSupabaseIdempotencyRepository: jest.fn(),
-}));
 
 describe("Idempotency Middleware", () => {
   let mockRequest: Partial<Request>;
@@ -20,7 +16,9 @@ describe("Idempotency Middleware", () => {
       tryAcquire: jest.fn(),
       complete: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
-    (createSupabaseIdempotencyRepository as jest.Mock).mockReturnValue(mockRepo);
+    jest
+      .spyOn(idempotencyRepoModule, "createSupabaseIdempotencyRepository")
+      .mockReturnValue(mockRepo as any);
 
     mockRequest = {
       headers: {
@@ -56,6 +54,7 @@ describe("Idempotency Middleware", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it("returns 401 if unauthenticated", async () => {
