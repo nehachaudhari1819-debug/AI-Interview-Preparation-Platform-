@@ -59,7 +59,7 @@ BEGIN
   END IF;
 
   -- finalize
-  v_result := public.finalize_soft_delete_account(v_user_id, v_key, v_op);
+  v_result := public.finalize_soft_delete_account(v_user_id, v_key, v_op, NULL::uuid);
   IF v_result->>'status' != 'completed' THEN
     RAISE EXCEPTION 'Case 1 finalize: expected completed, got %', v_result;
   END IF;
@@ -133,7 +133,7 @@ BEGIN
    WHERE id = v_user_id;
 
   -- finalize must fail closed, NOT delete the suspended account
-  v_result := public.finalize_soft_delete_account(v_user_id, v_key, 'account_deletion');
+  v_result := public.finalize_soft_delete_account(v_user_id, v_key, 'account_deletion', NULL::uuid);
   IF v_result->>'status' != 'failed' OR v_result->>'reason' != 'state_changed' THEN
     RAISE EXCEPTION 'Case 3 finalize: expected failed/state_changed, got %', v_result;
   END IF;
@@ -222,7 +222,7 @@ BEGIN
 
   -- prepare + finalize (first time)
   PERFORM public.prepare_soft_delete_account(v_user_id, v_key, 'h6', 'account_deletion');
-  PERFORM public.finalize_soft_delete_account(v_user_id, v_key, 'account_deletion');
+  PERFORM public.finalize_soft_delete_account(v_user_id, v_key, 'account_deletion', NULL::uuid);
 
   -- Count audit log entries before replay
   SELECT count(*) INTO v_count
@@ -230,7 +230,7 @@ BEGIN
    WHERE actor_user_id = v_user_id AND action = 'ACCOUNT_DEACTIVATED';
 
   -- Replay finalize (same key, already completed)
-  v_result := public.finalize_soft_delete_account(v_user_id, v_key, 'account_deletion');
+  v_result := public.finalize_soft_delete_account(v_user_id, v_key, 'account_deletion', NULL::uuid);
   IF v_result->>'status' != 'completed' THEN
     RAISE EXCEPTION 'Case 6 replay: expected completed, got %', v_result;
   END IF;

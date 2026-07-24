@@ -11,6 +11,16 @@
 --          ↓
 --   Finalizer changes suspended account to deleted  ← WRONG
 --
+-- Additionally: migration 07 created finalize_soft_delete_account(UUID, TEXT, TEXT)
+-- (3-arg) and migration 08 created the 4-arg version with UUID DEFAULT NULL.
+-- Both overloads coexist, making any 3-arg call ambiguous. Drop the stale 3-arg
+-- version here so only the canonical 4-arg signature remains.
+
+-- Drop the stale 3-arg overload introduced by migration 07.
+DROP FUNCTION IF EXISTS public.finalize_soft_delete_account(UUID, TEXT, TEXT);
+
+
+
 -- Fix – two invariants enforced:
 --
 --   prepare_soft_delete_account:
