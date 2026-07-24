@@ -9,7 +9,7 @@ export type IdempotencyRecordStatus = "processing" | "completed" | "failed" | "c
 export type AcquireIdempotencyResult = {
   status: IdempotencyRecordStatus;
   responseStatus?: number | undefined;
-  responseBody?: unknown | undefined;
+  responseBody?: unknown;
 };
 
 export type AcquireIdempotencyInput = {

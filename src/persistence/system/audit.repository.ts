@@ -2,6 +2,7 @@ import type { ApplicationConfig } from "../../config/app-config.js";
 import { createPrivilegedSupabaseClient } from "../../integrations/supabase/admin/create-privileged-supabase-client.js";
 import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js";
 import { normalizeSupabaseError } from "../../integrations/supabase/supabase-error-normalizer.js";
+import type { Json } from "../database.types.js";
 
 export type AuditLogEntry = {
   actorUserId?: string | null;
@@ -38,7 +39,7 @@ export function createSupabaseAuditRepository(
           actor_user_id: entry.actorUserId,
           actor_type: entry.actorType ?? "user",
           resource_id: entry.resourceId ?? null,
-          metadata: (entry.metadata as any) ?? null,
+          metadata: (entry.metadata as Json) ?? null,
           request_id: entry.requestId ?? null,
           ip_address: entry.ipAddress,
           user_agent: entry.userAgent,
