@@ -8,8 +8,8 @@ export type IdempotencyRecordStatus = "processing" | "completed" | "failed" | "c
 
 export type AcquireIdempotencyResult = {
   status: IdempotencyRecordStatus;
-  responseStatus?: number;
-  responseBody?: unknown;
+  responseStatus?: number | undefined;
+  responseBody?: unknown | undefined;
 };
 
 export type AcquireIdempotencyInput = {

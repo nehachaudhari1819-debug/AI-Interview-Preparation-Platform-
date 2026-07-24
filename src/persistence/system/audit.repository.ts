@@ -37,9 +37,9 @@ export function createSupabaseAuditRepository(
           resource_type: entry.resourceType,
           actor_user_id: entry.actorUserId,
           actor_type: entry.actorType ?? "user",
-          resource_id: entry.resourceId,
-          metadata: entry.metadata,
-          request_id: entry.requestId,
+          resource_id: entry.resourceId ?? null,
+          metadata: (entry.metadata as any) ?? null,
+          request_id: entry.requestId ?? null,
           ip_address: entry.ipAddress,
           user_agent: entry.userAgent,
         });
