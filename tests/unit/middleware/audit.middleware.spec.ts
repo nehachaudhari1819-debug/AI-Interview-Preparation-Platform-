@@ -17,7 +17,7 @@ describe("Audit Middleware", () => {
   const mockConfig = {} as ApplicationConfig;
 
   beforeEach(() => {
-    mockAuditRepo = { logEvent: jest.fn().mockResolvedValue(undefined) };
+    mockAuditRepo = { logEvent: jest.fn<() => Promise<void>>().mockResolvedValue(undefined) };
     (createSupabaseAuditRepository as jest.Mock).mockReturnValue(mockAuditRepo);
 
     mockRequest = {
@@ -40,7 +40,7 @@ describe("Audit Middleware", () => {
       locals: {
         auditMetadata: { changedFields: ["fullName"] },
       },
-      on: jest.fn().mockImplementation((event: string, cb: any) => {
+      on: jest.fn<any>().mockImplementation((event: any, cb: any) => {
         if (event === "finish") {
           finishCallback = cb;
         }

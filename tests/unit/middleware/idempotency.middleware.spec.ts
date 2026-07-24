@@ -18,7 +18,7 @@ describe("Idempotency Middleware", () => {
   beforeEach(() => {
     mockRepo = {
       tryAcquire: jest.fn(),
-      complete: jest.fn().mockResolvedValue(undefined),
+      complete: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     };
     (createSupabaseIdempotencyRepository as jest.Mock).mockReturnValue(mockRepo);
 
@@ -41,7 +41,7 @@ describe("Idempotency Middleware", () => {
       statusCode: 200,
       json: jest.fn().mockReturnThis(),
       status: jest.fn().mockReturnThis(),
-      on: jest.fn().mockImplementation((event: string, cb: any) => {
+      on: jest.fn<any>().mockImplementation((event: any, cb: any) => {
         if (event === "finish") finishCallback = cb;
         return mockResponse;
       }),
