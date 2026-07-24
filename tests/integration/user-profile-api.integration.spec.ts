@@ -75,7 +75,10 @@ describe("UserProfile API Integration", () => {
         // Mimic gateway by querying mockRepo
         let profile;
         try {
-          profile = await mockRepo.findById(req.context.authentication.principal.id);
+          profile = await mockRepo.findById(
+            req.context.authentication.principal.sub || req.context.authentication.principal.id,
+          );
+          if (!profile) throw new Error("Not found");
         } catch (err: any) {
           throw Object.assign(new Error("Not found"), {
             name: "UserProfileNotFoundError",
@@ -182,6 +185,7 @@ describe("UserProfile API Integration", () => {
   describe("PATCH /api/v1/users/me", () => {
     it("returns 200 and the updated profile successfully", async () => {
       mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+      mockRepo.findById.mockResolvedValue(validProfile);
       mockRepo.updateOwnProfile.mockResolvedValue({ ...validProfile, fullName: "Updated Name" });
 
       const res = await request(app)
@@ -200,6 +204,7 @@ describe("UserProfile API Integration", () => {
 
     it("returns 422 for empty update object", async () => {
       mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+      mockRepo.findById.mockResolvedValue(validProfile);
 
       const res = await request(app)
         .patch("/api/v1/users/me")
@@ -213,6 +218,7 @@ describe("UserProfile API Integration", () => {
 
     it("returns 422 for unknown fields", async () => {
       mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+      mockRepo.findById.mockResolvedValue(validProfile);
 
       const res = await request(app)
         .patch("/api/v1/users/me")
@@ -225,6 +231,7 @@ describe("UserProfile API Integration", () => {
 
     it("returns 422 for protected fields like email or id", async () => {
       mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+      mockRepo.findById.mockResolvedValue(validProfile);
 
       const resId = await request(app)
         .patch("/api/v1/users/me")
@@ -241,6 +248,7 @@ describe("UserProfile API Integration", () => {
 
     it("returns 404 if profile missing or hidden by RLS", async () => {
       mockVerifier.verify.mockResolvedValue({ success: true, claims: validClaims });
+      mockRepo.findById.mockResolvedValue(validProfile);
       mockRepo.updateOwnProfile.mockRejectedValue(
         new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "Not found"),
       );

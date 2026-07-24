@@ -31,6 +31,8 @@ describe("E2E: Update Current User Profile API", () => {
       password: userIdentity.password,
       email_confirm: true,
     });
+    if (aRes.error) throw new Error("createUser A failed: " + aRes.error.message);
+    if (!aRes.data.user) throw new Error("createUser A returned null user without error");
     testUsers.push(aRes.data.user!.id);
 
     // Login user

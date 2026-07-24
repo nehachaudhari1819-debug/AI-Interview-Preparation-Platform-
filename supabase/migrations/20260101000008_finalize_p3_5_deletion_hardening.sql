@@ -125,7 +125,8 @@ BEGIN
     -- 1. Verify idempotency lock
     SELECT status::text INTO v_record_status
     FROM public.idempotency_records
-    WHERE user_id = p_user_id AND operation = p_operation AND idempotency_key = p_idempotency_key;
+    WHERE user_id = p_user_id AND operation = p_operation AND idempotency_key = p_idempotency_key
+    FOR UPDATE;
 
     IF v_record_status IS DISTINCT FROM 'processing' THEN
         -- Might have been completed concurrently, handle gracefully

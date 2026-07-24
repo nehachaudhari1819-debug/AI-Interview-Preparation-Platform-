@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { SupabaseAccountAccessStateGateway } from "../../../src/integrations/supabase/account-authorization/supabase-account-access-state.gateway.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 

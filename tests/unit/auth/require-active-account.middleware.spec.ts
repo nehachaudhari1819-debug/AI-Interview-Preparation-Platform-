@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import type { Request, Response, NextFunction } from "express";
 import { createRequireActiveAccountMiddleware } from "../../../src/auth/require-active-account.middleware.js";
 import { AccountDisabledError } from "../../../src/errors/account-disabled.error.js";
@@ -9,11 +10,7 @@ import * as bearerUtils from "../../../src/auth/bearer-token.js";
 import * as clientUtils from "../../../src/integrations/supabase/create-user-supabase-client.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
 
-jest.mock(
-  "../../../src/integrations/supabase/account-authorization/supabase-account-access-state.gateway.js",
-);
-jest.mock("../../../src/auth/bearer-token.js");
-jest.mock("../../../src/integrations/supabase/create-user-supabase-client.js");
+// Removed jest.mock for gateway as we will spy on its prototype
 
 describe("createRequireActiveAccountMiddleware", () => {
   let mockRequest: Partial<Request>;
@@ -24,11 +21,17 @@ describe("createRequireActiveAccountMiddleware", () => {
 
   beforeEach(() => {
     mockConfig = {
-      supabase: { url: "http://test", anonKey: "test", serviceRoleKey: "test" },
+      supabase: {
+        configured: true,
+        url: "http://test",
+        publishableKey: "test",
+        serviceRoleKey: "test",
+      },
     } as unknown as ApplicationConfig;
 
     mockRequest = {
       headers: { authorization: "Bearer some-token" },
+      rawHeaders: ["Authorization", "Bearer some-token"],
       context: {
         authentication: {
           state: "authenticated",
@@ -39,17 +42,10 @@ describe("createRequireActiveAccountMiddleware", () => {
     mockResponse = {};
     nextFunction = jest.fn();
 
-    jest.spyOn(bearerUtils, "readSingleAuthorizationHeader").mockReturnValue("Bearer some-token");
-    jest
-      .spyOn(bearerUtils, "extractBearerToken")
-      .mockReturnValue({ status: "present", token: "some-token" });
-    jest.spyOn(clientUtils, "createUserSupabaseClient").mockReturnValue({} as any);
+    // Removing spyOn for ES Modules. The real utilities will parse "Bearer some-token" fine
+    // and instantiate a valid-looking but unused Supabase client.
 
-    mockGatewayInstance = {
-      getCurrentAccountAccessState: jest.fn(),
-    } as any;
-
-    (SupabaseAccountAccessStateGateway as jest.Mock).mockImplementation(() => mockGatewayInstance);
+    jest.spyOn(SupabaseAccountAccessStateGateway.prototype, "getCurrentAccountAccessState");
   });
 
   afterEach(() => {
@@ -57,7 +53,9 @@ describe("createRequireActiveAccountMiddleware", () => {
   });
 
   it("calls next if state is active", async () => {
-    mockGatewayInstance.getCurrentAccountAccessState.mockResolvedValue("active");
+    jest
+      .spyOn(SupabaseAccountAccessStateGateway.prototype, "getCurrentAccountAccessState")
+      .mockResolvedValue("active");
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
     await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
@@ -65,50 +63,52 @@ describe("createRequireActiveAccountMiddleware", () => {
   });
 
   it("throws AccountDisabledError if state is disabled", async () => {
-    mockGatewayInstance.getCurrentAccountAccessState.mockResolvedValue("disabled");
+    jest
+      .spyOn(SupabaseAccountAccessStateGateway.prototype, "getCurrentAccountAccessState")
+      .mockResolvedValue("disabled");
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(
-      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
-    ).rejects.toThrow(AccountDisabledError);
+    await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
+    expect(nextFunction).toHaveBeenCalledWith(expect.any(AccountDisabledError));
   });
 
   it("throws AccountDeletedError if state is deleted", async () => {
-    mockGatewayInstance.getCurrentAccountAccessState.mockResolvedValue("deleted");
+    jest
+      .spyOn(SupabaseAccountAccessStateGateway.prototype, "getCurrentAccountAccessState")
+      .mockResolvedValue("deleted");
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(
-      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
-    ).rejects.toThrow(AccountDeletedError);
+    await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
+    expect(nextFunction).toHaveBeenCalledWith(expect.any(AccountDeletedError));
   });
 
   it("throws UserProfileNotFoundError if state is missing", async () => {
-    mockGatewayInstance.getCurrentAccountAccessState.mockResolvedValue("missing");
+    jest
+      .spyOn(SupabaseAccountAccessStateGateway.prototype, "getCurrentAccountAccessState")
+      .mockResolvedValue("missing");
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(
-      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
-    ).rejects.toThrow(UserProfileNotFoundError);
+    await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
+    expect(nextFunction).toHaveBeenCalledWith(expect.any(UserProfileNotFoundError));
   });
 
   it("throws ServiceUnavailableError if gateway throws an expected error", async () => {
-    mockGatewayInstance.getCurrentAccountAccessState.mockRejectedValue(
-      new Error("Account state resolution failed: timeout"),
-    );
+    jest
+      .spyOn(SupabaseAccountAccessStateGateway.prototype, "getCurrentAccountAccessState")
+      .mockRejectedValue(new Error("Account state resolution failed: timeout"));
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(
-      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
-    ).rejects.toThrow(ServiceUnavailableError);
+    await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
+    expect(nextFunction).toHaveBeenCalledWith(expect.any(ServiceUnavailableError));
   });
 
   it("throws generic error if authentication is missing from context", async () => {
     (mockRequest as any).context = undefined;
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(
-      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
-    ).rejects.toThrow(
+    await middleware(mockRequest as Request, mockResponse as Response, nextFunction);
+    expect(nextFunction).toHaveBeenCalledWith(expect.any(Error));
+    expect((nextFunction as jest.Mock).mock.calls[0][0].message).toBe(
       "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
     );
   });

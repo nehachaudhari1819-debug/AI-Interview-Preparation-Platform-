@@ -50,7 +50,58 @@ describe("Security: User Profile Update Boundary", () => {
       res.locals.userProfileService = service;
       next();
     };
-    const usersRouter = createUserProfileRouter({ config, serviceMiddleware, authMiddleware });
+    const activeAccountMiddleware = async (req: any, res: any, next: any) => {
+      try {
+        let profile;
+        try {
+          profile = await mockRepo.findById(
+            req.context.authentication.principal.userId ?? req.context.authentication.principal.sub,
+          );
+          if (!profile) throw new Error("Not found");
+        } catch (err: any) {
+          throw Object.assign(new Error("Not found"), {
+            name: "UserProfileNotFoundError",
+            isAppError: true,
+            statusCode: 404,
+            code: "USER_PROFILE_NOT_FOUND",
+          });
+        }
+        if (profile.deletedAt) {
+          throw Object.assign(new Error("Deleted"), {
+            name: "AccountDeletedError",
+            isAppError: true,
+            statusCode: 403,
+            code: "ACCOUNT_DELETED",
+          });
+        }
+        if (profile.accountStatus === "suspended") {
+          throw Object.assign(new Error("Disabled"), {
+            name: "AccountDisabledError",
+            isAppError: true,
+            statusCode: 403,
+            code: "ACCOUNT_DISABLED",
+          });
+        }
+        if (profile.accountStatus !== "active") {
+          throw Object.assign(new Error("Not found"), {
+            name: "UserProfileNotFoundError",
+            isAppError: true,
+            statusCode: 404,
+            code: "USER_PROFILE_NOT_FOUND",
+          });
+        }
+        next();
+      } catch (err) {
+        next(err);
+      }
+    };
+
+    const usersRouter = createUserProfileRouter({
+      config,
+      serviceMiddleware,
+      authMiddleware,
+      activeAccountMiddleware,
+    });
 
     const apiRouter = Router();
     apiRouter.use("/users", usersRouter);

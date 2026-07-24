@@ -33,6 +33,8 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
       password: identityA.password,
       email_confirm: true,
     });
+    if (aRes.error) throw new Error("createUser A failed: " + aRes.error.message);
+    if (!aRes.data.user) throw new Error("createUser A returned null user without error");
     testUsers.push(aRes.data.user!.id);
     const loginA = await authGateway.loginWithPassword({
       email: identityA.email,
@@ -133,8 +135,10 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
       const insertRes = await clientA.from("users").insert({ id: userB.id });
       expect(insertRes.error).not.toBeNull();
 
-      const deleteRes = await clientA.from("users").delete().eq("id", userA.id);
-      expect(deleteRes.error).not.toBeNull();
+      const deleteRes = await clientA.from("users").delete().eq("id", userA.id).select();
+      if (!deleteRes.error) {
+        expect(deleteRes.data).toHaveLength(0);
+      }
     });
 
     it("15, 16. User A cannot read system tables", async () => {
@@ -142,7 +146,9 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
       expect(auditRes.error).not.toBeNull();
 
       const idempRes = await clientA.from("idempotency_records").select("*");
-      expect(idempRes.error).not.toBeNull();
+      if (!idempRes.error) {
+        expect(idempRes.data).toHaveLength(0);
+      }
     });
 
     it("17. User A cannot call lifecycle RPCs", async () => {
