@@ -38,7 +38,8 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
       email: identityA.email,
       password: identityA.password,
     });
-    userA = { ...aRes.data.user, token: loginA.session!.accessToken };
+    if (!loginA.success) throw new Error("Login failed");
+    userA = { ...aRes.data.user, token: loginA.session.accessToken };
 
     const identityB = generateTestIdentity("user-b-rls");
     const bRes = await testAdminClient.auth.admin.createUser({
@@ -51,7 +52,8 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
       email: identityB.email,
       password: identityB.password,
     });
-    userB = { ...bRes.data.user, token: loginB.session!.accessToken };
+    if (!loginB.success) throw new Error("Login failed");
+    userB = { ...bRes.data.user, token: loginB.session.accessToken };
   });
 
   afterAll(async () => {
@@ -84,6 +86,7 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
     let clientA: any;
 
     beforeAll(() => {
+      if (!appConfig.supabase.configured) throw new Error("Supabase is not configured");
       clientA = createClient(appConfig.supabase.url, appConfig.supabase.anonKey, {
         global: { headers: { Authorization: `Bearer ${userA.token}` } },
       });

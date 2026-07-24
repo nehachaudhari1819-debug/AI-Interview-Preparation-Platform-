@@ -57,7 +57,9 @@ describe("UserProfileRouter", () => {
     const router = createUserProfileRouter({
       config,
       authMiddleware: mockAuthMiddleware,
-      activeAccountMiddleware: (req, res, next) => { next(); },
+      activeAccountMiddleware: (req, res, next) => {
+        next();
+      },
       serviceMiddleware: (req, res, next) => {
         res.locals.userProfileService = mockService;
         next();

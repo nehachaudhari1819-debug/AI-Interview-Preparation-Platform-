@@ -52,7 +52,7 @@ export function createRequireActiveAccountMiddleware(
     } catch (error: unknown) {
       // Wrap known/unknown dependency failures
       if (error instanceof Error && error.message.includes("Account state resolution failed")) {
-        throw new ServiceUnavailableError("Authorization dependency unavailable");
+        throw new ServiceUnavailableError();
       }
       throw error;
     }

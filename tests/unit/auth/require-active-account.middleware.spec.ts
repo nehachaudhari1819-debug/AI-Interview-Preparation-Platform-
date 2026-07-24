@@ -30,7 +30,10 @@ describe("createRequireActiveAccountMiddleware", () => {
     mockRequest = {
       headers: { authorization: "Bearer some-token" },
       context: {
-        authentication: { state: "authenticated", principal: { id: "user-123", role: "student" } },
+        authentication: {
+          state: "authenticated",
+          principal: { id: "user-123", role: "student" } as any,
+        },
       },
     };
     mockResponse = {};
@@ -39,7 +42,7 @@ describe("createRequireActiveAccountMiddleware", () => {
     jest.spyOn(bearerUtils, "readSingleAuthorizationHeader").mockReturnValue("Bearer some-token");
     jest
       .spyOn(bearerUtils, "extractBearerToken")
-      .mockReturnValue({ status: "success", token: "some-token" });
+      .mockReturnValue({ status: "present", token: "some-token" });
     jest.spyOn(clientUtils, "createUserSupabaseClient").mockReturnValue({} as any);
 
     mockGatewayInstance = {
@@ -100,7 +103,7 @@ describe("createRequireActiveAccountMiddleware", () => {
   });
 
   it("throws generic error if authentication is missing from context", async () => {
-    mockRequest.context = undefined;
+    (mockRequest as any).context = undefined;
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
     await expect(
