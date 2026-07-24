@@ -116,12 +116,9 @@ describe("E2E: Get Current User Profile API", () => {
     const response = await request(app)
       .get("/api/v1/users/me")
       .set("Authorization", `Bearer ${loginRes.session.accessToken}`)
-      .expect(HTTP_STATUS.NOT_FOUND);
+      .expect(HTTP_STATUS.FORBIDDEN);
 
-    // NOTE: In Phase 3.3, RLS policies explicitly hide inactive (suspended/deleted) rows.
-    // Therefore, we cannot differentiate between "account inactive" (403) and "not found" (404).
-    // Exact inactive-status differentiation is deferred to P3.6.
-    expect(response.body.code).toBe("USER_PROFILE_NOT_FOUND");
+    expect(response.body.code).toBe("ACCOUNT_DISABLED");
   });
 
   it("returns 403 ACCOUNT_DELETED for soft-deleted accounts", async () => {
@@ -147,11 +144,8 @@ describe("E2E: Get Current User Profile API", () => {
     const response = await request(app)
       .get("/api/v1/users/me")
       .set("Authorization", `Bearer ${loginRes.session.accessToken}`)
-      .expect(HTTP_STATUS.NOT_FOUND);
+      .expect(HTTP_STATUS.FORBIDDEN);
 
-    // NOTE: In Phase 3.3, RLS policies explicitly hide inactive (suspended/deleted) rows.
-    // Therefore, we cannot differentiate between "account inactive" (403) and "not found" (404).
-    // Exact inactive-status differentiation is deferred to P3.6.
-    expect(response.body.code).toBe("USER_PROFILE_NOT_FOUND");
+    expect(response.body.code).toBe("ACCOUNT_DELETED");
   });
 });

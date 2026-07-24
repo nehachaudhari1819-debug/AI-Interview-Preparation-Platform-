@@ -6,10 +6,7 @@ export const userProfilePaths: Record<string, PathItemObject> = {
       tags: ["Users"],
       summary: "Get current user profile",
       description:
-        "Retrieves the canonical profile of the currently authenticated active user.\n\n" +
-        "**Note (P3.3):** Currently, RLS policies explicitly hide suspended or deleted user rows. " +
-        "Therefore, if an account is inactive, this endpoint returns `404 Not Found` instead of `403 Forbidden`. " +
-        "Exact inactive-status differentiation is deferred to Phase 3.6.",
+        "Retrieves the canonical profile of the currently authenticated active user.",
       security: [{ bearerAuth: [] }],
       responses: {
         "200": {
@@ -112,6 +109,7 @@ export const userProfilePaths: Record<string, PathItemObject> = {
         },
         "400": { $ref: "#/components/responses/BadRequest" },
         "401": { $ref: "#/components/responses/Unauthorized" },
+        "403": { $ref: "#/components/responses/Forbidden" },
         "404": { $ref: "#/components/responses/NotFound" },
         "415": { $ref: "#/components/responses/UnsupportedMediaType" },
         "422": { $ref: "#/components/responses/ValidationError" },

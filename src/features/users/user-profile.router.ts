@@ -8,10 +8,12 @@ import { createUserProfileServiceMiddleware } from "./user-profile.middleware.js
 import { createDeleteMeController } from "./account-deletion.controller.js";
 import { createAccountDeletionServiceMiddleware } from "./account-deletion.middleware.js";
 import { createAuthSessionRateLimiter } from "../../security/index.js";
+import { createRequireActiveAccountMiddleware } from "../../auth/require-active-account.middleware.js";
 
 export function createUserProfileRouter(options: {
   config: Readonly<ApplicationConfig>;
   authMiddleware?: ReturnType<typeof createAuthenticationMiddleware>;
+  activeAccountMiddleware?: RequestHandler;
   serviceMiddleware?: RequestHandler;
   deletionServiceMiddleware?: RequestHandler;
 }): Router {
@@ -19,6 +21,9 @@ export function createUserProfileRouter(options: {
 
   const authMiddleware =
     options.authMiddleware ?? createAuthenticationMiddleware({ config: options.config });
+
+  const activeAccountMiddleware =
+    options.activeAccountMiddleware ?? createRequireActiveAccountMiddleware(options.config);
 
   const serviceMiddleware =
     options.serviceMiddleware ?? createUserProfileServiceMiddleware(options.config);
@@ -32,6 +37,7 @@ export function createUserProfileRouter(options: {
     "/me",
     authNoStoreMiddleware,
     authMiddleware,
+    activeAccountMiddleware,
     serviceMiddleware,
     createGetMeController(),
   );
@@ -40,6 +46,7 @@ export function createUserProfileRouter(options: {
     "/me",
     authNoStoreMiddleware,
     authMiddleware,
+    activeAccountMiddleware,
     serviceMiddleware,
     createUpdateMeController(),
   );

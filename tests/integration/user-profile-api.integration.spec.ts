@@ -70,7 +70,32 @@ describe("UserProfile API Integration", () => {
       res.locals.userProfileService = service;
       next();
     };
-    const usersRouter = createUserProfileRouter({ config, serviceMiddleware, authMiddleware });
+    const activeAccountMiddleware = async (req: any, res: any, next: any) => {
+      try {
+        // Mimic gateway by querying mockRepo
+        let profile;
+        try {
+          profile = await mockRepo.findById(req.context.authentication.principal.id);
+        } catch (err: any) {
+           throw { name: "UserProfileNotFoundError", isAppError: true, statusCode: 404, code: "USER_PROFILE_NOT_FOUND", message: "Not found" };
+        }
+        
+        if (profile.deletedAt) {
+          throw { name: "AccountDeletedError", isAppError: true, statusCode: 403, code: "ACCOUNT_DELETED", message: "Deleted" };
+        }
+        if (profile.accountStatus === "suspended") {
+          throw { name: "AccountDisabledError", isAppError: true, statusCode: 403, code: "ACCOUNT_DISABLED", message: "Disabled" };
+        }
+        if (profile.accountStatus !== "active") {
+          throw { name: "UserProfileNotFoundError", isAppError: true, statusCode: 404, code: "USER_PROFILE_NOT_FOUND", message: "Not found" };
+        }
+        next();
+      } catch (err) {
+        next(err);
+      }
+    };
+
+    const usersRouter = createUserProfileRouter({ config, serviceMiddleware, authMiddleware, activeAccountMiddleware });
 
     const apiRouter = Router();
     apiRouter.use("/users", usersRouter);

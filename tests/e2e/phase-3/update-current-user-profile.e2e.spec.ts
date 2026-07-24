@@ -192,8 +192,8 @@ describe("E2E: Update Current User Profile API", () => {
       .patch("/api/v1/users/me")
       .set("Authorization", `Bearer ${inactiveToken}`)
       .send({ fullName: "Will fail" })
-      .expect(HTTP_STATUS.NOT_FOUND); // As per P3.3/P3.4 specs, missing due to RLS/inactive bubbles to 404
+      .expect(HTTP_STATUS.FORBIDDEN);
 
-    expect(response.body.code).toBe("USER_PROFILE_NOT_FOUND");
+    expect(response.body.code).toBe("ACCOUNT_DELETED");
   });
 });
