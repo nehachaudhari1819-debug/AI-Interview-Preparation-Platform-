@@ -26,13 +26,15 @@ jobs:
           cache: "npm"
 
       - name: Install Supabase CLI
-        run: npm install -g supabase@1.226.4
+        uses: supabase/setup-cli@v1
+        with:
+          version: 1.226.4
 
       - name: Install dependencies
         run: npm ci
 
       - name: Start local Supabase
-        run: npx supabase start
+        run: supabase start
 
       - name: Wait for Supabase readiness
         run: |
@@ -43,7 +45,7 @@ jobs:
       - name: Verify and Generate test environment file
         run: |
           echo "Generating .env.test from Supabase..."
-          npx supabase status -o env > .env.test
+          supabase status -o env > .env.test
 
           # Verify required variables are present
           if ! grep -q "API_URL" .env.test; then
@@ -99,4 +101,4 @@ jobs:
 
       - name: Stop local Supabase
         if: always()
-        run: npx supabase stop --no-backup
+        run: supabase stop --no-backup
