@@ -19,7 +19,7 @@ export class SupabaseAccountAccessStateGateway implements AccountAccessStateGate
     }
 
     const parseResult = accountAccessStateSchema.safeParse(data);
-    
+
     if (!parseResult.success) {
       // Unknown or malformed state -> missing
       return "missing";

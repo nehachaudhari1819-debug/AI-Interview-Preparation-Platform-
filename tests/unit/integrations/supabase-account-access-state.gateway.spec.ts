@@ -34,9 +34,9 @@ describe("SupabaseAccountAccessStateGateway", () => {
     } as unknown as SupabaseClient;
 
     const gateway = new SupabaseAccountAccessStateGateway(mockClient);
-    
+
     await expect(gateway.getCurrentAccountAccessState()).rejects.toThrow(
-      "Account state resolution failed: connection timeout"
+      "Account state resolution failed: connection timeout",
     );
   });
 });

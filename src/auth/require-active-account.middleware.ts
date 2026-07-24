@@ -10,12 +10,14 @@ import { extractBearerToken, readSingleAuthorizationHeader } from "./bearer-toke
 import { asyncHandler } from "../utils/async-handler.js";
 
 export function createRequireActiveAccountMiddleware(
-  config: Readonly<ApplicationConfig>
+  config: Readonly<ApplicationConfig>,
 ): RequestHandler {
   return asyncHandler(async (request, _response, next) => {
     // 1. Ensure the user is authenticated from previous middleware
     if (request.context?.authentication?.state !== "authenticated") {
-      throw new Error("createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware");
+      throw new Error(
+        "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
+      );
     }
 
     let headerValue: string | undefined;
@@ -23,7 +25,9 @@ export function createRequireActiveAccountMiddleware(
       headerValue = readSingleAuthorizationHeader(request);
     } catch {
       // If we got this far without a valid header, something is wrong with our middleware order
-      throw new Error("Missing or invalid authorization header in require-active-account middleware");
+      throw new Error(
+        "Missing or invalid authorization header in require-active-account middleware",
+      );
     }
 
     if (!headerValue) {

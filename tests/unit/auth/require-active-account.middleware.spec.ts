@@ -9,7 +9,9 @@ import * as bearerUtils from "../../../src/auth/bearer-token.js";
 import * as clientUtils from "../../../src/integrations/supabase/create-user-supabase-client.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
 
-jest.mock("../../../src/integrations/supabase/account-authorization/supabase-account-access-state.gateway.js");
+jest.mock(
+  "../../../src/integrations/supabase/account-authorization/supabase-account-access-state.gateway.js",
+);
 jest.mock("../../../src/auth/bearer-token.js");
 jest.mock("../../../src/integrations/supabase/create-user-supabase-client.js");
 
@@ -35,13 +37,15 @@ describe("createRequireActiveAccountMiddleware", () => {
     nextFunction = jest.fn();
 
     jest.spyOn(bearerUtils, "readSingleAuthorizationHeader").mockReturnValue("Bearer some-token");
-    jest.spyOn(bearerUtils, "extractBearerToken").mockReturnValue({ status: "success", token: "some-token" });
+    jest
+      .spyOn(bearerUtils, "extractBearerToken")
+      .mockReturnValue({ status: "success", token: "some-token" });
     jest.spyOn(clientUtils, "createUserSupabaseClient").mockReturnValue({} as any);
 
     mockGatewayInstance = {
       getCurrentAccountAccessState: jest.fn(),
     } as any;
-    
+
     (SupabaseAccountAccessStateGateway as jest.Mock).mockImplementation(() => mockGatewayInstance);
   });
 
@@ -61,36 +65,48 @@ describe("createRequireActiveAccountMiddleware", () => {
     mockGatewayInstance.getCurrentAccountAccessState.mockResolvedValue("disabled");
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(middleware(mockRequest as Request, mockResponse as Response, nextFunction)).rejects.toThrow(AccountDisabledError);
+    await expect(
+      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
+    ).rejects.toThrow(AccountDisabledError);
   });
 
   it("throws AccountDeletedError if state is deleted", async () => {
     mockGatewayInstance.getCurrentAccountAccessState.mockResolvedValue("deleted");
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(middleware(mockRequest as Request, mockResponse as Response, nextFunction)).rejects.toThrow(AccountDeletedError);
+    await expect(
+      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
+    ).rejects.toThrow(AccountDeletedError);
   });
 
   it("throws UserProfileNotFoundError if state is missing", async () => {
     mockGatewayInstance.getCurrentAccountAccessState.mockResolvedValue("missing");
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(middleware(mockRequest as Request, mockResponse as Response, nextFunction)).rejects.toThrow(UserProfileNotFoundError);
+    await expect(
+      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
+    ).rejects.toThrow(UserProfileNotFoundError);
   });
 
   it("throws ServiceUnavailableError if gateway throws an expected error", async () => {
-    mockGatewayInstance.getCurrentAccountAccessState.mockRejectedValue(new Error("Account state resolution failed: timeout"));
+    mockGatewayInstance.getCurrentAccountAccessState.mockRejectedValue(
+      new Error("Account state resolution failed: timeout"),
+    );
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(middleware(mockRequest as Request, mockResponse as Response, nextFunction)).rejects.toThrow(ServiceUnavailableError);
+    await expect(
+      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
+    ).rejects.toThrow(ServiceUnavailableError);
   });
 
   it("throws generic error if authentication is missing from context", async () => {
     mockRequest.context = undefined;
     const middleware = createRequireActiveAccountMiddleware(mockConfig);
 
-    await expect(middleware(mockRequest as Request, mockResponse as Response, nextFunction)).rejects.toThrow(
-      "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware"
+    await expect(
+      middleware(mockRequest as Request, mockResponse as Response, nextFunction),
+    ).rejects.toThrow(
+      "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
     );
   });
 });

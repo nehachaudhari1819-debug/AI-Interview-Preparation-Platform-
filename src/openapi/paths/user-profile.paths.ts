@@ -5,8 +5,7 @@ export const userProfilePaths: Record<string, PathItemObject> = {
     get: {
       tags: ["Users"],
       summary: "Get current user profile",
-      description:
-        "Retrieves the canonical profile of the currently authenticated active user.",
+      description: "Retrieves the canonical profile of the currently authenticated active user.",
       security: [{ bearerAuth: [] }],
       responses: {
         "200": {
