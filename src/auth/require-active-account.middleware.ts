@@ -14,7 +14,7 @@ export function createRequireActiveAccountMiddleware(
 ): RequestHandler {
   return asyncHandler(async (request, _response, next) => {
     // 1. Ensure the user is authenticated from previous middleware
-    if (request.context?.authentication?.state !== "authenticated") {
+    if (request.context.authentication.state !== "authenticated") {
       throw new Error(
         "createRequireActiveAccountMiddleware must be run after createAuthenticationMiddleware",
       );

@@ -35,7 +35,7 @@ describe("E2E: Authorization RLS Integration (Phase 3.6)", () => {
     });
     if (aRes.error) throw new Error("createUser A failed: " + aRes.error.message);
     if (!aRes.data.user) throw new Error("createUser A returned null user without error");
-    testUsers.push(aRes.data.user!.id);
+    testUsers.push(aRes.data.user.id);
     const loginA = await authGateway.loginWithPassword({
       email: identityA.email,
       password: identityA.password,

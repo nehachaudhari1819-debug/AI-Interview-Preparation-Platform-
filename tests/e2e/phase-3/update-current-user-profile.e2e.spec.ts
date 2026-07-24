@@ -33,7 +33,7 @@ describe("E2E: Update Current User Profile API", () => {
     });
     if (aRes.error) throw new Error("createUser A failed: " + aRes.error.message);
     if (!aRes.data.user) throw new Error("createUser A returned null user without error");
-    testUsers.push(aRes.data.user!.id);
+    testUsers.push(aRes.data.user.id);
 
     // Login user
     const loginRes = await authGateway.loginWithPassword({
