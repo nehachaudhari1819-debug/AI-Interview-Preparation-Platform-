@@ -13,9 +13,7 @@ describe("Audit Middleware", () => {
 
   beforeEach(() => {
     mockAuditRepo = { logEvent: jest.fn<() => Promise<void>>().mockResolvedValue(undefined) };
-    jest
-      .spyOn(auditRepoModule, "createSupabaseAuditRepository")
-      .mockReturnValue(mockAuditRepo as any);
+    jest.spyOn(auditRepoModule, "createSupabaseAuditRepository").mockReturnValue(mockAuditRepo);
 
     mockRequest = {
       ip: "127.0.0.1",

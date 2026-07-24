@@ -18,7 +18,7 @@ describe("Idempotency Middleware", () => {
     };
     jest
       .spyOn(idempotencyRepoModule, "createSupabaseIdempotencyRepository")
-      .mockReturnValue(mockRepo as any);
+      .mockReturnValue(mockRepo);
 
     mockRequest = {
       headers: {
