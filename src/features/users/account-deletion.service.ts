@@ -48,7 +48,17 @@ export class AccountDeletionService {
     }
 
     if (prepareResult.status === "failed") {
-      if (prepareResult.reason === "account_already_deleted") {
+      if (prepareResult.reason === "account_suspended") {
+        throw new AppError({
+          statusCode: 403,
+          code: "ACCOUNT_DISABLED",
+          message: "Account is suspended.",
+        });
+      }
+      if (
+        prepareResult.reason === "account_already_deleted" ||
+        prepareResult.reason === "account_deletion_pending"
+      ) {
         throw new AppError({
           statusCode: 403,
           code: "ACCOUNT_DELETED",

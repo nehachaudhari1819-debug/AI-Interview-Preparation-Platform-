@@ -172,4 +172,108 @@ describe("Phase 3.5: DELETE /api/v1/users/me (Account Deactivation)", () => {
     expect(res.body.success).toBe(false);
     expect(res.body.code).toBe("VALIDATION_ERROR");
   });
+
+  it("should return 403 ACCOUNT_DISABLED if account is suspended", async () => {
+    const identity = generateTestIdentity("me-api-del-susp");
+    const result = await authGateway.registerWithPassword({
+      email: identity.email,
+      password: identity.password,
+      emailRedirectTo: "http://localhost:3000/callback",
+    });
+    if (!result.success || !result.session) throw new Error("Failed to register test user");
+    const session = result.session;
+    testUsers.push(session.user.id);
+
+    await testAdminClient
+      .from("users")
+      .update({ account_status: "suspended" })
+      .eq("id", session.user.id);
+
+    const res = await request(app)
+      .delete("/api/v1/users/me")
+      .set("Authorization", `Bearer ${session.accessToken}`)
+      .set("Idempotency-Key", "test-key-" + Date.now())
+      .expect(403);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.code).toBe("ACCOUNT_DISABLED");
+  });
+
+  it("should return 403 ACCOUNT_DELETED if account is deletion_pending", async () => {
+    const identity = generateTestIdentity("me-api-del-pend");
+    const result = await authGateway.registerWithPassword({
+      email: identity.email,
+      password: identity.password,
+      emailRedirectTo: "http://localhost:3000/callback",
+    });
+    if (!result.success || !result.session) throw new Error("Failed to register test user");
+    const session = result.session;
+    testUsers.push(session.user.id);
+
+    await testAdminClient
+      .from("users")
+      .update({ account_status: "deletion_pending" })
+      .eq("id", session.user.id);
+
+    const res = await request(app)
+      .delete("/api/v1/users/me")
+      .set("Authorization", `Bearer ${session.accessToken}`)
+      .set("Idempotency-Key", "test-key-" + Date.now())
+      .expect(403);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.code).toBe("ACCOUNT_DELETED");
+  });
+
+  it("should return 403 ACCOUNT_DELETED if account is deleted", async () => {
+    const identity = generateTestIdentity("me-api-del-del");
+    const result = await authGateway.registerWithPassword({
+      email: identity.email,
+      password: identity.password,
+      emailRedirectTo: "http://localhost:3000/callback",
+    });
+    if (!result.success || !result.session) throw new Error("Failed to register test user");
+    const session = result.session;
+    testUsers.push(session.user.id);
+
+    await testAdminClient
+      .from("users")
+      .update({ account_status: "deleted" })
+      .eq("id", session.user.id);
+
+    const res = await request(app)
+      .delete("/api/v1/users/me")
+      .set("Authorization", `Bearer ${session.accessToken}`)
+      .set("Idempotency-Key", "test-key-" + Date.now())
+      .expect(403);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.code).toBe("ACCOUNT_DELETED");
+  });
+
+  it("should return 403 ACCOUNT_DELETED if deleted_at is not null", async () => {
+    const identity = generateTestIdentity("me-api-del-delat");
+    const result = await authGateway.registerWithPassword({
+      email: identity.email,
+      password: identity.password,
+      emailRedirectTo: "http://localhost:3000/callback",
+    });
+    if (!result.success || !result.session) throw new Error("Failed to register test user");
+    const session = result.session;
+    testUsers.push(session.user.id);
+
+    await testAdminClient
+      .from("users")
+      .update({ account_status: "active", deleted_at: new Date().toISOString() })
+      .eq("id", session.user.id);
+
+    const res = await request(app)
+      .delete("/api/v1/users/me")
+      .set("Authorization", `Bearer ${session.accessToken}`)
+      .set("Idempotency-Key", "test-key-" + Date.now())
+      .expect(403);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.code).toBe("ACCOUNT_DELETED");
+  });
 });
