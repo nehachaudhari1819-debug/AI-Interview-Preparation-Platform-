@@ -12,7 +12,7 @@ describe("Idempotency Middleware", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
-  let mockRepo: { tryAcquire: jest.Mock; complete: jest.Mock };
+  let mockRepo: { tryAcquire: jest.Mock<any>; complete: jest.Mock<any> };
   const mockConfig = {} as ApplicationConfig;
 
   beforeEach(() => {
@@ -41,7 +41,7 @@ describe("Idempotency Middleware", () => {
       statusCode: 200,
       json: jest.fn().mockReturnThis(),
       status: jest.fn().mockReturnThis(),
-      on: jest.fn().mockImplementation((event, cb) => {
+      on: jest.fn().mockImplementation((event: string, cb: any) => {
         if (event === "finish") finishCallback = cb;
         return mockResponse;
       }),

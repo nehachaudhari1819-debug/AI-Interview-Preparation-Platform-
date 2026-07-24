@@ -13,7 +13,7 @@ describe("Audit Middleware", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
-  let mockAuditRepo: { logEvent: jest.Mock };
+  let mockAuditRepo: { logEvent: jest.Mock<any> };
   const mockConfig = {} as ApplicationConfig;
 
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe("Audit Middleware", () => {
       locals: {
         auditMetadata: { changedFields: ["fullName"] },
       },
-      on: jest.fn().mockImplementation((event, cb) => {
+      on: jest.fn().mockImplementation((event: string, cb: any) => {
         if (event === "finish") {
           finishCallback = cb;
         }
