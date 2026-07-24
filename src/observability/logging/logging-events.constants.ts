@@ -11,4 +11,5 @@ export const LOG_EVENTS = {
   httpRequestAborted: "http.request.aborted",
   httpRequestError: "http.request.error",
   readinessFailed: "health.readiness.failed",
+  systemAuditFailed: "system.audit_failed",
 } as const;

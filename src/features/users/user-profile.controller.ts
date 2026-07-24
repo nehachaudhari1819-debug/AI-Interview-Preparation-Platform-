@@ -38,8 +38,13 @@ export function createUpdateMeController() {
     }
 
     const input = parseUpdateUserProfileRequest(req.body);
+    const changedFields = Object.keys(input);
     const profile = await service.updateCurrentUserProfile(principal.userId, input);
     const safeResponse = mapUserProfileToResponse(profile);
+
+    // Inject audit metadata for the audit middleware
+    res.locals.auditMetadata = { changedFields };
+    res.locals.auditResourceId = principal.userId;
 
     return sendSuccess({
       response: res,

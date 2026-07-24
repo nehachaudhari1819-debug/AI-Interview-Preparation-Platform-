@@ -9,6 +9,7 @@ import { createDeleteMeController } from "./account-deletion.controller.js";
 import { createAccountDeletionServiceMiddleware } from "./account-deletion.middleware.js";
 import { createAuthSessionRateLimiter } from "../../security/index.js";
 import { createRequireActiveAccountMiddleware } from "../../auth/require-active-account.middleware.js";
+import { createAuditMiddleware } from "../../middleware/audit.middleware.js";
 
 export function createUserProfileRouter(options: {
   config: Readonly<ApplicationConfig>;
@@ -42,12 +43,18 @@ export function createUserProfileRouter(options: {
     createGetMeController(),
   );
 
+  const profileAuditMiddleware = createAuditMiddleware(options.config, {
+    action: "PROFILE_UPDATED",
+    resourceType: "user",
+  });
+
   router.patch(
     "/me",
     authNoStoreMiddleware,
     authMiddleware,
     activeAccountMiddleware,
     serviceMiddleware,
+    profileAuditMiddleware,
     createUpdateMeController(),
   );
 
