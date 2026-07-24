@@ -117,8 +117,8 @@ export function createIdempotencyMiddleware(
             } catch {
               /* ignore */
             }
-          }
-          return res.json(bodyToSend);
+          res.json(bodyToSend);
+          return;
         }
 
         if (result.status === "processing") {
@@ -145,8 +145,8 @@ export function createIdempotencyMiddleware(
                   responseBody: responseBodyForIdempotency,
                 })
                 .catch((error: unknown) => {
-                  const logger = getRequestLogger(req);
-                  logger.error(
+                  const logger = getRequestLogger();
+                  logger?.error(
                     { event: LOG_EVENTS.systemAuditFailed, error, idempotencyKey }, // Reusing event or create a new one? Better use a generic error
                     "Failed to complete idempotency record.",
                   );

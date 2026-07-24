@@ -38,19 +38,15 @@ export function createAuditMiddleware(
             resourceId,
             metadata,
             requestId: req.context.requestId,
-            ipAddress: req.ip,
-            userAgent: req.headers["user-agent"],
+            ipAddress: req.ip ?? null,
+            userAgent: req.headers["user-agent"] ?? null,
           })
           .catch((error: unknown) => {
             // Failed to write audit log - record error in application logs
-            const logger = getRequestLogger(req);
-            logger.error(
-              {
-                event: LOG_EVENTS.systemAuditFailed,
-                error,
-                auditAction: options.action,
-              },
-              "Failed to persist audit log",
+            const logger = getRequestLogger();
+            logger?.error(
+              { event: LOG_EVENTS.systemAuditFailed, error, action: options.action },
+              "Failed to write audit log entry.",
             );
           });
       }
