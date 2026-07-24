@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import type { Request, Response, NextFunction } from "express";
 import { createAuditMiddleware } from "../../../src/middleware/audit.middleware.js";
 import { createSupabaseAuditRepository } from "../../../src/persistence/system/audit.repository.js";
