@@ -16,8 +16,7 @@ BEGIN
   
   -- Insert test user
   INSERT INTO auth.users (id, email) VALUES (test_user_id, 'rlstest@example.com');
-  INSERT INTO public.users (id, email, full_name, role, account_status)
-  VALUES (test_user_id, 'rlstest@example.com', 'Test User', 'student', 'active');
+  UPDATE public.users SET full_name = 'Test User', role = 'student', account_status = 'active' WHERE id = test_user_id;
 
   -- Impersonate user
   PERFORM set_config('request.jwt.claim.sub', test_user_id::text, true);
@@ -84,8 +83,7 @@ BEGIN
   test_user_id := gen_random_uuid();
   
   INSERT INTO auth.users (id, email) VALUES (test_user_id, 'rlstest2@example.com');
-  INSERT INTO public.users (id, email, full_name, role, account_status)
-  VALUES (test_user_id, 'rlstest2@example.com', 'Test User', 'student', 'suspended');
+  UPDATE public.users SET full_name = 'Test User', role = 'student', account_status = 'suspended' WHERE id = test_user_id;
 
   PERFORM set_config('request.jwt.claim.sub', test_user_id::text, true);
   PERFORM set_config('request.jwt.claim.role', 'authenticated', true);
@@ -110,8 +108,7 @@ BEGIN
   test_user_id := gen_random_uuid();
   
   INSERT INTO auth.users (id, email) VALUES (test_user_id, 'rlstest3@example.com');
-  INSERT INTO public.users (id, email, full_name, role, account_status, deleted_at)
-  VALUES (test_user_id, 'rlstest3@example.com', 'Test User', 'student', 'deleted', NOW());
+  UPDATE public.users SET full_name = 'Test User', role = 'student', account_status = 'deleted', deleted_at = NOW() WHERE id = test_user_id;
 
   PERFORM set_config('request.jwt.claim.sub', test_user_id::text, true);
   PERFORM set_config('request.jwt.claim.role', 'authenticated', true);
@@ -139,9 +136,8 @@ BEGIN
   test_user_b := gen_random_uuid();
   
   INSERT INTO auth.users (id, email) VALUES (test_user_a, 'user_a@example.com'), (test_user_b, 'user_b@example.com');
-  INSERT INTO public.users (id, email, full_name, role, account_status)
-  VALUES (test_user_a, 'user_a@example.com', 'User A', 'student', 'active'),
-         (test_user_b, 'user_b@example.com', 'User B', 'student', 'active');
+  UPDATE public.users SET full_name = 'User A', role = 'student', account_status = 'active' WHERE id = test_user_a;
+  UPDATE public.users SET full_name = 'User B', role = 'student', account_status = 'active' WHERE id = test_user_b;
 
   -- Impersonate A
   PERFORM set_config('request.jwt.claim.sub', test_user_a::text, true);
