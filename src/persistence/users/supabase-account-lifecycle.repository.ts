@@ -63,7 +63,6 @@ export function createSupabaseAccountLifecycleRepository(
         const { data, error } = await client.rpc("prepare_soft_delete_account", {
           p_user_id: input.userId,
           p_idempotency_key: input.idempotencyKey,
-          p_request_id: input.requestId,
           p_request_hash: input.requestHash,
           p_operation: input.operation,
         });

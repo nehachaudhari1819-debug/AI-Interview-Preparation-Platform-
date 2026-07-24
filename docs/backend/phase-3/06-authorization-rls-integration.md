@@ -33,7 +33,10 @@ Migration `20260101000009_phase3_authorization_rls_integration.sql` handles:
 2. Policy hardening for `public.users` guaranteeing isolated read/write logic.
 3. Finalizing correct schema ownership.
 
-Migration `20260101000008_finalize_p3_5_deletion_hardening.sql` added the critical `FOR UPDATE` lock around `idempotency_records` ensuring parallel deactivations don't skip audit logs.
+Migration `20260101000010_phase3_6_authorization_corrections.sql` applies final corrections:
+
+1. Drops the unused `p_request_id` parameter from `prepare_soft_delete_account`.
+2. Adds the critical `FOR UPDATE` lock around `idempotency_records` in `finalize_soft_delete_account` ensuring parallel deactivations safely queue without bypassing audit logs.
 
 ## Grants
 

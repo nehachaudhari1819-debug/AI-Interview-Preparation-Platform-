@@ -234,7 +234,6 @@ export type Database = {
         Args: {
           p_user_id: string
           p_idempotency_key: string
-          p_request_id: string
           p_request_hash: string
           p_operation: string
         }
