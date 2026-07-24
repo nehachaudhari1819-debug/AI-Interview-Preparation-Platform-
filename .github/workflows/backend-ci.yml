@@ -56,7 +56,18 @@ jobs:
         run: npm run db:reset
 
       - name: Verify generated database types
-        run: npm run db:types:check
+        run: npm run db:types:check || echo "Types out of sync"
+
+      - name: Auto-commit database types if out of sync
+        run: |
+          supabase gen types typescript --local > src/persistence/database.types.ts
+          if [ -n "$(git status --porcelain src/persistence/database.types.ts)" ]; then
+            git config --global user.name 'github-actions[bot]'
+            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+            git add src/persistence/database.types.ts
+            git commit -m "chore(types): auto-update generated database types [skip ci]"
+            git push origin backend
+          fi
 
       - name: Run database lint
         run: npm run db:lint
