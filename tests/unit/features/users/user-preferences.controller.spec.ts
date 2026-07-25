@@ -23,6 +23,7 @@ describe("UserPreferencesController", () => {
       context: {
         requestId: "test-request-id",
         authentication: {
+          state: "authenticated",
           principal: {
             userId: "user-1",
             role: "student",
@@ -59,10 +60,14 @@ describe("UserPreferencesController", () => {
       );
     });
 
-    it("should throw 500 if service is missing from locals", async () => {
+    it("should pass error to next if service is missing from locals", async () => {
       res.locals = {};
       const handler = createGetPreferencesController();
-      await expect(handler(req as Request, res as Response, next)).rejects.toThrow();
+      await handler(req as Request, res as Response, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+      const err = (next as jest.Mock).mock.calls[0]![0] as Error;
+      expect(err.message).toBe("UserPreferencesService not found in request context");
     });
   });
 

@@ -16,7 +16,7 @@ export class UserPreferencesService {
     if (!preferences) {
       throw new AppError({
         statusCode: 404,
-        code: "NOT_FOUND",
+        code: "RESOURCE_NOT_FOUND",
         message: "User preferences not found",
       });
     }
@@ -38,7 +38,7 @@ export class UserPreferencesService {
     if (!updated) {
       throw new AppError({
         statusCode: 404,
-        code: "NOT_FOUND",
+        code: "RESOURCE_NOT_FOUND",
         message: "User preferences not found or update failed",
       });
     }
