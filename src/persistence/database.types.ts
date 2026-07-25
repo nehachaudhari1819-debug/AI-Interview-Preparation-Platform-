@@ -152,6 +152,47 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          locale: string
+          practice_reminders_enabled: boolean
+          product_updates_enabled: boolean
+          time_zone: string
+          updated_at: string
+          user_id: string
+          weekly_progress_summary_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          locale?: string
+          practice_reminders_enabled?: boolean
+          product_updates_enabled?: boolean
+          time_zone?: string
+          updated_at?: string
+          user_id: string
+          weekly_progress_summary_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          locale?: string
+          practice_reminders_enabled?: boolean
+          product_updates_enabled?: boolean
+          time_zone?: string
+          updated_at?: string
+          user_id?: string
+          weekly_progress_summary_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           account_status: Database["public"]["Enums"]["account_status_enum"]

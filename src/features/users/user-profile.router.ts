@@ -9,6 +9,7 @@ import { createDeleteMeController } from "./account-deletion.controller.js";
 import { createAccountDeletionServiceMiddleware } from "./account-deletion.middleware.js";
 import { createAuthSessionRateLimiter } from "../../security/index.js";
 import { createRequireActiveAccountMiddleware } from "../../auth/require-active-account.middleware.js";
+import { createUserPreferencesRouter } from "./user-preferences.router.js";
 
 export function createUserProfileRouter(options: {
   config: Readonly<ApplicationConfig>;
@@ -64,6 +65,13 @@ export function createUserProfileRouter(options: {
     deletionServiceMiddleware,
     createDeleteMeController(options.config),
   );
+
+  const preferencesRouter = createUserPreferencesRouter({
+    config: options.config,
+    authMiddleware,
+    activeAccountMiddleware,
+  });
+  router.use("/me/preferences", preferencesRouter);
 
   return router;
 }

@@ -13,3 +13,11 @@ export * from "./account-deletion-response.mapper.js";
 export * from "./account-deletion.service.js";
 export * from "./account-deletion.controller.js";
 export * from "./account-deletion.middleware.js";
+
+export * from "./user-preferences.types.js";
+export * from "./user-preferences.schemas.js";
+export * from "./user-preferences.normalizers.js";
+export * from "./user-preferences-response.mapper.js";
+export * from "./user-preferences.service.js";
+export * from "./user-preferences.controller.js";
+export * from "./user-preferences.router.js";
