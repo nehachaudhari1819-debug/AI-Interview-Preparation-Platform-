@@ -14,8 +14,8 @@ Phase 4 (Question Bank and Content Management) is FORMALLY STARTED. P4.1 is AUTH
 
 ## 4. Approved baseline
 
-**Baseline Commit:** `07ce81e605e0c90b4468cb72b01298242ae553b4`
-**CI Status:** Backend CI #96 — Success
+**Baseline Commit:** `c2bdeb9375aa9b998f193778df02af7faa7e1e33`
+**CI Status:** Backend CI #98 — Failed (Correction Required)
 **Branch:** `backend`
 
 ## 5. Phase 4 objective
@@ -99,11 +99,11 @@ The core domain entity is split across two tables to enforce security boundaries
 
 ## 13. Field classification
 
-- **Student-readable:** `id`, `questionText`, `categoryId`, `difficultyId`, `interviewTypeId`, `status`, `createdAt`, `updatedAt`, `publishedAt`, `archivedAt` (if published).
-- **Admin-readable:** All fields across both tables.
+- **Student-readable:** `id`, `questionText`, `categoryId`, `difficultyId`, `interviewTypeId`, `createdAt`, `updatedAt`. (Internal lifecycle fields like status, publishedAt, archivedAt are explicitly NOT exposed to the frontend).
+- **Admin-readable:** All fields across both tables, including status and lifecycle timestamps.
 - **Admin-writable:** All except internally managed timestamps.
 - **Internal-only / Sensitive:** `referenceAnswer`, `evaluationGuidance`.
-- **Prohibited for students:** All fields in `question_internal_data`, creator PII.
+- **Prohibited for students:** All fields in `question_internal_data`, creator PII, status, publishedAt, archivedAt.
 
 ## 14. Sensitive content
 
@@ -113,11 +113,18 @@ The core domain entity is split across two tables to enforce security boundaries
 
 Official taxonomies require stable identifiers, human-readable names, and active states. All taxonomies are modeled as relational tables.
 
-- **Question Categories:** `question_categories` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
-- **Question Difficulties:** `question_difficulties` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
-- **Question Interview Types:** `question_interview_types` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
-- **Skills:** `question_skills` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
-- **Topics:** `question_topics` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
+**Shared Taxonomy Shape (applies to Categories, Difficulties, Interview Types, Skills, Topics):**
+
+- `id` (UUID, PK)
+- `slug` (Text, Unique, Case-insensitive uniqueness enforced via database collation or lowercasing trigger)
+- `name` (Text, Unique, Case-insensitive uniqueness enforced via database collation or lowercasing trigger)
+- `description` (Text, optional)
+- `display_order` (Integer, default 0)
+- `is_active` (Boolean, default true)
+- `created_at` (TimestampTZ)
+- `updated_at` (TimestampTZ, auto-updates on modification)
+
+**Archive Behavior:** Taxonomies do not have a dedicated `archived_at` timestamp. Archival is strictly managed by setting `is_active = false`. Soft deletion is not supported for taxonomies.
 
 ## 16. Relationship model
 
@@ -132,7 +139,8 @@ Official taxonomies require stable identifiers, human-readable names, and active
 
 - **Draft:** Visible only to admins. Used during creation and review. `published_at` is null.
 - **Published:** Visible to active students. Searchable and filterable. `published_at` is populated.
-- **Archived:** Preserved for history, removed from student visibility. `archived_at` is populated. Can be restored.
+- **Archived:** Preserved for history, removed from student visibility. `archived_at` is populated.
+- **Restore Behavior:** Restoring an archived question sets it back to **Draft** only. It must be explicitly republished through the `/publish` endpoint to become visible to students again.
 
 ## 18. Student access
 
@@ -161,13 +169,18 @@ Admins may create, update, publish, archive, and restore questions. Admins may v
 - `POST /api/v1/admin/questions/:questionId/publish`
 - `POST /api/v1/admin/questions/:questionId/archive`
 - `POST /api/v1/admin/questions/:questionId/restore`
+
+**Taxonomy Management:**
+Valid `taxonomyType` values: `categories`, `difficulties`, `interview-types`, `skills`, `topics`.
+
 - `POST /api/v1/admin/taxonomies/:taxonomyType`
-- `PATCH /api/v1/admin/taxonomies/:taxonomyType/:id`
+- `PATCH /api/v1/admin/taxonomies/:taxonomyType/:id` (Updates metadata. To **archive** or **restore**, patch the `isActive` boolean).
 
 ## 22. Search contract
 
-- **Query Parameter:** `q` or `search`
-- **Minimum length:** 3 characters.
+- **Query Parameter:** Exactly `search`.
+- **Empty State:** An omitted or empty `search` parameter explicitly means "no search filter applied."
+- **Minimum length:** 3 characters (when provided).
 - **Maximum length:** 100 characters.
 - **Behavior:** Case-insensitive search on `questions.question_text`.
 - **Security:** Excludes `question_internal_data` completely from search.
@@ -177,7 +190,7 @@ Admins may create, update, publish, archive, and restore questions. Admins may v
 - **Allowed filters:** `categoryId`, `difficultyId`, `interviewTypeId`, `skillId`, `topicId`.
 - Admin-only filter: `status`.
 - **Behavior:** AND logic across different parameters, OR logic for multiple values in the same parameter.
-- **Validation:** Must be valid UUIDv4 strings.
+- **Validation:** Must be valid UUIDv4 strings. Array parameter limit: max 10 elements.
 
 ## 24. Sort contract
 
@@ -188,11 +201,69 @@ Admins may create, update, publish, archive, and restore questions. Admins may v
 
 ## 25. Pagination contract
 
-- **Style:** Offset/Limit Pagination.
+- **Strategy:** Page-based offset pagination. NO cursor support in Phase 4.
 - **Parameters:** `page` (integer, default 1, min 1), `limit` (integer, default 20, max 100).
-- **Metadata Response:**
-  ```json
+- **Metadata Response:** Returns total metrics alongside page context.
+
+## 26. Response contracts
+
+Every standard API response must include the approved envelope and `meta.requestId`.
+
+**QuestionSummary (Student List Item):**
+
+```json
+{
+  "id": "uuid",
+  "questionText": "...",
+  "categoryId": "uuid",
+  "difficultyId": "uuid",
+  "interviewTypeId": "uuid",
+  "createdAt": "iso",
+  "updatedAt": "iso"
+}
+```
+
+**QuestionDetail (Student Detail Item):**
+
+```json
+{
+  "id": "uuid",
+  "questionText": "...",
+  "categoryId": "uuid",
+  "difficultyId": "uuid",
+  "interviewTypeId": "uuid",
+  "createdAt": "iso",
+  "updatedAt": "iso"
+}
+```
+
+**AdminQuestionDetail (Admin Detail Item):**
+
+```json
+{
+  "id": "uuid",
+  "questionText": "...",
+  "categoryId": "uuid",
+  "difficultyId": "uuid",
+  "interviewTypeId": "uuid",
+  "status": "published",
+  "publishedAt": "iso",
+  "archivedAt": null,
+  "createdAt": "iso",
+  "updatedAt": "iso",
+  "referenceAnswer": "...",
+  "evaluationGuidance": { "rubric": "..." }
+}
+```
+
+**QuestionListResponse (Student):**
+
+```json
+{
+  "success": true,
+  "data": [{ "id": "uuid", "...": "..." }],
   "meta": {
+    "requestId": "uuid",
     "totalItems": 150,
     "totalPages": 8,
     "currentPage": 1,
@@ -200,25 +271,25 @@ Admins may create, update, publish, archive, and restore questions. Admins may v
     "hasNextPage": true,
     "hasPreviousPage": false
   }
-  ```
+}
+```
 
-## 26. Response contracts
-
-**Student Question Detail Response (redacted):**
+**TaxonomyListResponse:**
 
 ```json
 {
   "success": true,
-  "data": {
-    "id": "uuid-v4",
-    "questionText": "...",
-    "categoryId": "uuid-v4",
-    "difficultyId": "uuid-v4",
-    "interviewTypeId": "uuid-v4",
-    "status": "published",
-    "createdAt": "2026-07-25T00:00:00.000Z",
-    "publishedAt": "2026-07-25T01:00:00.000Z"
-  }
+  "data": [
+    {
+      "id": "uuid",
+      "slug": "...",
+      "name": "...",
+      "description": "...",
+      "displayOrder": 0,
+      "isActive": true
+    }
+  ],
+  "meta": { "requestId": "uuid" }
 }
 ```
 
@@ -226,16 +297,26 @@ Admins may create, update, publish, archive, and restore questions. Admins may v
 
 - **Question Text:** Required, trimmed, min 10 chars, max 2000 chars.
 - **Taxonomies:** Must exist and be active upon question association.
-- **Status Transitions:** Draft -> Published -> Archived -> Draft/Published (via restore).
-- **Filters/Search:** Array parameter limit: max 10 elements.
+- **Status Transitions:** Draft -> Published -> Archived -> Draft (via restore).
 
 ## 28. Authorization matrix
 
-- **Anonymous:** DENY ALL.
-- **Suspended/Deleted/Pending Student:** DENY ALL.
-- **Active Student:** READ published questions, READ active taxonomies.
-- **Active Admin:** CREATE, READ, UPDATE, PUBLISH, ARCHIVE, RESTORE all questions and taxonomies. READ/WRITE sensitive fields.
-- **Service Role:** System jobs and migrations only.
+Every unspecified cell defaults to **DENY**.
+
+| Actor               | Q List | Q Detail | Draft/Arch Reads | Sens. Reads | Q Create | Q Update | Q Pub/Arch/Rest | Tax. Mgmt | Audit Read |
+| :------------------ | :----: | :------: | :--------------: | :---------: | :------: | :------: | :-------------: | :-------: | :--------: |
+| Anonymous           |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Active Student      | ALLOW  |  ALLOW   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Suspended Student   |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Del-Pending Student |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Deleted Student     |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Active Admin        | ALLOW  |  ALLOW   |      ALLOW       |    ALLOW    |  ALLOW   |  ALLOW   |      ALLOW      |   ALLOW   |   ALLOW    |
+| Suspended Admin     |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Del-Pending Admin   |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Deleted Admin       |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+| Service Role        |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
+
+_(Note: Active Students only read published questions. Service role is restricted to migrations/internal jobs)._
 
 ## 29. RLS strategy
 
@@ -253,7 +334,12 @@ The application repository layer restricts column selection. The database RLS st
 
 ## 32. Audit plan
 
-Actions to be audited securely in `audit_logs` (with `user_id` and IP):
+Audit writes must be **transactionally durable** with the source database mutation. IP storage is explicitly approved and captured from request boundaries. Failed operations are NOT audited in the `audit_logs` table (errors go to application logging). No-op updates (no fields changed) do NOT write audit logs.
+
+**Safe Metadata:**
+Metadata must only contain safe identifiers (`question_id`, `taxonomy_id`), previous state enum values, and field keys that were changed. It must NEVER contain full question text, reference answers, rubrics, or raw request bodies.
+
+**Actions (Resource Type: `QUESTION` or `TAXONOMY`):**
 
 - `QUESTION_CREATED`
 - `QUESTION_UPDATED`
@@ -261,17 +347,28 @@ Actions to be audited securely in `audit_logs` (with `user_id` and IP):
 - `QUESTION_ARCHIVED`
 - `QUESTION_RESTORED`
 - `TAXONOMY_CREATED`
-- `TAXONOMY_UPDATED`
+- `TAXONOMY_UPDATED` (covers edits)
+- `TAXONOMY_ARCHIVED` (triggered when `isActive` -> `false`)
+- `TAXONOMY_RESTORED` (triggered when `isActive` -> `true`)
 
 ## 33. Idempotency plan
 
-`Idempotency-Key` headers will map to generic idempotency framework (`idempotency_records`) for state mutations:
+Idempotency applies to admin mutative routes via the `Idempotency-Key` header and the generic `idempotency_records` table.
 
-- `POST /api/v1/admin/questions`
-- `POST /api/v1/admin/questions/:questionId/publish`
-- `POST /api/v1/admin/questions/:questionId/archive`
-- `POST /api/v1/admin/questions/:questionId/restore`
-- `POST /api/v1/admin/taxonomies/:taxonomyType`
+- **Operations protected:**
+  - `admin.questions.create`
+  - `admin.questions.publish`
+  - `admin.questions.archive`
+  - `admin.questions.restore`
+  - `admin.taxonomies.create`
+- _(Note: Taxonomy archive/restore is performed via generic PATCH `isActive`, which is conventionally non-idempotent-protected in this architecture, but safe since it sets boolean state)._
+- **Canonical Fingerprint:** SHA-256 of the authenticated `userId`, operation name, and JSON request body.
+- **Conflict Behavior:** `409 Conflict` if fingerprints mismatch for the same key.
+- **In-Progress Behavior:** `409 Conflict` (or `429 Too Many Requests`) if an operation is currently processing.
+- **Lease Duration:** 30 seconds for the initial processing lock.
+- **Failure Transition:** Hard failures cleanly roll back the idempotency record or mark it failed, allowing safe retries.
+- **Record Expiry:** Idempotency records expire and are scavenged after 24 hours.
+- **Audit Interaction:** Returning a cached idempotent response does NOT generate a duplicate `audit_log` entry.
 
 ## 34. Error contracts
 
@@ -282,10 +379,10 @@ Actions to be audited securely in `audit_logs` (with `user_id` and IP):
 
 ## 35. Rate-limit plan
 
-Uses existing verified policies:
+Uses existing verified policies only. Dedicated admin rate limits require separate Phase 4 implementation and are NOT assumed available.
 
-- **Student endpoints (list/detail/taxonomies):** `authenticated_api`
-- **Admin endpoints (CRUD/transitions):** `admin_api`
+- **Student endpoints:** `global-api`
+- **Admin endpoints:** `global-api` (paired strictly with active-admin authorization middleware).
 
 ## 36. Cache plan
 
@@ -321,7 +418,7 @@ Frontend receives `page`, `limit`, and metadata for list tables. Empty states mu
 
 - Router & Controller HTTP tests for all endpoints.
 - Authorization rejection for admin routes by student tokens.
-- Pagination cursor and filter intersection testing.
+- Pagination offset and filter intersection testing (NO cursor tests).
 
 ## 42. Security test plan
 
