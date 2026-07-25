@@ -42,8 +42,8 @@ P3.8 delivers the secure backend account-settings resource that allows an authen
 
 - Table: `public.user_preferences`
 - Primary Key: `user_id` (UUID, FK to `public.users(id)` ON DELETE CASCADE)
-- `locale`: VARCHAR(10) NOT NULL DEFAULT 'en'
-- `time_zone`: VARCHAR(50) NOT NULL DEFAULT 'UTC'
+- `locale`: VARCHAR(35) NOT NULL DEFAULT 'en'
+- `time_zone`: VARCHAR(64) NOT NULL DEFAULT 'UTC'
 - `practice_reminders_enabled`: BOOLEAN NOT NULL DEFAULT false
 - `weekly_progress_summary_enabled`: BOOLEAN NOT NULL DEFAULT false
 - `product_updates_enabled`: BOOLEAN NOT NULL DEFAULT false
@@ -104,7 +104,14 @@ P3.8 delivers the secure backend account-settings resource that allows an authen
 - **Real Supabase E2E Tests**: Tests full flow against real Supabase instance, including cross-user checks, DB triggers for audits, and Data API security isolation.
 - **Security Tests**: Ensures Express router boundaries prevent cross-user ID injection.
 
-## 10. Next-Phase Boundary
+## 10. Acceptance Criteria
+
+- Database triggers reliably prevent audits for no-op preference updates.
+- End-to-end OpenAPI documentation accurately reflects the preference contracts.
+- E2E tests prove updated_at behaviors correctly distinguish between no-op and actual updates.
+- Database documentation remains accurate and aligns exactly with migrations.
+
+## 11. Next-Phase Boundary
 
 - This completes Phase 3.8.
 - No work is authorized for Phase 4 or beyond.
@@ -112,7 +119,7 @@ P3.8 delivers the secure backend account-settings resource that allows an authen
 
 ---
 
-### Approval Checkpoint
+## 12. Approval Checkpoint
 
 Please review the source diff, test results, and this document.
-**STATUS:** PENDING USER REVIEW
+**STATUS:** IMPLEMENTED — REVIEW PENDING

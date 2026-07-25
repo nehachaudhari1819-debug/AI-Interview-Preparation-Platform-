@@ -89,6 +89,9 @@ describe("E2E: User Preferences API", () => {
     }
   });
 
+  let initialUpdatedAt: string;
+  let changedUpdatedAt: string;
+
   it("GET /api/v1/users/me/preferences retrieves default preferences for User A", async () => {
     const response = await request(app)
       .get("/api/v1/users/me/preferences")
@@ -99,6 +102,8 @@ describe("E2E: User Preferences API", () => {
     expect(response.body.data.locale).toBe("en");
     expect(response.body.data.timeZone).toBe("UTC");
     expect(response.body.data.practiceRemindersEnabled).toBe(false);
+
+    initialUpdatedAt = response.body.data.updatedAt;
   });
 
   it("PATCH /api/v1/users/me/preferences updates preferences", async () => {
@@ -117,6 +122,9 @@ describe("E2E: User Preferences API", () => {
     expect(response.body.data.timeZone).toBe("Europe/Paris");
     expect(response.body.data.practiceRemindersEnabled).toBe(true);
     expect(response.body.data.weeklyProgressSummaryEnabled).toBe(false); // Should remain default
+
+    expect(response.body.data.updatedAt).not.toBe(initialUpdatedAt);
+    changedUpdatedAt = response.body.data.updatedAt;
   });
 
   it("GET /api/v1/users/me/preferences verifies persistence", async () => {
@@ -159,13 +167,15 @@ describe("E2E: User Preferences API", () => {
   });
 
   it("Send same-value PATCH and verify audit count is unchanged", async () => {
-    await request(app)
+    const response = await request(app)
       .patch("/api/v1/users/me/preferences")
       .set("Authorization", `Bearer ${validAccessTokenA}`)
       .send({
         locale: "fr-FR", // Same value
       })
       .expect(HTTP_STATUS.OK);
+
+    expect(response.body.data.updatedAt).toBe(changedUpdatedAt);
 
     // Count should still be 1
     const { count, error } = await testAdminClient
