@@ -60,26 +60,9 @@ export const UpdateUserPreferencesInputSchema = z
       })
       .optional(),
 
-    practiceRemindersEnabled: z
-      .boolean({
-        required_error: "practiceRemindersEnabled is required.",
-        invalid_type_error: "practiceRemindersEnabled must be a strict boolean.",
-      })
-      .optional(),
-
-    weeklyProgressSummaryEnabled: z
-      .boolean({
-        required_error: "weeklyProgressSummaryEnabled is required.",
-        invalid_type_error: "weeklyProgressSummaryEnabled must be a strict boolean.",
-      })
-      .optional(),
-
-    productUpdatesEnabled: z
-      .boolean({
-        required_error: "productUpdatesEnabled is required.",
-        invalid_type_error: "productUpdatesEnabled must be a strict boolean.",
-      })
-      .optional(),
+    practiceRemindersEnabled: z.boolean().optional(),
+    weeklyProgressSummaryEnabled: z.boolean().optional(),
+    productUpdatesEnabled: z.boolean().optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {

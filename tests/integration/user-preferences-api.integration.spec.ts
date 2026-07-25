@@ -4,7 +4,7 @@ import { Router } from "express";
 import { createApp } from "../../src/app.js";
 import { createTestApplicationConfig } from "../setup/test-helpers.js";
 import { createAuthenticationMiddleware } from "../../src/auth/create-authentication-middleware.js";
-import { requireActiveAccount } from "../../src/auth/require-active-account.middleware.js";
+import { createRequireActiveAccountMiddleware } from "../../src/auth/require-active-account.middleware.js";
 import { createUserPreferencesRouter } from "../../src/features/users/user-preferences.router.js";
 import type { AccessTokenVerifier } from "../../src/auth/supabase-access-token-verifier.js";
 import type { UserPreferencesRepository } from "../../src/persistence/users/user-preferences.repository.js";
@@ -48,7 +48,6 @@ describe("UserPreferences API Integration", () => {
     };
     mockProfileRepo = {
       findById: jest.fn<any>(),
-      create: jest.fn<any>(),
       updateById: jest.fn<any>(),
     };
 
@@ -58,7 +57,7 @@ describe("UserPreferences API Integration", () => {
       now: () => Date.now(),
     });
 
-    const activeAccountMiddleware = requireActiveAccount({
+    const activeAccountMiddleware = createRequireActiveAccountMiddleware({
       userProfileRepository: mockProfileRepo,
     });
 

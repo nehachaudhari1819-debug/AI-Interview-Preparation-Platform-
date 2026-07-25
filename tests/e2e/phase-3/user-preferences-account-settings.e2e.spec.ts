@@ -142,7 +142,7 @@ describe("E2E: User Preferences API", () => {
     expect(data).toBeDefined();
     expect(data!.length).toBe(1);
 
-    const audit = data![0];
+    const audit = data![0] as any;
     expect(audit.resource_type).toBe("user_preferences");
     expect(audit.resource_id).toBe(validUserIdA);
     expect(audit.metadata).toHaveProperty("changedFields");
@@ -211,7 +211,7 @@ describe("E2E: User Preferences API", () => {
   it("Cross-user access denied via Data API", async () => {
     // Note: The Express API doesn't even accept IDs in URL. It always uses `me`.
     // So the "Attempt User A access to User B" must be done through direct Data API to verify RLS
-    const userAClient = createClient(appConfig.supabase.url, appConfig.supabase.publishableKey, {
+    const userAClient = createClient((appConfig.supabase as any).url, (appConfig.supabase as any).publishableKey, {
       global: {
         headers: {
           Authorization: `Bearer ${validAccessTokenA}`,
@@ -241,7 +241,7 @@ describe("E2E: User Preferences API", () => {
   });
 
   it("Direct authenticated Data API owner update is audited", async () => {
-    const userAClient = createClient(appConfig.supabase.url, appConfig.supabase.publishableKey, {
+    const userAClient = createClient((appConfig.supabase as any).url, (appConfig.supabase as any).publishableKey, {
       global: {
         headers: {
           Authorization: `Bearer ${validAccessTokenA}`,
@@ -271,7 +271,7 @@ describe("E2E: User Preferences API", () => {
   });
 
   it("Client cannot insert or delete preference rows directly via Data API", async () => {
-    const userAClient = createClient(appConfig.supabase.url, appConfig.supabase.publishableKey, {
+    const userAClient = createClient((appConfig.supabase as any).url, (appConfig.supabase as any).publishableKey, {
       global: {
         headers: {
           Authorization: `Bearer ${validAccessTokenA}`,

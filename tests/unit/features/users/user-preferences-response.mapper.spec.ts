@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+// Using Jest globals
 import { mapUserPreferencesResponse } from "../../../../src/features/users/user-preferences-response.mapper.js";
 
 describe("mapUserPreferencesResponse", () => {

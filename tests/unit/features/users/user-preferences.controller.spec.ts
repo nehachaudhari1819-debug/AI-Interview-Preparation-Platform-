@@ -92,7 +92,7 @@ describe("UserPreferencesController", () => {
       await handler(req as Request, res as Response, next);
 
       expect(next).toHaveBeenCalledWith(expect.any(AppError));
-      const err = (next as jest.Mock).mock.calls[0][0] as AppError;
+      const err = (next as jest.Mock).mock.calls[0]![0] as AppError;
       expect(err.code).toBe("VALIDATION_ERROR");
 
       expect(service.updatePreferences).not.toHaveBeenCalled();

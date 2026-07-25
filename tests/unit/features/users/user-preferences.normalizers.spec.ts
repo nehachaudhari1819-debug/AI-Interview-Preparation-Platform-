@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+// Using Jest globals
 import {
   normalizeLocale,
   normalizeTimeZone,

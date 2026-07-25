@@ -1,18 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Mocked } from "vitest";
+import { jest } from "@jest/globals";
 import { UserPreferencesService } from "../../../../src/features/users/user-preferences.service.js";
 import { AppError } from "../../../../src/errors/app-error.js";
 import type { UserPreferencesRepository } from "../../../../src/persistence/users/user-preferences.repository.js";
 import type { UserPreferences } from "../../../../src/features/users/user-preferences.types.js";
 
 describe("UserPreferencesService", () => {
-  let repository: Mocked<UserPreferencesRepository>;
+  let repository: jest.Mocked<UserPreferencesRepository>;
   let service: UserPreferencesService;
 
   beforeEach(() => {
     repository = {
-      findByUserId: vi.fn(),
-      updateByUserId: vi.fn(),
+      findByUserId: jest.fn<any>(),
+      updateByUserId: jest.fn<any>(),
     };
     service = new UserPreferencesService(repository);
   });
