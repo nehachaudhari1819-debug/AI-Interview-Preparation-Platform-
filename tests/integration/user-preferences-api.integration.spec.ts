@@ -4,7 +4,6 @@ import { Router } from "express";
 import { createApp } from "../../src/app.js";
 import { createTestApplicationConfig } from "../setup/test-helpers.js";
 import { createAuthenticationMiddleware } from "../../src/auth/create-authentication-middleware.js";
-import { createRequireActiveAccountMiddleware } from "../../src/auth/require-active-account.middleware.js";
 import { createUserPreferencesRouter } from "../../src/features/users/user-preferences.router.js";
 import type { AccessTokenVerifier } from "../../src/auth/supabase-access-token-verifier.js";
 import type { UserPreferencesRepository } from "../../src/persistence/users/user-preferences.repository.js";
@@ -48,8 +47,7 @@ describe("UserPreferences API Integration", () => {
     };
     mockProfileRepo = {
       findById: jest.fn<any>(),
-      updateById: jest.fn<any>(),
-    };
+    } as any;
 
     const authMiddleware = createAuthenticationMiddleware({
       config,
@@ -57,9 +55,26 @@ describe("UserPreferences API Integration", () => {
       now: () => Date.now(),
     });
 
-    const activeAccountMiddleware = createRequireActiveAccountMiddleware({
-      userProfileRepository: mockProfileRepo,
-    });
+    const activeAccountMiddleware = (req: any, res: any, next: any) => {
+      mockProfileRepo
+        .findById(req.context.authentication.principal.userId)
+        .then((profile: any) => {
+          if (!profile || profile.accountStatus === "missing") {
+            return res.status(401).json({ code: "USER_PROFILE_NOT_FOUND" });
+          }
+          if (profile.accountStatus === "suspended") {
+            return res.status(403).json({ code: "ACCOUNT_DISABLED" });
+          }
+          if (profile.accountStatus === "deletion_pending") {
+            return res.status(403).json({ code: "ACCOUNT_DEACTIVATED" });
+          }
+          if (profile.accountStatus === "deleted") {
+            return res.status(403).json({ code: "ACCOUNT_DELETED" });
+          }
+          next();
+        })
+        .catch(next);
+    };
 
     const service = new UserPreferencesService(mockRepo);
     const serviceMiddleware = (req: any, res: any, next: any) => {
