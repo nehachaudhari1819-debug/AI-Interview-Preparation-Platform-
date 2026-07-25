@@ -1,5 +1,5 @@
 import { AppError } from "../../errors/app-error.js";
-import type { UserPreferencesRepository } from "../../../persistence/users/user-preferences.repository.js";
+import type { UserPreferencesRepository } from "../../persistence/users/user-preferences.repository.js";
 import type { UpdateUserPreferencesInput, UserPreferences } from "./user-preferences.types.js";
 
 export class UserPreferencesService {
