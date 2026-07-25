@@ -12,4 +12,12 @@ export const LOG_EVENTS = {
   httpRequestError: "http.request.error",
   readinessFailed: "health.readiness.failed",
   systemAuditFailed: "system.audit_failed",
+  // P3.7 — Audit subsystem
+  systemAuditPersistenceFailed: "system.audit.persistence_failed",
+  // P3.7 — Idempotency subsystem
+  systemIdempotencyAcquireFailed: "system.idempotency.acquire_failed",
+  systemIdempotencyCompleteFailed: "system.idempotency.complete_failed",
+  systemIdempotencyFailTransitionFailed: "system.idempotency.fail_transition_failed",
+  securityIdempotencyConflict: "security.idempotency.conflict",
+  securityIdempotencyInProgress: "security.idempotency.in_progress",
 } as const;

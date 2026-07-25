@@ -13,7 +13,9 @@ describe("Audit Middleware", () => {
   const mockConfig = {} as ApplicationConfig;
 
   beforeEach(() => {
-    mockAuditRepo = { logEvent: jest.fn<() => Promise<void>>().mockResolvedValue(undefined) };
+    mockAuditRepo = {
+      logEvent: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    };
     mockRepoFactory = jest
       .fn<typeof createSupabaseAuditRepository>()
       .mockReturnValue(mockAuditRepo);
@@ -61,7 +63,7 @@ describe("Audit Middleware", () => {
   it("calls next() without blocking", () => {
     const middleware = createAuditMiddleware(
       mockConfig,
-      { action: "TEST_ACTION", resourceType: "test_resource" },
+      { action: "SYSTEM_EVENT", resourceType: "system" },
       mockRepoFactory,
     );
 
@@ -71,10 +73,10 @@ describe("Audit Middleware", () => {
     expect(mockAuditRepo.logEvent).not.toHaveBeenCalled();
   });
 
-  it("logs audit event successfully on response finish", async () => {
+  it("logs optional operational audit event successfully on response finish", async () => {
     const middleware = createAuditMiddleware(
       mockConfig,
-      { action: "PROFILE_UPDATED", resourceType: "user" },
+      { action: "SYSTEM_OPERATION", resourceType: "system" },
       mockRepoFactory,
     );
 
@@ -87,8 +89,8 @@ describe("Audit Middleware", () => {
     await new Promise(process.nextTick);
 
     expect(mockAuditRepo.logEvent).toHaveBeenCalledWith({
-      action: "PROFILE_UPDATED",
-      resourceType: "user",
+      action: "SYSTEM_OPERATION",
+      resourceType: "system",
       actorUserId: "user-123",
       resourceId: "user-123",
       metadata: { changedFields: ["fullName"] },
@@ -103,7 +105,7 @@ describe("Audit Middleware", () => {
 
     const middleware = createAuditMiddleware(
       mockConfig,
-      { action: "TEST_ACTION", resourceType: "test_resource" },
+      { action: "SYSTEM_EVENT", resourceType: "system" },
       mockRepoFactory,
     );
 
@@ -119,7 +121,7 @@ describe("Audit Middleware", () => {
 
     const middleware = createAuditMiddleware(
       mockConfig,
-      { action: "ANON_ACTION", resourceType: "anon_resource" },
+      { action: "SYSTEM_EVENT", resourceType: "system" },
       mockRepoFactory,
     );
 
@@ -132,5 +134,21 @@ describe("Audit Middleware", () => {
         actorUserId: null,
       }),
     );
+  });
+
+  it("must NOT be used as the PROFILE_UPDATED durability mechanism", () => {
+    // This is a documentation test: the middleware fires after "finish" (fire-and-forget).
+    // PROFILE_UPDATED durability is the DB trigger's responsibility.
+    // Verify that audit event is NOT dispatched synchronously (only after finish).
+    const middleware = createAuditMiddleware(
+      mockConfig,
+      { action: "PROFILE_UPDATED", resourceType: "user_profile" },
+      mockRepoFactory,
+    );
+
+    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
+
+    // Before finish: must not have been called
+    expect(mockAuditRepo.logEvent).not.toHaveBeenCalled();
   });
 });

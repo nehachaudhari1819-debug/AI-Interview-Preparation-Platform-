@@ -4,11 +4,14 @@ import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js"
 import { normalizeSupabaseError } from "../../integrations/supabase/supabase-error-normalizer.js";
 import type { Json } from "../database.types.js";
 
-export type IdempotencyRecordStatus = "processing" | "completed" | "failed" | "conflict";
+export type IdempotencyRecordStatus = "acquired" | "conflict" | "in_progress" | "replay";
 
 export type AcquireIdempotencyResult = {
   status: IdempotencyRecordStatus;
-  responseStatus?: number | undefined;
+  recordId?: string;
+  leaseToken?: string;
+  leaseExpiresAt?: string;
+  responseStatus?: number;
   responseBody?: unknown;
 };
 
@@ -20,26 +23,35 @@ export type AcquireIdempotencyInput = {
 };
 
 export type CompleteIdempotencyInput = {
-  userId: string;
-  idempotencyKey: string;
-  operation: string;
+  recordId: string;
+  leaseToken: string;
   responseStatus: number;
   responseBody: unknown;
 };
 
+export type FailIdempotencyInput = {
+  recordId: string;
+  leaseToken: string;
+};
+
 export interface IdempotencyRepository {
   /**
-   * Attempts to reserve an idempotency key.
-   * If successful, returns status 'processing'.
-   * If already exists with same hash, returns existing status and payload.
-   * If already exists with different hash, returns status 'conflict'.
+   * Attempts to reserve an idempotency key using the DB RPC.
    */
-  tryAcquire(input: AcquireIdempotencyInput): Promise<AcquireIdempotencyResult>;
+  tryAcquire(
+    input: AcquireIdempotencyInput,
+    leaseDurationSec?: number,
+  ): Promise<AcquireIdempotencyResult>;
 
   /**
    * Completes the idempotency record with the final response.
    */
-  complete(input: CompleteIdempotencyInput): Promise<void>;
+  complete(input: CompleteIdempotencyInput): Promise<boolean>;
+
+  /**
+   * Fails the idempotency record if the operation crashes or errors out.
+   */
+  fail(input: FailIdempotencyInput): Promise<boolean>;
 }
 
 export function createSupabaseIdempotencyRepository(
@@ -48,56 +60,39 @@ export function createSupabaseIdempotencyRepository(
   const getClient = () => createPrivilegedSupabaseClient({ config });
 
   return {
-    async tryAcquire(input: AcquireIdempotencyInput): Promise<AcquireIdempotencyResult> {
+    async tryAcquire(
+      input: AcquireIdempotencyInput,
+      leaseDurationSec = 60,
+    ): Promise<AcquireIdempotencyResult> {
       try {
         const client = getClient();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-        // 1. Attempt to insert new record
-        const { error: insertError } = await client.from("idempotency_records").insert({
-          user_id: input.userId,
-          idempotency_key: input.idempotencyKey,
-          operation: input.operation,
-          request_hash: input.requestHash,
-          status: "processing",
-          expires_at: expiresAt,
+        const { data, error } = await client.rpc("acquire_idempotency_lease", {
+          p_user_id: input.userId,
+          p_operation: input.operation,
+          p_idempotency_key: input.idempotencyKey,
+          p_request_hash: input.requestHash,
+          p_lease_duration_sec: leaseDurationSec,
         });
 
-        if (!insertError) {
-          return { status: "processing" };
+        if (error) {
+          throw normalizeSupabaseError(error, { operation: "acquire_idempotency_lease" });
         }
 
-        // 2. If it's not a unique constraint violation, throw
-        if (insertError.code !== "23505") {
-          throw normalizeSupabaseError(insertError, { operation: "insert_idempotency" });
-        }
+        const res = data as unknown as Record<string, unknown>;
 
-        // 3. Conflict occurred, fetch the existing record
-        const { data: existing, error: fetchError } = await client
-          .from("idempotency_records")
-          .select("status, request_hash, response_status, response_body")
-          .eq("user_id", input.userId)
-          .eq("idempotency_key", input.idempotencyKey)
-          .eq("operation", input.operation)
-          .maybeSingle();
-
-        if (fetchError || !existing) {
-          throw new PersistenceError(
-            PersistenceErrorCode.OPERATION_FAILED,
-            "Failed to fetch conflicting idempotency record.",
-          );
-        }
-
-        // 4. Validate request hash matches
-        if (existing.request_hash !== input.requestHash) {
-          return { status: "conflict" };
-        }
-
-        return {
-          status: existing.status as IdempotencyRecordStatus,
-          responseStatus: existing.response_status ?? undefined,
-          responseBody: existing.response_body ?? undefined,
+        const result: AcquireIdempotencyResult = {
+          status: (res.status ?? "conflict") as IdempotencyRecordStatus,
         };
+
+        if (typeof res.record_id === "string") result.recordId = res.record_id;
+        if (typeof res.lease_token === "string") result.leaseToken = res.lease_token;
+        if (typeof res.lease_expires_at === "string") result.leaseExpiresAt = res.lease_expires_at;
+        if (typeof res.response_status === "number") result.responseStatus = res.response_status;
+        if (res.response_body !== undefined && res.response_body !== null)
+          result.responseBody = res.response_body;
+
+        return result;
       } catch (err: unknown) {
         if (PersistenceError.is(err)) throw err;
         throw new PersistenceError(
@@ -107,29 +102,46 @@ export function createSupabaseIdempotencyRepository(
       }
     },
 
-    async complete(input: CompleteIdempotencyInput): Promise<void> {
+    async complete(input: CompleteIdempotencyInput): Promise<boolean> {
       try {
         const client = getClient();
-        const { error } = await client
-          .from("idempotency_records")
-          .update({
-            status: "completed",
-            response_status: input.responseStatus,
-            response_body: input.responseBody as Json,
-          })
-          .eq("user_id", input.userId)
-          .eq("idempotency_key", input.idempotencyKey)
-          .eq("operation", input.operation)
-          .eq("status", "processing"); // Ensure we only complete if processing
+        const { data, error } = await client.rpc("complete_idempotency_lease", {
+          p_record_id: input.recordId,
+          p_lease_token: input.leaseToken,
+          p_response_status: input.responseStatus,
+          p_response_body: input.responseBody as Json,
+        });
 
         if (error) {
-          throw normalizeSupabaseError(error, { operation: "complete_idempotency" });
+          throw normalizeSupabaseError(error, { operation: "complete_idempotency_lease" });
         }
+        return data;
       } catch (err: unknown) {
         if (PersistenceError.is(err)) throw err;
         throw new PersistenceError(
           PersistenceErrorCode.OPERATION_FAILED,
           "Failed to complete idempotency record.",
+        );
+      }
+    },
+
+    async fail(input: FailIdempotencyInput): Promise<boolean> {
+      try {
+        const client = getClient();
+        const { data, error } = await client.rpc("fail_idempotency_lease", {
+          p_record_id: input.recordId,
+          p_lease_token: input.leaseToken,
+        });
+
+        if (error) {
+          throw normalizeSupabaseError(error, { operation: "fail_idempotency_lease" });
+        }
+        return data;
+      } catch (err: unknown) {
+        if (PersistenceError.is(err)) throw err;
+        throw new PersistenceError(
+          PersistenceErrorCode.OPERATION_FAILED,
+          "Failed to fail idempotency record.",
         );
       }
     },

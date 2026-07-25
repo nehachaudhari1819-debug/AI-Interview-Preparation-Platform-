@@ -86,10 +86,13 @@ export type Database = {
       }
       idempotency_records: {
         Row: {
+          attempt_count: number
           created_at: string
           expires_at: string
           id: string
           idempotency_key: string
+          lease_expires_at: string | null
+          lease_token: string | null
           locked_until: string | null
           operation: string
           request_hash: string
@@ -102,10 +105,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempt_count?: number
           created_at?: string
           expires_at: string
           id?: string
           idempotency_key: string
+          lease_expires_at?: string | null
+          lease_token?: string | null
           locked_until?: string | null
           operation: string
           request_hash: string
@@ -118,10 +124,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attempt_count?: number
           created_at?: string
           expires_at?: string
           id?: string
           idempotency_key?: string
+          lease_expires_at?: string | null
+          lease_token?: string | null
           locked_until?: string | null
           operation?: string
           request_hash?: string
@@ -208,6 +217,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acquire_idempotency_lease: {
+        Args: {
+          p_user_id: string
+          p_operation: string
+          p_idempotency_key: string
+          p_request_hash: string
+          p_lease_duration_sec: number
+        }
+        Returns: Json
+      }
+      complete_idempotency_lease: {
+        Args: {
+          p_record_id: string
+          p_lease_token: string
+          p_response_status: number
+          p_response_body: Json
+        }
+        Returns: boolean
+      }
+      fail_idempotency_lease: {
+        Args: {
+          p_record_id: string
+          p_lease_token: string
+        }
+        Returns: boolean
+      }
       finalize_soft_delete_account: {
         Args: {
           p_user_id: string

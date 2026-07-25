@@ -39,4 +39,12 @@ export const LOG_REDACTION_PATHS = [
   "headers.authorization",
   "headers.cookie",
   "headers.set-cookie",
+
+  // P3.7 — Idempotency redaction: raw keys, tokens, and hashes must never appear in logs
+  "headers.idempotency-key",
+  "req.headers.idempotency-key",
+  "idempotencyKey",
+  "rawKey",
+  "leaseToken",
+  "requestHash",
 ];

@@ -1,27 +1,43 @@
 import { jest } from "@jest/globals";
 import type { Request, Response, NextFunction } from "express";
-import { createIdempotencyMiddleware } from "../../../src/middleware/idempotency.middleware.js";
+import { withIdempotency } from "../../../src/middleware/idempotency.middleware.js";
 import type { createSupabaseIdempotencyRepository } from "../../../src/persistence/system/idempotency.repository.js";
 import type { ApplicationConfig } from "../../../src/config/app-config.js";
 
-describe("Idempotency Middleware", () => {
+/**
+ * Builds a minimal mock of the idempotency persistence repository.
+ */
+function buildMockRepo() {
+  return {
+    tryAcquire: jest.fn<any>(),
+    complete: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+    fail: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+  };
+}
+
+describe("Idempotency Wrapper", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
-  let mockRepo: { tryAcquire: jest.Mock<any>; complete: jest.Mock<() => Promise<void>> };
+  let mockRepo: ReturnType<typeof buildMockRepo>;
   let mockRepoFactory: jest.Mock<typeof createSupabaseIdempotencyRepository>;
   const mockConfig = {} as ApplicationConfig;
+  let mockHandler: jest.Mock<any>;
+
+  const baseOptions = {
+    operation: "test_op",
+    routePattern: "/test",
+    apiVersion: "v1",
+  };
 
   beforeEach(() => {
-    mockRepo = {
-      tryAcquire: jest.fn(),
-      complete: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-    };
+    mockRepo = buildMockRepo();
     mockRepoFactory = jest
       .fn<typeof createSupabaseIdempotencyRepository>()
       .mockReturnValue(mockRepo);
 
     mockRequest = {
+      method: "POST",
       headers: {
         "idempotency-key": "valid-key-123",
       },
@@ -35,129 +51,127 @@ describe("Idempotency Middleware", () => {
       },
     } as any;
 
-    let finishCallback: (() => void) | undefined;
     mockResponse = {
       statusCode: 200,
-      json: jest.fn().mockReturnThis(),
-      status: jest.fn().mockReturnThis(),
-      on: jest.fn<any>().mockImplementation((event: any, cb: any) => {
-        if (event === "finish") finishCallback = cb;
-        return mockResponse;
-      }),
+      json: jest.fn<any>().mockReturnThis(),
+      status: jest.fn<any>().mockReturnThis(),
+      send: jest.fn<any>().mockReturnThis(),
     } as any;
 
-    (mockResponse as any).simulateFinish = () => {
-      if (finishCallback) finishCallback();
-    };
-
     nextFunction = jest.fn();
+
+    mockHandler = jest.fn<any>().mockResolvedValue({ status: 200, body: { success: true } });
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
+  // ---------------------------------------------------------------------------
+  // Authentication guard
+  // ---------------------------------------------------------------------------
+
   it("returns 401 if unauthenticated", async () => {
     mockRequest.context!.authentication = { state: "anonymous" };
-    const middleware = createIdempotencyMiddleware(
-      mockConfig,
-      { operation: "test" },
-      mockRepoFactory,
-    );
+    const wrapper = withIdempotency(mockConfig, baseOptions, mockHandler, mockRepoFactory);
 
-    await new Promise<void>((resolve) => {
-      middleware(mockRequest as Request, mockResponse as Response, (err) => {
-        expect(err).toBeDefined();
-        expect(err.statusCode).toBe(401);
-        resolve();
-      });
-    });
+    await wrapper(mockRequest as Request, mockResponse as Response, nextFunction);
+
+    expect(nextFunction).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
+    expect(mockHandler).not.toHaveBeenCalled();
   });
 
-  it("returns 400 if idempotency key is missing", async () => {
+  // ---------------------------------------------------------------------------
+  // Key validation
+  // ---------------------------------------------------------------------------
+
+  it("returns 400 IDEMPOTENCY_KEY_REQUIRED if key is missing", async () => {
     delete mockRequest.headers!["idempotency-key"];
-    const middleware = createIdempotencyMiddleware(
-      mockConfig,
-      { operation: "test" },
-      mockRepoFactory,
-    );
+    const wrapper = withIdempotency(mockConfig, baseOptions, mockHandler, mockRepoFactory);
 
-    await new Promise<void>((resolve) => {
-      middleware(mockRequest as Request, mockResponse as Response, (err) => {
-        expect(err).toBeDefined();
-        expect(err.statusCode).toBe(400);
-        expect(err.code).toBe("IDEMPOTENCY_KEY_REQUIRED");
-        resolve();
-      });
-    });
+    await wrapper(mockRequest as Request, mockResponse as Response, nextFunction);
+
+    expect(nextFunction).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 400, code: "IDEMPOTENCY_KEY_REQUIRED" }),
+    );
   });
 
-  it("returns 409 if tryAcquire returns conflict", async () => {
+  // ---------------------------------------------------------------------------
+  // Acquisition states
+  // ---------------------------------------------------------------------------
+
+  it("returns 409 IDEMPOTENCY_CONFLICT if tryAcquire returns conflict", async () => {
     mockRepo.tryAcquire.mockResolvedValue({ status: "conflict" });
-    const middleware = createIdempotencyMiddleware(
-      mockConfig,
-      { operation: "test" },
-      mockRepoFactory,
-    );
+    const wrapper = withIdempotency(mockConfig, baseOptions, mockHandler, mockRepoFactory);
 
-    await new Promise<void>((resolve) => {
-      middleware(mockRequest as Request, mockResponse as Response, (err) => {
-        expect(err).toBeDefined();
-        expect(err.statusCode).toBe(409);
-        expect(err.code).toBe("IDEMPOTENCY_CONFLICT");
-        resolve();
-      });
-    });
+    await wrapper(mockRequest as Request, mockResponse as Response, nextFunction);
+
+    expect(nextFunction).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 409, code: "IDEMPOTENCY_CONFLICT" }),
+    );
   });
 
-  it("returns cached response if tryAcquire returns completed", async () => {
+  it("returns cached response if tryAcquire returns replay", async () => {
     mockRepo.tryAcquire.mockResolvedValue({
-      status: "completed",
+      status: "replay",
       responseStatus: 201,
       responseBody: JSON.stringify({ success: true }),
     });
-    const middleware = createIdempotencyMiddleware(
-      mockConfig,
-      { operation: "test" },
-      mockRepoFactory,
-    );
+    const wrapper = withIdempotency(mockConfig, baseOptions, mockHandler, mockRepoFactory);
 
-    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
-
-    // Give promises time to resolve
-    await new Promise(process.nextTick);
+    await wrapper(mockRequest as Request, mockResponse as Response, nextFunction);
 
     expect(mockResponse.status).toHaveBeenCalledWith(201);
     expect(mockResponse.json).toHaveBeenCalledWith({ success: true });
-    expect(nextFunction).not.toHaveBeenCalled();
+    expect(mockHandler).not.toHaveBeenCalled();
   });
 
-  it("overrides res.json and completes on finish if tryAcquire returns processing", async () => {
-    mockRepo.tryAcquire.mockResolvedValue({ status: "processing" });
-    const middleware = createIdempotencyMiddleware(
-      mockConfig,
-      { operation: "test" },
-      mockRepoFactory,
-    );
+  // ---------------------------------------------------------------------------
+  // Acquired: completion is awaited before response
+  // ---------------------------------------------------------------------------
 
-    middleware(mockRequest as Request, mockResponse as Response, nextFunction);
-    await new Promise(process.nextTick);
+  it("executes handler, awaits completion, and sends response when acquired", async () => {
+    mockRepo.tryAcquire.mockResolvedValue({
+      status: "acquired",
+      recordId: "rec-id-1",
+      leaseToken: "token-1",
+      leaseExpiresAt: new Date().toISOString(),
+    });
 
-    expect(nextFunction).toHaveBeenCalled();
+    const wrapper = withIdempotency(mockConfig, baseOptions, mockHandler, mockRepoFactory);
 
-    // Call the overridden res.json
-    mockResponse.json!({ success: true });
-    (mockResponse as any).simulateFinish();
-    await new Promise(process.nextTick);
+    await wrapper(mockRequest as Request, mockResponse as Response, nextFunction);
 
+    expect(mockHandler).toHaveBeenCalled();
     expect(mockRepo.complete).toHaveBeenCalledWith(
       expect.objectContaining({
-        userId: "user-123",
-        idempotencyKey: "valid-key-123",
-        operation: "test",
+        recordId: "rec-id-1",
+        leaseToken: "token-1",
         responseStatus: 200,
         responseBody: { success: true },
       }),
     );
+    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    expect(mockResponse.json).toHaveBeenCalledWith({ success: true });
+  });
+
+  it("calls fail if handler throws", async () => {
+    mockRepo.tryAcquire.mockResolvedValue({
+      status: "acquired",
+      recordId: "rec-id-2",
+      leaseToken: "token-2",
+      leaseExpiresAt: new Date().toISOString(),
+    });
+
+    const testError = new Error("Handler failed");
+    mockHandler.mockRejectedValue(testError);
+
+    const wrapper = withIdempotency(mockConfig, baseOptions, mockHandler, mockRepoFactory);
+
+    await wrapper(mockRequest as Request, mockResponse as Response, nextFunction);
+
+    expect(nextFunction).toHaveBeenCalledWith(testError);
+    expect(mockRepo.fail).toHaveBeenCalledWith({ recordId: "rec-id-2", leaseToken: "token-2" });
+    expect(mockRepo.complete).not.toHaveBeenCalled();
   });
 });

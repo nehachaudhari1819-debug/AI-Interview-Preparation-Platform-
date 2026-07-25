@@ -9,7 +9,6 @@ import { createDeleteMeController } from "./account-deletion.controller.js";
 import { createAccountDeletionServiceMiddleware } from "./account-deletion.middleware.js";
 import { createAuthSessionRateLimiter } from "../../security/index.js";
 import { createRequireActiveAccountMiddleware } from "../../auth/require-active-account.middleware.js";
-import { createAuditMiddleware } from "../../middleware/audit.middleware.js";
 
 export function createUserProfileRouter(options: {
   config: Readonly<ApplicationConfig>;
@@ -43,18 +42,17 @@ export function createUserProfileRouter(options: {
     createGetMeController(),
   );
 
-  const profileAuditMiddleware = createAuditMiddleware(options.config, {
-    action: "PROFILE_UPDATED",
-    resourceType: "user",
-  });
-
+  // PATCH /me — profile update.
+  // PROFILE_UPDATED audit durability is guaranteed by the PostgreSQL trigger
+  // `audit_user_profile_update_trigger` (migration 14), which executes in the
+  // same transaction as the UPDATE. No audit middleware is registered here to
+  // avoid creating a duplicate event via the fire-and-forget pattern.
   router.patch(
     "/me",
     authNoStoreMiddleware,
     authMiddleware,
     activeAccountMiddleware,
     serviceMiddleware,
-    profileAuditMiddleware,
     createUpdateMeController(),
   );
 

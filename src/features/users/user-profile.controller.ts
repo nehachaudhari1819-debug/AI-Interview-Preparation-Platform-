@@ -38,13 +38,13 @@ export function createUpdateMeController() {
     }
 
     const input = parseUpdateUserProfileRequest(req.body);
-    const changedFields = Object.keys(input);
     const profile = await service.updateCurrentUserProfile(principal.userId, input);
     const safeResponse = mapUserProfileToResponse(profile);
 
-    // Inject audit metadata for the audit middleware
-    res.locals.auditMetadata = { changedFields };
-    res.locals.auditResourceId = principal.userId;
+    // PROFILE_UPDATED audit is handled transactionally by the PostgreSQL trigger
+    // `audit_user_profile_update_trigger` (migration 14). It detects actual OLD vs
+    // NEW column changes and inserts exactly one audit record in the same DB
+    // transaction as the UPDATE. No audit metadata injection is needed here.
 
     return sendSuccess({
       response: res,

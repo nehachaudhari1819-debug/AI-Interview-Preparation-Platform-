@@ -31,7 +31,7 @@ BEGIN
       INSERT INTO public.users (id, email, full_name, role, account_status)
       VALUES (%L, %L, ''Deadlock Test'', ''student'', ''deletion_pending'')
       ON CONFLICT (id) DO UPDATE SET full_name = ''Deadlock Test'', role = ''student'', account_status = ''deletion_pending'';
-      
+
       -- Pre-create the idempotency record in processing state so both RPCs will overlap on it
       INSERT INTO public.idempotency_records (user_id, idempotency_key, operation, request_hash, status, expires_at)
       VALUES (%L, %L, ''account_deletion'', ''hash1'', ''processing'', NOW() + INTERVAL ''1 day'')
@@ -42,7 +42,7 @@ BEGIN
   -- 2. Open two concurrent sessions and apply statement/lock timeouts
   PERFORM dblink_connect('conn1', 'dbname=' || v_db || ' user=supabase_admin password=postgres');
   PERFORM dblink_connect('conn2', 'dbname=' || v_db || ' user=supabase_admin password=postgres');
-  
+
   PERFORM dblink_exec('conn1', 'SET statement_timeout = ''3s''; SET lock_timeout = ''3s'';');
   PERFORM dblink_exec('conn2', 'SET statement_timeout = ''3s''; SET lock_timeout = ''3s'';');
 
@@ -68,7 +68,7 @@ BEGIN
   IF v_res1.res->>'status' NOT IN ('processing', 'completed') THEN
     RAISE EXCEPTION 'Unexpected prepare result: %', v_res1.res;
   END IF;
-  
+
   IF v_res2.res->>'status' != 'completed' THEN
     RAISE EXCEPTION 'Unexpected finalize result: %', v_res2.res;
   END IF;
@@ -78,7 +78,7 @@ BEGIN
 
   -- 5. Final state assertions via a fresh connection (to read committed data)
   PERFORM dblink_connect('verify', 'dbname=' || v_db || ' user=supabase_admin password=postgres');
-  
+
   SELECT res INTO v_final_status FROM dblink('verify', format('SELECT account_status::text FROM public.users WHERE id = %L', v_user_id)) AS t(res text);
   IF v_final_status != 'deleted' THEN
     RAISE EXCEPTION 'Final account status is %, expected deleted', v_final_status;
@@ -88,7 +88,7 @@ BEGIN
   IF v_audit_count != 1 THEN
     RAISE EXCEPTION 'Expected exactly 1 audit log, got %', v_audit_count;
   END IF;
-  
+
   -- Assert replay behavior
   SELECT res INTO v_replay FROM dblink('verify', format('SELECT public.finalize_soft_delete_account(%L, %L, ''account_deletion'', NULL::uuid)', v_user_id, v_key)) AS t(res jsonb);
   IF v_replay->>'status' != 'completed' OR (v_replay->>'response_status')::int != 200 THEN
