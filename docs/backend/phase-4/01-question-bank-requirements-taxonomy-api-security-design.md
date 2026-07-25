@@ -14,9 +14,13 @@ Phase 4 (Question Bank and Content Management) is FORMALLY STARTED. P4.1 is AUTH
 
 ## 4. Approved baseline
 
-**Baseline Commit:** `c2bdeb9375aa9b998f193778df02af7faa7e1e33`
-**CI Status:** Backend CI #98 — Failed (Correction Required)
+**Baseline Commit:** `07ce81e605e0c90b4468cb72b01298242ae553b4`
+**CI Status:** Backend CI #96 — Success
 **Branch:** `backend`
+
+**Final P4.1 Design Validation:**
+**Commit:** `e814ed8`
+**CI Status:** Backend CI #99 — Success
 
 ## 5. Phase 4 objective
 
@@ -99,7 +103,7 @@ The core domain entity is split across two tables to enforce security boundaries
 
 ## 13. Field classification
 
-- **Student-readable:** `id`, `questionText`, `categoryId`, `difficultyId`, `interviewTypeId`, `createdAt`, `updatedAt`. (Internal lifecycle fields like status, publishedAt, archivedAt are explicitly NOT exposed to the frontend).
+- **Student-readable:** `id`, `questionText`, `categoryId`, `difficultyId`, `interviewTypeId`, `skillIds`, `topicIds`, `createdAt`, `updatedAt`. (Internal lifecycle fields like status, publishedAt, archivedAt are explicitly NOT exposed to the frontend).
 - **Admin-readable:** All fields across both tables, including status and lifecycle timestamps.
 - **Admin-writable:** All except internally managed timestamps.
 - **Internal-only / Sensitive:** `referenceAnswer`, `evaluationGuidance`.
@@ -116,15 +120,27 @@ Official taxonomies require stable identifiers, human-readable names, and active
 **Shared Taxonomy Shape (applies to Categories, Difficulties, Interview Types, Skills, Topics):**
 
 - `id` (UUID, PK)
-- `slug` (Text, Unique, Case-insensitive uniqueness enforced via database collation or lowercasing trigger)
-- `name` (Text, Unique, Case-insensitive uniqueness enforced via database collation or lowercasing trigger)
+- `slug` (Text, Unique)
+- `name` (Text, Unique)
 - `description` (Text, optional)
 - `display_order` (Integer, default 0)
 - `is_active` (Boolean, default true)
 - `created_at` (TimestampTZ)
 - `updated_at` (TimestampTZ, auto-updates on modification)
 
-**Archive Behavior:** Taxonomies do not have a dedicated `archived_at` timestamp. Archival is strictly managed by setting `is_active = false`. Soft deletion is not supported for taxonomies.
+**Uniqueness:**
+
+- `UNIQUE INDEX ON lower(slug)`
+- `UNIQUE INDEX ON lower(name)`
+
+**Archive and Referential Behavior:**
+
+- Taxonomies do not have a dedicated `archived_at` timestamp. Archival is strictly managed by setting `is_active = false`.
+- New question associations require active taxonomies.
+- Publishing requires every referenced taxonomy to be active.
+- Deactivating a taxonomy referenced by a published question is blocked.
+- Draft or archived questions may temporarily reference an inactive taxonomy but cannot be published until all references are active.
+- Foreign-key rows are never automatically deleted during archival.
 
 ## 16. Relationship model
 
@@ -218,6 +234,8 @@ Every standard API response must include the approved envelope and `meta.request
   "categoryId": "uuid",
   "difficultyId": "uuid",
   "interviewTypeId": "uuid",
+  "skillIds": ["uuid"],
+  "topicIds": ["uuid"],
   "createdAt": "iso",
   "updatedAt": "iso"
 }
@@ -232,6 +250,8 @@ Every standard API response must include the approved envelope and `meta.request
   "categoryId": "uuid",
   "difficultyId": "uuid",
   "interviewTypeId": "uuid",
+  "skillIds": ["uuid"],
+  "topicIds": ["uuid"],
   "createdAt": "iso",
   "updatedAt": "iso"
 }
@@ -246,6 +266,8 @@ Every standard API response must include the approved envelope and `meta.request
   "categoryId": "uuid",
   "difficultyId": "uuid",
   "interviewTypeId": "uuid",
+  "skillIds": ["uuid"],
+  "topicIds": ["uuid"],
   "status": "published",
   "publishedAt": "iso",
   "archivedAt": null,
@@ -310,13 +332,21 @@ Every unspecified cell defaults to **DENY**.
 | Suspended Student   |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
 | Del-Pending Student |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
 | Deleted Student     |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
-| Active Admin        | ALLOW  |  ALLOW   |      ALLOW       |    ALLOW    |  ALLOW   |  ALLOW   |      ALLOW      |   ALLOW   |   ALLOW    |
+| Active Admin        | ALLOW  |  ALLOW   |      ALLOW       |    ALLOW    |  ALLOW   |  ALLOW   |      ALLOW      |   ALLOW   |    DENY    |
 | Suspended Admin     |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
 | Del-Pending Admin   |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
 | Deleted Admin       |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
-| Service Role        |  DENY  |   DENY   |       DENY       |    DENY     |   DENY   |   DENY   |      DENY       |   DENY    |    DENY    |
 
-_(Note: Active Students only read published questions. Service role is restricted to migrations/internal jobs)._
+_(Note: Active Students only read published questions. Active Admins cannot read Audits through Phase 4 routes)._
+
+**Service Role:**
+INTERNAL ONLY — NOT EXPOSED THROUGH PHASE 4 HTTP ROUTES.
+Permitted only for:
+
+- migrations
+- trusted maintenance
+- controlled test setup
+- explicitly authorized internal jobs
 
 ## 29. RLS strategy
 
@@ -326,7 +356,7 @@ _(Note: Active Students only read published questions. Service role is restricte
 
 ## 30. Privilege strategy
 
-The application repository layer restricts column selection. The database RLS strictly blocks any accidental read access to `question_internal_data` by non-admins. The service role is restricted to migrations.
+The application repository layer restricts column selection. The database RLS strictly blocks any accidental read access to `question_internal_data` by non-admins. The service role is restricted to internal operational usage.
 
 ## 31. Sensitive-column protection
 
@@ -334,10 +364,27 @@ The application repository layer restricts column selection. The database RLS st
 
 ## 32. Audit plan
 
-Audit writes must be **transactionally durable** with the source database mutation. IP storage is explicitly approved and captured from request boundaries. Failed operations are NOT audited in the `audit_logs` table (errors go to application logging). No-op updates (no fields changed) do NOT write audit logs.
+Audit writes must be **transactionally durable** with the source database mutation. Request IP may remain in existing operational security logs according to the existing logging policy, but it is explicitly NOT stored in these durable content audit events. Failed operations are NOT audited in the `audit_logs` table. No-op updates (no fields changed) do NOT write audit logs.
 
 **Safe Metadata:**
-Metadata must only contain safe identifiers (`question_id`, `taxonomy_id`), previous state enum values, and field keys that were changed. It must NEVER contain full question text, reference answers, rubrics, or raw request bodies.
+Audit metadata may contain:
+
+- `questionId`
+- `taxonomyId`
+- `previousState`
+- `nextState`
+- sorted changedFields
+
+Audit metadata must NOT contain:
+
+- IP address
+- user agent
+- question text
+- reference answer
+- evaluation guidance
+- request body
+- tokens
+- raw Idempotency-Key
 
 **Actions (Resource Type: `QUESTION` or `TAXONOMY`):**
 
@@ -362,20 +409,28 @@ Idempotency applies to admin mutative routes via the `Idempotency-Key` header an
   - `admin.questions.restore`
   - `admin.taxonomies.create`
 - _(Note: Taxonomy archive/restore is performed via generic PATCH `isActive`, which is conventionally non-idempotent-protected in this architecture, but safe since it sets boolean state)._
-- **Canonical Fingerprint:** SHA-256 of the authenticated `userId`, operation name, and JSON request body.
-- **Conflict Behavior:** `409 Conflict` if fingerprints mismatch for the same key.
-- **In-Progress Behavior:** `409 Conflict` (or `429 Too Many Requests`) if an operation is currently processing.
-- **Lease Duration:** 30 seconds for the initial processing lock.
-- **Failure Transition:** Hard failures cleanly roll back the idempotency record or mark it failed, allowing safe retries.
-- **Record Expiry:** Idempotency records expire and are scavenged after 24 hours.
-- **Audit Interaction:** Returning a cached idempotent response does NOT generate a duplicate `audit_log` entry.
+
+**Behavioral Contract:**
+
+- **Canonical fingerprint:** `SHA-256(apiVersion + method + routePattern + authenticatedUserId + operationName + canonicalSortedRequestBody)`
+- **Replay:** Return the original stored HTTP status and response body.
+- **Conflict:** `409 IDEMPOTENCY_CONFLICT`
+- **Concurrent processing:** `409 CONCURRENT_REQUEST_IN_PROGRESS`
+- **Failure:** Persist the approved failed transition through the existing P3.7 `fail-idempotency` workflow.
+- **Lease:** 30 seconds
+- **Record retention:** 24 hours
 
 ## 34. Error contracts
 
-- `401 Unauthorized` (Token invalid or missing)
-- `403 Forbidden` (Account suspended, Admin required, Draft question accessed by student)
-- `404 Not Found` (Question/Category UUID missing)
-- `422 Unprocessable Entity` (Invalid transition, Duplicate taxonomy slug)
+- `401 AUTHENTICATION_REQUIRED` / `INVALID_TOKEN`
+- `403 ACCOUNT_DISABLED` / `ACCOUNT_DELETED` / `ADMIN_REQUIRED`
+- `404 QUESTION_NOT_FOUND` / `TAXONOMY_NOT_FOUND`
+- `409 IDEMPOTENCY_CONFLICT`
+- `409 CONCURRENT_REQUEST_IN_PROGRESS`
+- `422 VALIDATION_ERROR` / `INVALID_STATUS_TRANSITION`
+- `429 RATE_LIMIT_EXCEEDED`
+- `500 INTERNAL_SERVER_ERROR`
+- `503 DATABASE_UNAVAILABLE`
 
 ## 35. Rate-limit plan
 
