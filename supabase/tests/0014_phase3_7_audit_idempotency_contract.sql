@@ -23,7 +23,7 @@ BEGIN
         INSERT INTO public.users (id, email, full_name, role, account_status)
         VALUES (%L, ''test_a@example.com'', ''Test User A'', ''student'', ''active'')
         ON CONFLICT (id) DO UPDATE SET full_name = ''Test User A'', role = ''student'', account_status = ''active'', bio = NULL, college = NULL;
-        
+
         INSERT INTO auth.users (id, email) VALUES (%L, ''test_b@example.com'');
         INSERT INTO public.users (id, email, full_name, role, account_status)
         VALUES (%L, ''test_b@example.com'', ''Test User B'', ''student'', ''active'')
@@ -153,9 +153,9 @@ BEGIN
     SELECT res INTO v_res FROM public.acquire_idempotency_lease('bbbbbbbb-2222-2222-2222-bbbbbbbbbbbb'::uuid, 'test_op', 'key_2', 'hash_1', 60) AS res;
     v_record_id := (v_res->>'record_id')::uuid;
     v_token := (v_res->>'lease_token')::uuid;
-    
+
     SELECT public.complete_idempotency_lease(v_record_id, v_token, 200, '{"success": true}'::jsonb) INTO v_complete_res;
-    
+
     IF v_complete_res != true THEN
         RAISE EXCEPTION 'complete_idempotency_lease should return true for valid lease owner';
     END IF;
