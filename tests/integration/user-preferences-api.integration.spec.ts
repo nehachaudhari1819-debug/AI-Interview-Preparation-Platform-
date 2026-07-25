@@ -22,6 +22,9 @@ describe("UserPreferences API Integration", () => {
     iat: Math.floor(Date.now() / 1000) - 3600,
     sub: "d290f1ee-6c54-4b01-90e6-d701748f0851",
     role: "authenticated",
+    aal: "aal1",
+    session_id: "c290f1ee-6c54-4b01-90e6-d701748f0852",
+    is_anonymous: false,
   };
 
   const mockPref = {

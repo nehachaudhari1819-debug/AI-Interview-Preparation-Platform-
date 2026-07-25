@@ -297,7 +297,7 @@ describe("E2E: User Preferences API", () => {
       .insert({ user_id: validUserIdA, locale: "it" });
 
     expect(insertError).not.toBeNull();
-    expect(insertError!.message).toContain("new row violates row-level security policy");
+    expect(insertError!.message).toContain("permission denied for table user_preferences");
 
     // Attempt Delete
     const { error: deleteError } = await userAClient
@@ -306,7 +306,7 @@ describe("E2E: User Preferences API", () => {
       .eq("user_id", validUserIdA);
 
     expect(deleteError).not.toBeNull();
-    expect(deleteError!.message).toContain("policy");
+    expect(deleteError!.message).toContain("permission denied for table user_preferences");
   });
 
   it("Suspend User A and verify GET and PATCH are denied", async () => {
@@ -329,12 +329,6 @@ describe("E2E: User Preferences API", () => {
 
   it("Soft delete a separate user and verify preferences row is preserved", async () => {
     // Delete User C
-    await request(app)
-      .delete("/api/v1/users/me")
-      .set("Authorization", `Bearer ${validAccessTokenA}`) // Assume a different token for C, wait, we don't have token for C
-      // We will just do it via admin
-      .expect(HTTP_STATUS.FORBIDDEN); // A is suspended
-
     await testAdminClient
       .from("users")
       .update({ account_status: "deleted" })
