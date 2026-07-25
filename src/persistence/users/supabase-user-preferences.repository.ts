@@ -40,7 +40,7 @@ export class SupabaseUserPreferencesRepository implements UserPreferencesReposit
 
     const { data, error } = await this.supabase
       .from("user_preferences")
-      .update(dbUpdates as any)
+      .update(dbUpdates as Database["public"]["Tables"]["user_preferences"]["Update"])
       .eq("user_id", userId)
       .select(SAFE_PREF_COLUMNS)
       .maybeSingle();

@@ -56,7 +56,7 @@ describe("UserPreferences API Integration", () => {
     });
 
     const activeAccountMiddleware = (req: any, res: any, next: any) => {
-      mockProfileRepo
+      void mockProfileRepo
         .findById(req.context.authentication.principal.userId)
         .then((profile: any) => {
           if (!profile || profile.accountStatus === "missing") {
