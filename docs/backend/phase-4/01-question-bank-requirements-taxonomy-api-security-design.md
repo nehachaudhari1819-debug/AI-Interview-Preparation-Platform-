@@ -71,76 +71,83 @@ The objective of P4.1 is to define the architectural, database, API, and securit
 - PostgreSQL + Supabase backend stack.
 - `snake_case` database schema mapped to `camelCase` API payloads.
 - Row-Level Security (RLS) mandated on all public schema tables.
-- Hard deletions are generally prohibited for transactional/user records. Soft deletion via `deleted_at` is the standard.
 
 ## 12. Question domain model
 
-The core domain entity `Question` requires the following fields:
+The core domain entity is split across two tables to enforce security boundaries.
+
+**`questions` (Publicly queryable by students if published):**
 
 - `id` (UUID, primary key)
-- `questionText` (String)
-- `categoryId` (UUID)
-- `difficulty` (Enum: easy, medium, hard)
-- `interviewType` (Enum: technical, behavioral, mixed)
-- `skills` (Array of UUIDs or Slugs)
-- `topics` (Array of UUIDs or Slugs)
+- `question_text` (Text)
+- `category_id` (UUID, foreign key)
+- `difficulty_id` (UUID, foreign key)
+- `interview_type_id` (UUID, foreign key)
 - `status` (Enum: draft, published, archived)
-- `referenceAnswer` (String, internal)
-- `evaluationGuidance` (JSON, internal)
-- `createdBy` (UUID)
-- `createdAt` (TimestampTZ)
-- `updatedAt` (TimestampTZ)
-- `deletedAt` (TimestampTZ)
+- `created_by` (UUID, foreign key)
+- `created_at` (TimestampTZ)
+- `updated_at` (TimestampTZ)
+- `published_at` (TimestampTZ, null until published)
+- `archived_at` (TimestampTZ, null until archived)
+
+**`question_internal_data` (Strictly isolated, admin-only):**
+
+- `question_id` (UUID, primary key, foreign key)
+- `reference_answer` (Text)
+- `evaluation_guidance` (JSONB)
+- `updated_at` (TimestampTZ)
 
 ## 13. Field classification
 
-- **Student-readable:** `id`, `questionText`, `category`, `difficulty`, `interviewType`, `skills`, `topics`, `status`, `createdAt`, `updatedAt`.
-- **Admin-readable:** All fields including `referenceAnswer` and `evaluationGuidance`.
+- **Student-readable:** `id`, `questionText`, `categoryId`, `difficultyId`, `interviewTypeId`, `status`, `createdAt`, `updatedAt`, `publishedAt`, `archivedAt` (if published).
+- **Admin-readable:** All fields across both tables.
 - **Admin-writable:** All except internally managed timestamps.
 - **Internal-only / Sensitive:** `referenceAnswer`, `evaluationGuidance`.
-- **Prohibited for students:** All sensitive fields, `deletedAt`, creator PII.
+- **Prohibited for students:** All fields in `question_internal_data`, creator PII.
 
 ## 14. Sensitive content
 
-`referenceAnswer` and `evaluationGuidance` contain proprietary evaluation criteria and must never be exposed to students. Exposure invalidates mock interview integrity.
+`reference_answer` and `evaluation_guidance` contain proprietary evaluation criteria and must never be exposed to students. Exposure invalidates mock interview integrity. This is enforced at the database level via the separate `question_internal_data` table protected by strict admin-only RLS.
 
 ## 15. Taxonomy model
 
-Official taxonomies require stable identifiers, human-readable names, and active states.
+Official taxonomies require stable identifiers, human-readable names, and active states. All taxonomies are modeled as relational tables.
 
-- **Question Categories:** Relational table (`question_categories`) with `id`, `slug`, `name`, `is_active`.
-- **Skills:** Relational table (`question_skills`) with `id`, `slug`, `name`, `is_active`.
-- **Topics:** Relational table (`question_topics`) with `id`, `slug`, `name`, `is_active`.
-- **Difficulty & Interview Types:** Bound locally via PostgreSQL Native Enums (`difficulty_enum`, `interview_type_enum`) as they represent strict platform invariants.
+- **Question Categories:** `question_categories` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
+- **Question Difficulties:** `question_difficulties` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
+- **Question Interview Types:** `question_interview_types` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
+- **Skills:** `question_skills` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
+- **Topics:** `question_topics` (id UUID, slug text, name text, is_active boolean, created_at, updated_at).
 
 ## 16. Relationship model
 
-- **Question to Category:** One-to-Many (`category_id` on Question).
-- **Question to Difficulty:** Field enum.
-- **Question to Interview Type:** Field enum.
+- **Question to Category:** One-to-Many (`category_id`).
+- **Question to Difficulty:** One-to-Many (`difficulty_id`).
+- **Question to Interview Type:** One-to-Many (`interview_type_id`).
 - **Question to Skills:** Many-to-Many via mapping table `question_skill_mappings`.
 - **Question to Topics:** Many-to-Many via mapping table `question_topic_mappings`.
+- **Question to Internal Data:** One-to-One (`question_internal_data.question_id`).
 
 ## 17. Content lifecycle
 
-- **Draft:** Visible only to admins. Used during creation and review.
-- **Published:** Visible to active students. Searchable and filterable.
-- **Archived:** Preserved for history, removed from student visibility, retained for active ongoing interview references. Admin visible.
+- **Draft:** Visible only to admins. Used during creation and review. `published_at` is null.
+- **Published:** Visible to active students. Searchable and filterable. `published_at` is populated.
+- **Archived:** Preserved for history, removed from student visibility. `archived_at` is populated. Can be restored.
 
 ## 18. Student access
 
-Students may access only `Published` questions, active taxonomy values, and safe metadata fields. They have no ownership over the global question bank.
+Students may access only `Published` questions and active taxonomy values. They have no ownership over the global question bank. Anonymous access is strictly denied.
 
 ## 19. Admin access
 
-Admins may create, update, publish, archive, and soft-delete questions. Admins may view draft and archived questions, and they possess read/write access to sensitive internal fields and taxonomies.
+Admins may create, update, publish, archive, and restore questions. Admins may view draft and archived questions, and they possess read/write access to sensitive internal fields and all taxonomies.
 
 ## 20. Student API inventory
 
 - `GET /api/v1/questions` (Paginated, filtered list)
 - `GET /api/v1/questions/:questionId` (Detail view)
 - `GET /api/v1/questions/categories`
-- `GET /api/v1/questions/difficulty-levels`
+- `GET /api/v1/questions/difficulties`
 - `GET /api/v1/questions/interview-types`
 - `GET /api/v1/questions/skills`
 - `GET /api/v1/questions/topics`
@@ -148,53 +155,69 @@ Admins may create, update, publish, archive, and soft-delete questions. Admins m
 ## 21. Admin API inventory
 
 - `POST /api/v1/admin/questions`
-- `GET /api/v1/admin/questions` (Supports all statuses)
-- `GET /api/v1/admin/questions/:questionId` (Includes sensitive fields)
+- `GET /api/v1/admin/questions`
+- `GET /api/v1/admin/questions/:questionId`
 - `PATCH /api/v1/admin/questions/:questionId`
 - `POST /api/v1/admin/questions/:questionId/publish`
 - `POST /api/v1/admin/questions/:questionId/archive`
+- `POST /api/v1/admin/questions/:questionId/restore`
+- `POST /api/v1/admin/taxonomies/:taxonomyType`
+- `PATCH /api/v1/admin/taxonomies/:taxonomyType/:id`
 
 ## 22. Search contract
 
 - **Query Parameter:** `q` or `search`
 - **Minimum length:** 3 characters.
 - **Maximum length:** 100 characters.
-- **Behavior:** Case-insensitive search on `question_text`.
-- **Security:** Excludes `reference_answer` completely from search tokenization.
+- **Behavior:** Case-insensitive search on `questions.question_text`.
+- **Security:** Excludes `question_internal_data` completely from search.
 
 ## 23. Filter contract
 
-- **Allowed filters:** `categoryId`, `difficulty`, `interviewType`, `skillId`, `topicId`.
+- **Allowed filters:** `categoryId`, `difficultyId`, `interviewTypeId`, `skillId`, `topicId`.
 - Admin-only filter: `status`.
-- **Behavior:** AND logic across different parameters, OR logic for multiple values in the same parameter (e.g., `?difficulty=easy,medium`).
-- **Validation:** Invalid UUIDs or unknown slugs return validation errors immediately.
+- **Behavior:** AND logic across different parameters, OR logic for multiple values in the same parameter.
+- **Validation:** Must be valid UUIDv4 strings.
 
 ## 24. Sort contract
 
 - **Parameters:** `sortBy`, `sortDir` (asc, desc)
-- **Allowed fields:** `createdAt`, `updatedAt`, `difficulty`.
-- **Tie-breaker:** Stable deterministic tie-breaker via `id`.
+- **Allowed fields:** `createdAt`, `updatedAt`, `publishedAt`.
+- **Tie-breaker:** Stable deterministic tie-breaker via `id` (UUID).
 - **Validation:** Unrecognized sort keys are rejected.
 
 ## 25. Pagination contract
 
-- **Style:** Offset/Page Pagination (aligning with P1 API Blueprint).
-- **Parameters:** `page` (default 1), `limit` (default 20, max 100).
-- **Metadata Response:** Returns `totalItems`, `totalPages`, `currentPage`, `limit`, `hasNextPage`, `hasPreviousPage`.
+- **Style:** Offset/Limit Pagination.
+- **Parameters:** `page` (integer, default 1, min 1), `limit` (integer, default 20, max 100).
+- **Metadata Response:**
+  ```json
+  "meta": {
+    "totalItems": 150,
+    "totalPages": 8,
+    "currentPage": 1,
+    "limit": 20,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  }
+  ```
 
 ## 26. Response contracts
 
-Student Question Response (redacted):
+**Student Question Detail Response (redacted):**
 
 ```json
 {
   "success": true,
   "data": {
-    "id": "uuid",
+    "id": "uuid-v4",
     "questionText": "...",
-    "category": { "id": "...", "name": "..." },
-    "difficulty": "medium",
-    "status": "published"
+    "categoryId": "uuid-v4",
+    "difficultyId": "uuid-v4",
+    "interviewTypeId": "uuid-v4",
+    "status": "published",
+    "createdAt": "2026-07-25T00:00:00.000Z",
+    "publishedAt": "2026-07-25T01:00:00.000Z"
   }
 }
 ```
@@ -203,68 +226,71 @@ Student Question Response (redacted):
 
 - **Question Text:** Required, trimmed, min 10 chars, max 2000 chars.
 - **Taxonomies:** Must exist and be active upon question association.
-- **Status Transitions:** Draft -> Published -> Archived -> Published.
-- **Filters/Search:** Length bounded. Array parameter limit: max 10 elements.
+- **Status Transitions:** Draft -> Published -> Archived -> Draft/Published (via restore).
+- **Filters/Search:** Array parameter limit: max 10 elements.
 
 ## 28. Authorization matrix
 
 - **Anonymous:** DENY ALL.
 - **Suspended/Deleted/Pending Student:** DENY ALL.
-- **Active Student:** READ published questions, READ taxonomies.
-- **Active Admin:** CREATE, READ, UPDATE, ARCHIVE all questions and taxonomies. READ sensitive fields.
-- **Service Role:** System jobs and transitions only.
+- **Active Student:** READ published questions, READ active taxonomies.
+- **Active Admin:** CREATE, READ, UPDATE, PUBLISH, ARCHIVE, RESTORE all questions and taxonomies. READ/WRITE sensitive fields.
+- **Service Role:** System jobs and migrations only.
 
 ## 29. RLS strategy
 
-- `question_categories`, `question_skills`: `PUBLIC_READ` for active, `ADMIN_WRITE`.
-- `questions`: `questions_student_published_select` for published reads. `questions_admin_all` for admin reads/writes.
-- Ownership checks map to `private.is_active_user()` and `private.is_active_admin()`.
+- **Taxonomy tables:** `taxonomies_authenticated_read` (uses `private.is_active_user()`), `taxonomies_admin_write` (uses `private.is_active_admin()`).
+- **`questions`:** `questions_student_published_select` (where status = 'published' AND `private.is_active_user()`). `questions_admin_all` (uses `private.is_active_admin()`).
+- **`question_internal_data`:** `internal_data_admin_all` (uses `private.is_active_admin()`). Explicitly NO student read policy.
 
 ## 30. Privilege strategy
 
-The application repository layer restricts column selection. The service role is restricted to migrations and specific system workflows (e.g., cron jobs), not standard application reads.
+The application repository layer restricts column selection. The database RLS strictly blocks any accidental read access to `question_internal_data` by non-admins. The service role is restricted to migrations.
 
 ## 31. Sensitive-column protection
 
-`reference_answer` and `evaluation_guidance` will be stored in the main `questions` table to simplify relationships, but tightly protected using **Data-Access Layer Projections**. The Express API mapping layer explicitly omits these fields for student routes. RLS prevents unauthorized backend data extraction.
+`reference_answer` and `evaluation_guidance` are strictly isolated into the `question_internal_data` table. Database-enforced Row-Level Security explicitly denies student access to this table entirely, ensuring defense in depth beyond application mapping logic.
 
 ## 32. Audit plan
 
-Actions to be audited in `audit_logs`:
+Actions to be audited securely in `audit_logs` (with `user_id` and IP):
 
 - `QUESTION_CREATED`
 - `QUESTION_UPDATED`
-- `QUESTION_STATUS_CHANGED` (e.g., Publish/Archive)
+- `QUESTION_PUBLISHED`
+- `QUESTION_ARCHIVED`
+- `QUESTION_RESTORED`
 - `TAXONOMY_CREATED`
 - `TAXONOMY_UPDATED`
 
 ## 33. Idempotency plan
 
-`Idempotency-Key` headers will be required for:
+`Idempotency-Key` headers will map to generic idempotency framework (`idempotency_records`) for state mutations:
 
 - `POST /api/v1/admin/questions`
 - `POST /api/v1/admin/questions/:questionId/publish`
 - `POST /api/v1/admin/questions/:questionId/archive`
+- `POST /api/v1/admin/questions/:questionId/restore`
+- `POST /api/v1/admin/taxonomies/:taxonomyType`
 
 ## 34. Error contracts
 
-Utilizes standard `ApiError` format:
-
-- `401 Unauthorized` (Token invalid)
+- `401 Unauthorized` (Token invalid or missing)
 - `403 Forbidden` (Account suspended, Admin required, Draft question accessed by student)
 - `404 Not Found` (Question/Category UUID missing)
-- `422 Unprocessable Entity` (Invalid transition, Duplicate taxonomy)
+- `422 Unprocessable Entity` (Invalid transition, Duplicate taxonomy slug)
 
 ## 35. Rate-limit plan
 
-- **Student Reads:** Standard limit (e.g., 100 req / minute).
-- **Search endpoints:** Tighter limit (e.g., 30 req / minute).
-- **Admin Writes:** Moderate limit (e.g., 50 req / minute).
+Uses existing verified policies:
+
+- **Student endpoints (list/detail/taxonomies):** `authenticated_api`
+- **Admin endpoints (CRUD/transitions):** `admin_api`
 
 ## 36. Cache plan
 
-- Read-heavy taxonomy endpoints (`/categories`, `/skills`) can utilize `Cache-Control: public, max-age=300`.
-- Sensitive and admin responses use `Cache-Control: no-store`.
+- Read-heavy taxonomy endpoints (`/categories`, `/skills`) can utilize internal backend caching.
+- External HTTP Cache-Control must be `private, no-store` to prevent CDN caching of authenticated content. NO public caching.
 
 ## 37. OpenAPI plan
 
@@ -277,19 +303,19 @@ New components will be modeled using Zod:
 
 ## 38. Frontend integration plan
 
-Frontend receives `page`, `limit`, and metadata for list tables. Empty states must gracefully display "No questions found." Unauthorized status triggers global logout/notification flows.
+Frontend receives `page`, `limit`, and metadata for list tables. Empty states must gracefully display "No questions found."
 
 ## 39. Database test plan
 
 - Constraints and foreign keys check (pgTAP).
-- RLS read enforcement for published vs draft (pgTAP).
+- RLS read enforcement blocking student access to `question_internal_data` (pgTAP).
 - Admin RLS override testing.
 
 ## 40. Unit test plan
 
 - Zod schema strict parsing tests.
 - Pagination metadata calculator tests.
-- Lifecycle transition guard tests (Draft -> Publish).
+- Lifecycle transition guard tests.
 
 ## 41. Integration test plan
 
@@ -300,8 +326,8 @@ Frontend receives `page`, `limit`, and metadata for list tables. Empty states mu
 ## 42. Security test plan
 
 - SQL injection via search parameter testing.
-- Over-posting fields testing (attempting to set `referenceAnswer` as student).
-- IDOR (Attempting to view draft).
+- Over-posting fields testing (attempting to set internal data as student).
+- IDOR (Attempting to view draft or internal data).
 
 ## 43. E2E test plan
 
@@ -311,12 +337,10 @@ Frontend receives `page`, `limit`, and metadata for list tables. Empty states mu
 
 Migration `20260101000017_create_question_bank_tables.sql` will include:
 
-- `question_categories`
-- `question_skills`
-- `question_topics`
+- `question_categories`, `question_difficulties`, `question_interview_types`, `question_skills`, `question_topics`
 - `questions`
-- `question_skill_mappings`
-- `question_topic_mappings`
+- `question_internal_data`
+- `question_skill_mappings`, `question_topic_mappings`
 
 ## 45. Expected P4.2 files
 
