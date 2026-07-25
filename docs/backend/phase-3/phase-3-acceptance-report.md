@@ -42,11 +42,11 @@ Phase 3 Final Acceptance Report — PrepPulse AI Backend
 
 ## 6. Final Commit
 
-| Item                   | Value                                        |
-| :--------------------- | :------------------------------------------- |
-| P3.9 documentation SHA | Pending commit (docs only, no source change) |
-| Branch                 | `backend`                                    |
-| Expected CI            | Backend CI #94 (pending push)                |
+| Item                   | Value                                      |
+| :--------------------- | :----------------------------------------- |
+| P3.9 documentation SHA | `ac8ee948b5c0cb48789e1f42e2311a233f5d0d3b` |
+| Branch                 | `backend`                                  |
+| Final CI               | Backend CI #94 — Success                   |
 
 ## 7. Phase 3 Objective
 
@@ -184,7 +184,7 @@ Review confirms:
 - No cascade hard-deletion is implemented.
 - Refresh sessions are revoked globally via `AccountSessionRevocationGateway`.
 - Refresh cookie is cleared by `clearRefreshTokenCookie()`.
-- `ACCOUNT_DEACTIVATED` audit occurs exactly once, inside the prepare RPC, in the same database transaction as the soft-deletion update.
+- `ACCOUNT_DEACTIVATED` is inserted exactly once by `finalize_soft_delete_account()`, in the same database transaction that changes `account_status` from `deletion_pending` to `deleted` and completes the deletion lifecycle.
 - Replay with the same key and same user returns `200 OK` without re-executing the deactivation.
 - Different payload/key conflict returns `409 IDEMPOTENCY_CONFLICT`.
 - Service-role access is isolated inside the lifecycle and idempotency repositories.
@@ -208,7 +208,7 @@ Review confirms:
 - Cross-user access is structurally impossible via `/users/me` paths.
 - RPC (`get_current_account_access_state`) runs as `SECURITY DEFINER` with `SET search_path = ''`.
 - Column-level grants: `REVOKE UPDATE (email, role, account_status, deleted_at) ON public.users FROM authenticated`.
-- Deletion lock ordering is consistent (user row locked before idempotency row) in migrations 12 and 13.
+- Deletion lock ordering is consistent (idempotency record first, user row second) in migrations 12 and 13.
 - Concurrency tests exist in `tests/e2e/phase-3/authorization-rls-integration.e2e.spec.ts`.
 - No deadlock regression found.
 
@@ -224,9 +224,9 @@ Review confirms:
 - Audit metadata stores changed field names only. No old values, new values, request bodies, emails, tokens, or raw idempotency keys are stored.
 - Audit logs remain append-only. Client roles cannot read, insert, update, or delete audit log rows (verified by pgTAP).
 - Generic idempotency acquisition is atomic via `acquire_idempotency_lease()` RPC.
-- Processing leases are bounded (24-hour validity).
+- Processing leases use the caller-supplied bounded `p_lease_duration_sec` value. Idempotency records use a 24-hour `expires_at` retention window.
 - Stale lease reclamation is safe via `acquire_idempotency_lease()` reclaim logic.
-- Stale worker completion is rejected via `complete_idempotency_record()` ownership check.
+- Stale worker completion is rejected by `complete_idempotency_lease()` through lease-token ownership checks.
 - Replay is deterministic.
 - Conflict detection is deterministic via request fingerprinting.
 - Raw idempotency keys are never logged; they are hashed prior to storage and log redaction is in place.
@@ -426,8 +426,8 @@ Generic idempotency is **not** attached to: GET /me, PATCH /me, GET /preferences
 
 ## 26. Concurrency Acceptance
 
-- Deletion lock order is consistent: user row locked before idempotency record.
-  Enforced in migrations 12 and 13.
+- Deletion lock order is consistent: idempotency record first, user row second.
+  Enforced in migrations 12 and 13 for both prepare and finalize.
 - No deadlock regression found. Confirmed by existing E2E concurrency tests.
 - pgTAP test file count: 10 files, 147 assertions. All pass.
 
@@ -697,7 +697,7 @@ No high-severity risks remain unmitigated.
 - [x] Local SHA matches remote SHA after push
 - [x] Divergence is empty
 - [x] Baseline CI #93 succeeded
-- [x] P3.9 CI pending (will trigger on docs commit push)
+- [x] P3.9 CI #94 succeeded
 - [ ] Reviewer grants explicit formal approval ← **BLOCKING**
 
 ---

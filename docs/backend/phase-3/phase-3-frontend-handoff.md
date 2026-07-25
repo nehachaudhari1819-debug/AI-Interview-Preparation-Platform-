@@ -282,11 +282,13 @@ None.
 {
   "success": true,
   "data": {
-    "message": "Account successfully deactivated.",
-    "userId": "uuid",
-    "deletedAt": "2026-07-25T14:00:00.000Z"
+    "account": {
+      "status": "deleted"
+    }
   },
-  "meta": { "requestId": "uuid" }
+  "meta": {
+    "requestId": "uuid"
+  }
 }
 ```
 
@@ -430,20 +432,20 @@ Send only the preferences you intend to change. At least one field is required.
 **Locale rules:**
 
 - Must be a valid BCP 47 locale tag (e.g. `en`, `en-US`, `fr-FR`, `zh-Hans`).
-- Invalid locale format is rejected with `400 VALIDATION_ERROR`.
+- Invalid locale format is rejected with `422 VALIDATION_ERROR`.
 
 **Time-zone rules:**
 
 - Must be a valid IANA time zone identifier recognized by `Intl.supportedValuesOf("timeZone")`.
 - `UTC` is always valid. Example valid values: `America/New_York`, `Europe/London`, `Asia/Kolkata`.
-- Invalid time zone is rejected with `400 VALIDATION_ERROR`.
+- Invalid time zone is rejected with `422 VALIDATION_ERROR`.
 
 **Boolean rules:**
 
 - Send JSON `true` or `false` only.
 - Strings like `"true"`, `"false"`, `"1"`, `"0"` are rejected.
 
-**Unknown fields are rejected** with `400 VALIDATION_ERROR`.
+**Unknown fields are rejected** with `422 VALIDATION_ERROR`.
 **Ownership field injection (`userId`) is blocked.**
 
 #### No-op Behavior
@@ -481,10 +483,10 @@ were not part of the request:
 | Invalid/expired token   | 401    | `INVALID_ACCESS_TOKEN`    |
 | Account suspended       | 403    | `ACCOUNT_DISABLED`        |
 | Account deleted         | 403    | `ACCOUNT_DELETED`         |
-| Empty body              | 400    | `VALIDATION_ERROR`        |
-| Unknown fields          | 400    | `VALIDATION_ERROR`        |
-| Invalid locale or tz    | 400    | `VALIDATION_ERROR`        |
-| Non-boolean for boolean | 400    | `VALIDATION_ERROR`        |
+| Empty body              | 422    | `VALIDATION_ERROR`        |
+| Unknown fields          | 422    | `VALIDATION_ERROR`        |
+| Invalid locale or tz    | 422    | `VALIDATION_ERROR`        |
+| Non-boolean for boolean | 422    | `VALIDATION_ERROR`        |
 | Database unavailable    | 503    | `SERVICE_UNAVAILABLE`     |
 
 #### Cache Behavior
