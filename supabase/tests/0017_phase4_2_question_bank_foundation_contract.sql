@@ -1,7 +1,7 @@
 begin;
 
 -- Determine the plan count by counting the assertions below
-select plan(137);
+select plan(96);
 
 -- ## Tables and types
 select has_type('public', 'question_status_enum', '1. question_status type exists');
@@ -160,18 +160,11 @@ select results_eq(
   '38. student UPDATE affects zero internal-data rows'
 );
 
-select results_eq(
-  $$
-    WITH affected AS (
-      DELETE FROM public.question_internal_data
-      WHERE question_id = '00000000-0000-0000-0000-000000000004'
-      RETURNING 1
-    )
-    SELECT count(*)::bigint
-    FROM affected
-  $$,
-  $$ VALUES (0::bigint) $$,
-  '39. student DELETE affects zero internal-data rows'
+select throws_ok(
+  'DELETE FROM public.question_internal_data WHERE question_id = ''00000000-0000-0000-0000-000000000004''',
+  '42501',
+  NULL,
+  '39. student DELETE is blocked by table privileges'
 );
 
 set role postgres;
@@ -344,52 +337,55 @@ set role postgres;
 select set_config('request.jwt.claims', '', true);
 
 -- suspended student denied
-insert into public.users (id, email, full_name, role, account_status) values ('00000000-0000-0000-0000-300000000001', 'susp.student@test', 'Susp Student', 'student', 'suspended');
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-300000000001', 'susp.student@test');
+update public.users set full_name = 'Susp Student', account_status = 'suspended' where id = '00000000-0000-0000-0000-300000000001';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-300000000001"}', true);
 select is_empty('select * from public.questions', '70. suspended student denied');
 
 set role postgres;
 select set_config('request.jwt.claims', '', true);
-insert into public.users (id, email, full_name, role, account_status) values ('00000000-0000-0000-0000-300000000002', 'delpend.student@test', 'Del Pend Student', 'student', 'deletion_pending');
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-300000000002', 'delpend.student@test');
+update public.users set full_name = 'Del Pend Student', account_status = 'deletion_pending' where id = '00000000-0000-0000-0000-300000000002';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-300000000002"}', true);
 select is_empty('select * from public.questions', '71. deletion-pending student denied');
 
 set role postgres;
 select set_config('request.jwt.claims', '', true);
-insert into public.users (id, email, full_name, role, account_status, deleted_at) values ('00000000-0000-0000-0000-300000000003', 'del.student@test', 'Del Student', 'student', 'deleted', now());
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-300000000003', 'del.student@test');
+update public.users set full_name = 'Del Student', account_status = 'deleted', deleted_at = now() where id = '00000000-0000-0000-0000-300000000003';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-300000000003"}', true);
 select is_empty('select * from public.questions', '72. deleted student denied');
 
 set role postgres;
 select set_config('request.jwt.claims', '', true);
-insert into public.users (id, email, full_name, role, account_status) values ('00000000-0000-0000-0000-100000000001', 'susp.admin@test', 'Susp Admin', 'admin', 'suspended');
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-100000000001', 'susp.admin@test');
+update public.users set full_name = 'Susp Admin', role = 'admin', account_status = 'suspended' where id = '00000000-0000-0000-0000-100000000001';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-100000000001"}', true);
 select is_empty('select * from public.questions', '73. suspended admin denied');
 
 set role postgres;
 select set_config('request.jwt.claims', '', true);
-insert into public.users (id, email, full_name, role, account_status) values ('00000000-0000-0000-0000-100000000002', 'delpend.admin@test', 'Del Pend Admin', 'admin', 'deletion_pending');
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-100000000002', 'delpend.admin@test');
+update public.users set full_name = 'Del Pend Admin', role = 'admin', account_status = 'deletion_pending' where id = '00000000-0000-0000-0000-100000000002';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-100000000002"}', true);
 select is_empty('select * from public.questions', '74. deletion-pending admin denied');
 
 set role postgres;
 select set_config('request.jwt.claims', '', true);
-insert into public.users (id, email, full_name, role, account_status, deleted_at) values ('00000000-0000-0000-0000-100000000003', 'del.admin@test', 'Del Admin', 'admin', 'deleted', now());
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-100000000003', 'del.admin@test');
+update public.users set full_name = 'Del Admin', role = 'admin', account_status = 'deleted', deleted_at = now() where id = '00000000-0000-0000-0000-100000000003';
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-100000000003"}', true);
 select is_empty('select * from public.questions', '75. deleted admin denied');
 
-set role postgres;
-select set_config('request.jwt.claims', '', true);
-select throws_ok('delete from public.questions where id = ''00000000-0000-0000-0000-000000000008''', '42501', NULL, '76. authenticated role has no question hard-delete privilege (tests admin)');
-
 set role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-100000000000"}', true);
+select throws_ok('delete from public.questions where id = ''00000000-0000-0000-0000-000000000008''', '42501', NULL, '76. authenticated role has no question hard-delete privilege (tests admin)');
 select throws_ok('delete from public.question_categories where id = ''00000000-0000-0000-0000-000000000001''', '42501', NULL, '77. authenticated role has no taxonomy hard-delete privilege');
 
 set role postgres;
