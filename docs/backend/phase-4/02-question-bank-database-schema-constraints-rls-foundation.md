@@ -6,7 +6,7 @@ P4.2 Question Bank Database Schema, Constraints and RLS Foundation
 
 ## 2. Status
 
-P4.2 STATUS: AUTHORIZED — IMPLEMENTATION PLAN REVIEW
+P4.2 STATUS: IMPLEMENTED — REVIEW PENDING
 
 ## 3. Authorization
 
@@ -69,7 +69,7 @@ Implement the secure relational database foundation for the approved Phase 4 Que
 13. **Exact internal-data columns and limits:**
     - `question_id` UUID PRIMARY KEY REFERENCES public.questions(id) ON DELETE CASCADE
     - `reference_answer` TEXT CHECK (char_length(trim(reference_answer)) <= 5000)
-    - `evaluation_guidance` TEXT CHECK (char_length(trim(evaluation_guidance)) <= 5000)
+    - `evaluation_guidance` JSONB CHECK (jsonb_typeof(evaluation_guidance) = 'object')
     - `updated_at` TIMESTAMPTZ NOT NULL DEFAULT now()
 14. **Exact mapping-table columns:**
     - `question_id` UUID NOT NULL REFERENCES public.questions(id) ON DELETE CASCADE
@@ -188,7 +188,7 @@ Enabled on all 9 tables. All use `private.is_active_user()` for students and `pr
 
 ## 25. Question RLS
 
-- Student: `SELECT` where `status = 'published'`.
+- Student: No direct table access. Restricted to `public.published_questions` secure view.
 - Admin: `SELECT`, `INSERT`, `UPDATE` all.
 
 ## 26. Internal-data RLS
@@ -198,7 +198,7 @@ Enabled on all 9 tables. All use `private.is_active_user()` for students and `pr
 
 ## 27. Mapping RLS
 
-- Student: `SELECT` where `EXISTS (SELECT 1 FROM questions WHERE id = question_id AND status = 'published')`.
+- Student: `SELECT` where `EXISTS (SELECT 1 FROM published_questions WHERE id = question_id)`.
 - Admin: `SELECT`, `INSERT`, `DELETE` all.
 
 ## 28. Grants
@@ -215,7 +215,7 @@ New trigger functions will use `SECURITY DEFINER` and `SET search_path = ''` to 
 
 ## 31. Direct Data API boundary
 
-Data API strictly enforces the RLS policies, ensuring students cannot fetch `question_internal_data` or draft/archived questions even via direct `supabase.from('questions').select()` calls.
+Data API strictly enforces the RLS policies and secure views, ensuring students cannot fetch `question_internal_data` or draft/archived questions, nor can they fetch internal columns (like `created_by` or `status`) even via direct `supabase.from('questions').select()` calls.
 
 ## 32. pgTAP coverage
 
@@ -227,12 +227,15 @@ Will be automatically built via `npm run db:types:generate`.
 
 ## 34. Validation evidence
 
-(To be filled after tests pass)
+Backend CI #101 — Success
+Migration 18 test suite passing.
 
 ## 35. Files created
 
 - `supabase/migrations/20260101000017_create_question_bank_tables.sql`
+- `supabase/migrations/20260101000018_phase4_2_question_bank_foundation_corrections.sql`
 - `supabase/tests/0017_phase4_2_question_bank_foundation_contract.sql`
+- `supabase/tests/0018_phase4_2_question_bank_corrections_contract.sql`
 - `docs/backend/phase-4/02-question-bank-database-schema-constraints-rls-foundation.md`
 
 ## 36. Files modified

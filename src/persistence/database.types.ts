@@ -220,24 +220,31 @@ export type Database = {
       }
       question_internal_data: {
         Row: {
-          evaluation_guidance: string | null
+          evaluation_guidance: Json | null
           question_id: string
           reference_answer: string | null
           updated_at: string
         }
         Insert: {
-          evaluation_guidance?: string | null
+          evaluation_guidance?: Json | null
           question_id: string
           reference_answer?: string | null
           updated_at?: string
         }
         Update: {
-          evaluation_guidance?: string | null
+          evaluation_guidance?: Json | null
           question_id?: string
           reference_answer?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "question_internal_data_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "published_questions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "question_internal_data_question_id_fkey"
             columns: ["question_id"]
@@ -297,6 +304,13 @@ export type Database = {
           skill_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "question_skill_mappings_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "published_questions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "question_skill_mappings_question_id_fkey"
             columns: ["question_id"]
@@ -363,6 +377,13 @@ export type Database = {
           topic_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "question_topic_mappings_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "published_questions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "question_topic_mappings_question_id_fkey"
             columns: ["question_id"]
@@ -589,7 +610,58 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      published_questions: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          difficulty_id: string | null
+          id: string | null
+          interview_type_id: string | null
+          question_text: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          difficulty_id?: string | null
+          id?: string | null
+          interview_type_id?: string | null
+          question_text?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          difficulty_id?: string | null
+          id?: string | null
+          interview_type_id?: string | null
+          question_text?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "question_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_difficulty_id_fkey"
+            columns: ["difficulty_id"]
+            isOneToOne: false
+            referencedRelation: "question_difficulties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_interview_type_id_fkey"
+            columns: ["interview_type_id"]
+            isOneToOne: false
+            referencedRelation: "question_interview_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       acquire_idempotency_lease: {

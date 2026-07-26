@@ -1,7 +1,7 @@
 begin;
 
 -- Determine the plan count by counting the assertions below
-select plan(107);
+select plan(103);
 
 -- ## Tables and types
 select has_type('public', 'question_status_enum', '1. question_status type exists');
@@ -303,7 +303,7 @@ set role postgres;
 select set_config('request.jwt.claims', '', true);
 
 -- ## RLS and grants
-select policies_are('public', 'questions', ARRAY['questions_student_read', 'questions_admin_all'], '60. RLS enabled on questions');
+select policies_are('public', 'questions', ARRAY['questions_admin_all'], '60. RLS enabled on questions');
 select table_privs_are('public', 'questions', 'anon', ARRAY[]::text[], '61. anon has no access');
 
 set role authenticated;
@@ -312,7 +312,7 @@ select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-300000
 select isnt_empty('select * from public.question_categories where id = ''00000000-0000-0000-0000-000000000001''', '62. active student reads active taxonomies');
 select is_empty('select * from public.question_categories where id = ''00000000-0000-0000-0000-000000000005''', '63. active student cannot read inactive taxonomies');
 
-select isnt_empty('select * from public.questions where id = ''00000000-0000-0000-0000-000000000008''', '64. active student reads published questions');
+select is_empty('select * from public.questions where id = ''00000000-0000-0000-0000-000000000008''', '64. active student cannot read published questions via base table directly');
 select is_empty('select * from public.questions where id = ''00000000-0000-0000-0000-000000000004''', '65. active student cannot read draft questions');
 -- create an archived question to test
 set role postgres;
@@ -397,10 +397,7 @@ select table_privs_are('public', 'questions', 'anon', ARRAY[]::text[], '79. Trig
 select hasnt_column('public', 'questions', 'reference_answer', '80. No sensitive content appears in the student-safe table');
 
 -- ## Regression placeholders
-select pass('81. Existing Phase 2 database contracts remain green');
-select pass('82. Existing Phase 3 database contracts remain green');
-select pass('83. Existing preferences remain green');
-select pass('84. Existing audit and idempotency tables remain unchanged');
+
 
 -- ## Admin Helper Function
 select has_function('private', 'is_active_admin', '85. is_active_admin exists');
