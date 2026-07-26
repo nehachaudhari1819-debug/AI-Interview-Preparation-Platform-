@@ -23,7 +23,7 @@ describe("SupabaseUserProfileRepository", () => {
       rpc: jest.fn(),
     };
     repository = new SupabaseUserProfileRepository(
-      mockSupabaseClient as unknown as SupabaseClient<Database>
+      mockSupabaseClient as unknown as SupabaseClient<Database>,
     );
   });
 
@@ -73,9 +73,7 @@ describe("SupabaseUserProfileRepository", () => {
 
     it("throws OPERATION_FAILED when supabase throws", async () => {
       const mockError = new Error("DB Error");
-      const mockMaybeSingle = jest
-        .fn()
-        .mockResolvedValue({ data: null, error: mockError });
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: mockError });
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
@@ -138,9 +136,7 @@ describe("SupabaseUserProfileRepository", () => {
 
     it("throws OPERATION_FAILED when supabase throws", async () => {
       const mockError = new Error("DB Error");
-      const mockMaybeSingle = jest
-        .fn()
-        .mockResolvedValue({ data: null, error: mockError });
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: mockError });
       const mockSelect = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
