@@ -1,6 +1,6 @@
 begin;
 
-select plan(28);
+select plan(33);
 
 -- ## 1. View and Base Table Permissions
 select has_view('public', 'published_questions', '1. Student view exists');
@@ -158,11 +158,50 @@ select lives_ok(
   '26. Draft question UPDATE allows changing to new active category'
 );
 
--- Finally cleanup
+-- ## 6. Published Questions View Security
+select columns_are(
+    'public',
+    'published_questions',
+    ARRAY['id', 'question_text', 'category_id', 'difficulty_id', 'interview_type_id', 'created_at', 'updated_at'],
+    '27. Exact approved view columns exposed'
+);
 
--- Just two filler assertions to reach 28
-select pass('27. Cleanup completed successfully');
-select pass('28. Migration 18 contract verified');
+-- Anonymous access denial
+set role anon;
+select throws_ok($$ select * from public.published_questions $$, '42501', null, '28. Anonymous access denied');
+
+-- Suspended user
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-400000000000"}', true);
+select results_eq($$ select count(*)::integer from public.published_questions $$, $$ values (0::integer) $$, '29. Suspended user receives 0 rows');
+
+-- Deleted user
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-500000000000"}', true);
+select results_eq($$ select count(*)::integer from public.published_questions $$, $$ values (0::integer) $$, '30. Deleted user receives 0 rows');
+
+-- Active student read-only behavior
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-300000000000"}', true);
+
+select throws_ok(
+  $$ insert into public.published_questions (id, question_text) values ('00000000-0000-0000-0000-000000000099', 'test') $$,
+  '42501',
+  null,
+  '31. Student cannot insert into published_questions view'
+);
+
+select throws_ok(
+  $$ update public.published_questions set question_text = 'hack' where id = '60000000-0000-0000-0000-000000000000' $$,
+  '42501',
+  null,
+  '32. Student cannot update published_questions view'
+);
+
+select throws_ok(
+  $$ delete from public.published_questions where id = '60000000-0000-0000-0000-000000000000' $$,
+  '42501',
+  null,
+  '33. Student cannot delete from published_questions view'
+);
 
 select * from finish();
 rollback;

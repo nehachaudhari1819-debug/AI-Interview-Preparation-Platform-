@@ -234,8 +234,10 @@ Migration 18 test suite passing.
 
 - `supabase/migrations/20260101000017_create_question_bank_tables.sql`
 - `supabase/migrations/20260101000018_phase4_2_question_bank_foundation_corrections.sql`
+- `supabase/migrations/20260101000019_phase4_2_questions_timestamp_correction.sql`
 - `supabase/tests/0017_phase4_2_question_bank_foundation_contract.sql`
 - `supabase/tests/0018_phase4_2_question_bank_corrections_contract.sql`
+- `supabase/tests/0019_phase4_2_questions_timestamp_contract.sql`
 - `docs/backend/phase-4/02-question-bank-database-schema-constraints-rls-foundation.md`
 
 ## 36. Files modified
@@ -254,19 +256,23 @@ Low. Ensuring exact state transitions for lifecycle requires robust trigger logi
 
 Full text search is basic English `tsvector`, which meets requirements but may need tuning for technical jargon later.
 
-## 40. Deferred P4.3 work
+## 40. Migration 19 summary
+
+Restores standard `updated_at` behavior for the `questions` table by replacing the verbose trigger condition from Migration 18 with `when (old.* is distinct from new.*)`. Test 0019 explicitly proves the `updated_at` behavior using actual timestamp comparisons for no-ops, real updates, status changes, and forged timestamps.
+
+## 41. Deferred P4.3 work
 
 Student Question Bank HTTP APIs.
 
-## 41. Deferred P4.4 work
+## 42. Deferred P4.4 work
 
 Admin Question Bank HTTP APIs.
 
-## 42. Deferred audit/idempotency work
+## 43. Deferred audit/idempotency work
 
 Durable audit logs for question bank operations, generic idempotency middleware.
 
-## 43. Acceptance criteria
+## 44. Acceptance criteria
 
 - All taxonomies and questions tables exist.
 - Internal data is isolated.
@@ -275,10 +281,10 @@ Durable audit logs for question bank operations, generic idempotency middleware.
 - 0 lint/test/build errors.
 - Clean git state.
 
-## 44. Approval checkpoint
+## 45. Approval checkpoint
 
 (Pending user review)
 
-## 45. Next-subphase boundary
+## 46. Next-subphase boundary
 
 P4.3 Student APIs.

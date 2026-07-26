@@ -11,15 +11,20 @@ const SAFE_PROFILE_COLUMNS =
   "id, email, full_name, college, branch, graduation_year, experience_level, preferred_roles, bio, avatar_url, role, account_status, created_at, updated_at, deleted_at";
 
 describe("SupabaseUserProfileRepository", () => {
-  let mockSupabaseClient: jest.Mocked<SupabaseClient<Database>>;
+  let mockSupabaseClient: {
+    from: jest.Mock;
+    rpc: jest.Mock;
+  };
   let repository: SupabaseUserProfileRepository;
 
   beforeEach(() => {
     mockSupabaseClient = {
       from: jest.fn(),
       rpc: jest.fn(),
-    } as unknown as jest.Mocked<SupabaseClient<Database>>;
-    repository = new SupabaseUserProfileRepository(mockSupabaseClient);
+    };
+    repository = new SupabaseUserProfileRepository(
+      mockSupabaseClient as unknown as SupabaseClient<Database>
+    );
   });
 
   describe("findById", () => {
@@ -42,10 +47,10 @@ describe("SupabaseUserProfileRepository", () => {
         deleted_at: null,
       };
 
-      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: mockData, error: null } as never);
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: mockData, error: null });
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       const result = await repository.findById(mockData.id);
 
@@ -56,10 +61,10 @@ describe("SupabaseUserProfileRepository", () => {
     });
 
     it("throws RECORD_NOT_FOUND when user is missing", async () => {
-      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null } as never);
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       await expect(repository.findById("123")).rejects.toThrowError(
         new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "User profile not found"),
@@ -70,10 +75,10 @@ describe("SupabaseUserProfileRepository", () => {
       const mockError = new Error("DB Error");
       const mockMaybeSingle = jest
         .fn()
-        .mockResolvedValue({ data: null, error: mockError } as never);
+        .mockResolvedValue({ data: null, error: mockError });
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       await expect(repository.findById("123")).rejects.toThrowError(
         new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, "Failed to query user profile"),
@@ -102,11 +107,11 @@ describe("SupabaseUserProfileRepository", () => {
         deleted_at: null,
       };
 
-      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: mockData, error: null } as never);
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: mockData, error: null });
       const mockSelect = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate } as any);
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate });
 
       const result = await repository.updateOwnProfile(mockData.id, updates);
 
@@ -117,11 +122,11 @@ describe("SupabaseUserProfileRepository", () => {
     });
 
     it("throws RECORD_NOT_FOUND when user is missing or access denied", async () => {
-      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null } as never);
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
       const mockSelect = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate } as any);
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate });
 
       await expect(repository.updateOwnProfile("123", {})).rejects.toThrowError(
         new PersistenceError(
@@ -135,11 +140,11 @@ describe("SupabaseUserProfileRepository", () => {
       const mockError = new Error("DB Error");
       const mockMaybeSingle = jest
         .fn()
-        .mockResolvedValue({ data: null, error: mockError } as never);
+        .mockResolvedValue({ data: null, error: mockError });
       const mockSelect = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockEq = jest.fn().mockReturnValue({ select: mockSelect });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate } as any);
+      mockSupabaseClient.from.mockReturnValue({ update: mockUpdate });
 
       await expect(repository.updateOwnProfile("123", {})).rejects.toThrowError(
         new PersistenceError(
@@ -153,12 +158,12 @@ describe("SupabaseUserProfileRepository", () => {
   describe("isActive", () => {
     it("returns true when profile is active", async () => {
       const mockMaybeSingle = jest.fn().mockResolvedValue({
-        data: { account_status: "active", deleted_at: null },
+        data: { account_status: "active" },
         error: null,
-      } as never);
+      });
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       const result = await repository.isActive("123");
       expect(result).toBe(true);
@@ -169,32 +174,32 @@ describe("SupabaseUserProfileRepository", () => {
 
     it("returns false when profile is not active", async () => {
       const mockMaybeSingle = jest.fn().mockResolvedValue({
-        data: { account_status: "suspended", deleted_at: null },
+        data: { account_status: "suspended" },
         error: null,
-      } as never);
+      });
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       const result = await repository.isActive("123");
       expect(result).toBe(false);
     });
 
     it("returns false when profile is not found", async () => {
-      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null } as never);
+      const mockMaybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       const result = await repository.isActive("123");
       expect(result).toBe(false);
     });
 
     it("returns false when db errors out securely", async () => {
-      const mockMaybeSingle = jest.fn().mockRejectedValue(new Error("Network Error") as never);
+      const mockMaybeSingle = jest.fn().mockRejectedValue(new Error("Network Error"));
       const mockEq = jest.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
-      mockSupabaseClient.from.mockReturnValue({ select: mockSelect } as any);
+      mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
 
       const result = await repository.isActive("123");
       expect(result).toBe(false); // Fail closed securely
