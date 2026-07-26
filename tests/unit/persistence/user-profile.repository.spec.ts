@@ -166,7 +166,7 @@ describe("SupabaseUserProfileRepository", () => {
   describe("isActive", () => {
     it("returns true when profile is active", async () => {
       const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({
-        data: { account_status: "active" },
+        data: { account_status: "active", deleted_at: null },
         error: null,
       });
       const mockEq = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
@@ -182,7 +182,7 @@ describe("SupabaseUserProfileRepository", () => {
 
     it("returns false when profile is not active", async () => {
       const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({
-        data: { account_status: "suspended" },
+        data: { account_status: "suspended", deleted_at: null },
         error: null,
       });
       const mockEq = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
