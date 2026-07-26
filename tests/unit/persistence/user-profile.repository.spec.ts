@@ -47,7 +47,9 @@ describe("SupabaseUserProfileRepository", () => {
         deleted_at: null,
       };
 
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({ data: mockData, error: null });
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: mockData, error: null });
       const mockEq = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
@@ -61,7 +63,9 @@ describe("SupabaseUserProfileRepository", () => {
     });
 
     it("throws RECORD_NOT_FOUND when user is missing", async () => {
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({ data: null, error: null });
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: null });
       const mockEq = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
@@ -73,7 +77,9 @@ describe("SupabaseUserProfileRepository", () => {
 
     it("throws OPERATION_FAILED when supabase throws", async () => {
       const mockError = new Error("DB Error");
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({ data: null, error: mockError });
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: mockError });
       const mockEq = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
@@ -105,7 +111,9 @@ describe("SupabaseUserProfileRepository", () => {
         deleted_at: null,
       };
 
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({ data: mockData, error: null });
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: mockData, error: null });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockEq = jest.fn<() => any>().mockReturnValue({ select: mockSelect });
       const mockUpdate = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
@@ -120,7 +128,9 @@ describe("SupabaseUserProfileRepository", () => {
     });
 
     it("throws RECORD_NOT_FOUND when user is missing or access denied", async () => {
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({ data: null, error: null });
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: null });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockEq = jest.fn<() => any>().mockReturnValue({ select: mockSelect });
       const mockUpdate = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
@@ -136,7 +146,9 @@ describe("SupabaseUserProfileRepository", () => {
 
     it("throws OPERATION_FAILED when supabase throws", async () => {
       const mockError = new Error("DB Error");
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({ data: null, error: mockError });
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: mockError });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockEq = jest.fn<() => any>().mockReturnValue({ select: mockSelect });
       const mockUpdate = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
@@ -182,7 +194,9 @@ describe("SupabaseUserProfileRepository", () => {
     });
 
     it("returns false when profile is not found", async () => {
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockResolvedValue({ data: null, error: null });
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockResolvedValue({ data: null, error: null });
       const mockEq = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
@@ -192,7 +206,9 @@ describe("SupabaseUserProfileRepository", () => {
     });
 
     it("returns false when db errors out securely", async () => {
-      const mockMaybeSingle = jest.fn<() => Promise<any>>().mockRejectedValue(new Error("Network Error"));
+      const mockMaybeSingle = jest
+        .fn<() => Promise<any>>()
+        .mockRejectedValue(new Error("Network Error"));
       const mockEq = jest.fn<() => any>().mockReturnValue({ maybeSingle: mockMaybeSingle });
       const mockSelect = jest.fn<() => any>().mockReturnValue({ eq: mockEq });
       mockSupabaseClient.from.mockReturnValue({ select: mockSelect });
