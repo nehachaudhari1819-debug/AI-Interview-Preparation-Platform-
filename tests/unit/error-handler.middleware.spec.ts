@@ -6,7 +6,9 @@ import { errorHandlerMiddleware } from "../../src/middleware/error-handler.middl
 import { AppError } from "../../src/errors/app-error.js";
 import { ERROR_CODES } from "../../src/constants/error-codes.constants.js";
 import { HTTP_STATUS } from "../../src/constants/http.constants.js";
-
+import { AccountDisabledError } from "../../src/errors/account-disabled.error.js";
+import { AccountDeletedError } from "../../src/errors/account-deleted.error.js";
+import { UserProfileNotFoundError } from "../../src/errors/user-profile-not-found.error.js";
 describe("errorHandlerMiddleware", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -107,5 +109,49 @@ describe("errorHandlerMiddleware", () => {
 
     expect(nextFunction).toHaveBeenCalledWith(error);
     expect(mockResponse.status).not.toHaveBeenCalled();
+  });
+
+  describe("AppError runtime property preservation", () => {
+    it("preserves isAppError as an own property", () => {
+      const error = new AccountDisabledError("Disabled");
+      expect(error.isAppError).toBe(true);
+      expect(Object.prototype.hasOwnProperty.call(error, "isAppError")).toBe(true);
+    });
+
+    it("returns 403 ACCOUNT_DISABLED and does not log for AccountDisabledError", () => {
+      const error = new AccountDisabledError("Disabled");
+      errorHandlerMiddleware(error, mockRequest as Request, mockResponse as Response, nextFunction);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "ACCOUNT_DISABLED" }),
+      );
+      expect(mockRequest.log?.error).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it("returns 403 ACCOUNT_DELETED and does not log for AccountDeletedError", () => {
+      const error = new AccountDeletedError("Deleted");
+      errorHandlerMiddleware(error, mockRequest as Request, mockResponse as Response, nextFunction);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "ACCOUNT_DELETED" }),
+      );
+      expect(mockRequest.log?.error).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it("returns 404 USER_PROFILE_NOT_FOUND and does not log for UserProfileNotFoundError", () => {
+      const error = new UserProfileNotFoundError("Not found");
+      errorHandlerMiddleware(error, mockRequest as Request, mockResponse as Response, nextFunction);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "USER_PROFILE_NOT_FOUND" }),
+      );
+      expect(mockRequest.log?.error).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    });
   });
 });

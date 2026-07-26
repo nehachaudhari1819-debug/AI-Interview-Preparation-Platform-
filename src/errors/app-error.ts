@@ -14,12 +14,13 @@ export class AppError extends Error {
   public readonly code: string;
   public readonly errors?: ApiFieldError[];
   public readonly isOperational: boolean;
-  public readonly isAppError = true;
+  public readonly isAppError: boolean;
 
   public constructor(options: AppErrorOptions) {
     super(options.message, {
       cause: options.cause,
     });
+    this.isAppError = true;
 
     this.name = new.target.name;
     this.statusCode = options.statusCode;
