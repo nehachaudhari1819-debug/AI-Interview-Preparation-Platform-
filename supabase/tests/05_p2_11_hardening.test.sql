@@ -1,5 +1,5 @@
 begin;
-select plan(12);
+select plan(10);
 
 -- 1. Create a mock user
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -80,16 +80,17 @@ select results_eq(
   'graduation_year defaults to null for invalid inputs'
 );
 
--- 7. No admin policies or admin helper exist
-select is_empty(
-  'select 1 from pg_policies where policyname = ''users_admin_select'' or policyname = ''audit_logs_admin_select''',
-  'No admin policies exist'
-);
+-- 7. (Phase 2 constraint removed in Phase 4) No admin policies or admin helper exist
+-- Admin helper and policies were re-introduced in Phase 4 for Question Bank Management.
+-- select is_empty(
+--   'select 1 from pg_policies where policyname = ''users_admin_select'' or policyname = ''audit_logs_admin_select''',
+--   'No admin policies exist'
+-- );
 
-select is_empty(
-  'select 1 from pg_proc join pg_namespace n on pg_proc.pronamespace = n.oid where proname = ''is_active_admin'' and n.nspname = ''private''',
-  'Admin helper function does not exist'
-);
+-- select is_empty(
+--   'select 1 from pg_proc join pg_namespace n on pg_proc.pronamespace = n.oid where proname = ''is_active_admin'' and n.nspname = ''private''',
+--   'Admin helper function does not exist'
+-- );
 
 select * from finish();
 rollback;

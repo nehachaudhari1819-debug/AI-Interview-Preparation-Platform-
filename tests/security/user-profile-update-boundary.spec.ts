@@ -10,6 +10,9 @@ import type { UserProfileRepository } from "../../src/persistence/users/user-pro
 import { createUserProfileService } from "../../src/features/users/user-profile.service.js";
 import { HTTP_STATUS } from "../../src/constants/http.constants.js";
 import { PersistenceError, PersistenceErrorCode } from "../../src/persistence/persistence-error.js";
+import { UserProfileNotFoundError } from "../../src/errors/user-profile-not-found.error.js";
+import { AccountDeletedError } from "../../src/errors/account-deleted.error.js";
+import { AccountDisabledError } from "../../src/errors/account-disabled.error.js";
 
 describe("Security: User Profile Update Boundary", () => {
   const config = createTestApplicationConfig();
@@ -57,38 +60,18 @@ describe("Security: User Profile Update Boundary", () => {
           profile = await mockRepo.findById(
             req.context.authentication.principal.userId ?? req.context.authentication.principal.sub,
           );
-          if (!profile) throw new Error("Not found");
+          if (!profile) throw new UserProfileNotFoundError("Not found");
         } catch (err: any) {
-          throw Object.assign(new Error("Not found"), {
-            name: "UserProfileNotFoundError",
-            isAppError: true,
-            statusCode: 404,
-            code: "USER_PROFILE_NOT_FOUND",
-          });
+          throw new UserProfileNotFoundError("Not found");
         }
         if (profile.deletedAt) {
-          throw Object.assign(new Error("Deleted"), {
-            name: "AccountDeletedError",
-            isAppError: true,
-            statusCode: 403,
-            code: "ACCOUNT_DELETED",
-          });
+          throw new AccountDeletedError();
         }
         if (profile.accountStatus === "suspended") {
-          throw Object.assign(new Error("Disabled"), {
-            name: "AccountDisabledError",
-            isAppError: true,
-            statusCode: 403,
-            code: "ACCOUNT_DISABLED",
-          });
+          throw new AccountDisabledError();
         }
         if (profile.accountStatus !== "active") {
-          throw Object.assign(new Error("Not found"), {
-            name: "UserProfileNotFoundError",
-            isAppError: true,
-            statusCode: 404,
-            code: "USER_PROFILE_NOT_FOUND",
-          });
+          throw new UserProfileNotFoundError("Not found");
         }
         next();
       } catch (err) {

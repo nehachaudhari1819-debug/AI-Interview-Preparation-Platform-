@@ -280,6 +280,7 @@ describe("UserPreferences API Integration", () => {
     });
 
     it("Database failure maps safely", async () => {
+      const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
       mockRepo.updateByUserId.mockRejectedValue(new Error("Database connection failed"));
 
       const res = await request(app)
@@ -290,6 +291,8 @@ describe("UserPreferences API Integration", () => {
       expect(res.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
       // Actual error should be redacted
       expect(res.body.message).not.toContain("Database connection failed");
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      consoleErrorSpy.mockRestore();
     });
   });
 });

@@ -113,13 +113,13 @@ describe("errorHandlerMiddleware", () => {
 
   describe("AppError runtime property preservation", () => {
     it("preserves isAppError as an own property", () => {
-      const error = new AccountDisabledError("Disabled");
+      const error = new AccountDisabledError();
       expect(error.isAppError).toBe(true);
       expect(Object.prototype.hasOwnProperty.call(error, "isAppError")).toBe(true);
     });
 
     it("returns 403 ACCOUNT_DISABLED and does not log for AccountDisabledError", () => {
-      const error = new AccountDisabledError("Disabled");
+      const error = new AccountDisabledError();
       errorHandlerMiddleware(error, mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(403);
@@ -131,7 +131,7 @@ describe("errorHandlerMiddleware", () => {
     });
 
     it("returns 403 ACCOUNT_DELETED and does not log for AccountDeletedError", () => {
-      const error = new AccountDeletedError("Deleted");
+      const error = new AccountDeletedError();
       errorHandlerMiddleware(error, mockRequest as Request, mockResponse as Response, nextFunction);
 
       expect(mockResponse.status).toHaveBeenCalledWith(403);
