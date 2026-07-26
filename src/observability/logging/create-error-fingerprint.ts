@@ -4,8 +4,16 @@ import { AppError } from "../../errors/app-error.js";
 export function createErrorFingerprint(error: unknown): string {
   let canonicalRepresentation = "unknown_error";
 
-  if (error instanceof AppError) {
-    canonicalRepresentation = `${error.name}:${error.code}:${String(error.statusCode)}`;
+  const errRec =
+    error !== null && typeof error === "object" ? (error as Record<string, unknown>) : null;
+  const isAppError = error instanceof AppError || errRec?.isAppError === true;
+
+  if (isAppError) {
+    const err = error as AppError;
+    if (!err.isOperational && err.cause) {
+      return createErrorFingerprint(err.cause);
+    }
+    canonicalRepresentation = `${err.name}:${err.code}:${String(err.statusCode)}`;
   } else if (error instanceof Error) {
     const errorRecord = error as unknown as Record<string, unknown>;
     const code =

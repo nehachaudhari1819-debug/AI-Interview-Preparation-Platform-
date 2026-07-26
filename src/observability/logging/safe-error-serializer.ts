@@ -13,14 +13,19 @@ export type SafeSerializedError = {
 export function safeErrorSerializer(error: unknown): SafeSerializedError {
   const fingerprint = createErrorFingerprint(error);
 
-  if (error instanceof AppError) {
+  const errRec =
+    error !== null && typeof error === "object" ? (error as Record<string, unknown>) : null;
+  const isAppError = error instanceof AppError || errRec?.isAppError === true;
+
+  if (isAppError) {
+    const err = error as AppError;
     return {
       category: "application",
-      name: error.name,
-      code: error.code,
-      statusCode: error.statusCode,
+      name: err.name,
+      code: err.code,
+      statusCode: err.statusCode,
       fingerprint,
-      operational: true,
+      operational: err.isOperational,
     };
   }
 

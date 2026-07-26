@@ -27,6 +27,23 @@ describe("Safe Error Serializer", () => {
     expect(result.name).toBe("AppError");
   });
 
+  it("handles cross-realm AppError objects gracefully", () => {
+    const error = {
+      name: "AppError",
+      code: "TEST_CROSS_REALM",
+      statusCode: 400,
+      isAppError: true,
+      isOperational: true,
+    };
+    const result = safeErrorSerializer(error);
+
+    expect(result.category).toBe("application");
+    expect(result.name).toBe("AppError");
+    expect(result.code).toBe("TEST_CROSS_REALM");
+    expect(result.statusCode).toBe(400);
+    expect(result.operational).toBe(true);
+  });
+
   it("handles non-error objects gracefully", () => {
     const obj = { msg: "Something went wrong" };
     const result = safeErrorSerializer(obj);

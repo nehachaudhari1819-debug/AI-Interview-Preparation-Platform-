@@ -1,7 +1,7 @@
 begin;
 
 -- Determine the plan count by counting the assertions below
-select plan(96);
+select plan(107);
 
 -- ## Tables and types
 select has_type('public', 'question_status_enum', '1. question_status type exists');
@@ -401,6 +401,31 @@ select pass('81. Existing Phase 2 database contracts remain green');
 select pass('82. Existing Phase 3 database contracts remain green');
 select pass('83. Existing preferences remain green');
 select pass('84. Existing audit and idempotency tables remain unchanged');
+
+-- ## Admin Helper Function
+select has_function('private', 'is_active_admin', '85. is_active_admin exists');
+select function_returns('private', 'is_active_admin', 'boolean', '86. is_active_admin returns boolean');
+select is_definer('private', 'is_active_admin', '87. is_active_admin is secured (security definer)');
+select is(
+  (select proconfig::text from pg_proc join pg_namespace n on pg_proc.pronamespace = n.oid where proname = 'is_active_admin' and n.nspname = 'private'),
+  '{"search_path=\"\""}',
+  '88. is_active_admin uses empty search_path'
+);
+select function_privs_are('private', 'is_active_admin', ARRAY[]::name[], 'anon', ARRAY[]::text[], '89. anon cannot execute is_active_admin (not exposed unnecessarily)');
+select function_privs_are('private', 'is_active_admin', ARRAY[]::name[], 'public', ARRAY[]::text[], '90. public cannot execute is_active_admin (not exposed unnecessarily)');
+select function_privs_are('private', 'is_active_admin', ARRAY[]::name[], 'authenticated', ARRAY['EXECUTE'], '91. authenticated can execute is_active_admin');
+select function_privs_are('private', 'is_active_admin', ARRAY[]::name[], 'service_role', ARRAY['EXECUTE'], '92. service_role can execute is_active_admin');
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-100000000000"}', true);
+select results_eq('select private.is_active_admin()', ARRAY[true], '93. active admin is true');
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-100000000001"}', true);
+select results_eq('select private.is_active_admin()', ARRAY[false], '94. suspended admin is false (denies inactive admins)');
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-200000000000"}', true);
+select results_eq('select private.is_active_admin()', ARRAY[false], '95. active student is false');
+
+set role postgres;
+select set_config('request.jwt.claims', '', true);
 
 -- Rollback transaction
 rollback;

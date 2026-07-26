@@ -73,7 +73,7 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
 
   const logger = request.log ?? getRequestLogger();
   if (logger) {
-    const serializedError = safeErrorSerializer(error);
+    const serializedError = safeErrorSerializer(appError);
     let level: "info" | "warn" | "error" = "error";
 
     if (appError.statusCode < 500) {
