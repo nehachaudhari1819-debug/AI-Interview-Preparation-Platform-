@@ -152,6 +152,340 @@ export type Database = {
           },
         ]
       }
+      question_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      question_difficulties: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      question_internal_data: {
+        Row: {
+          evaluation_guidance: string | null
+          question_id: string
+          reference_answer: string | null
+          updated_at: string
+        }
+        Insert: {
+          evaluation_guidance?: string | null
+          question_id: string
+          reference_answer?: string | null
+          updated_at?: string
+        }
+        Update: {
+          evaluation_guidance?: string | null
+          question_id?: string
+          reference_answer?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_internal_data_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_interview_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      question_skill_mappings: {
+        Row: {
+          created_at: string
+          question_id: string
+          skill_id: string
+        }
+        Insert: {
+          created_at?: string
+          question_id: string
+          skill_id: string
+        }
+        Update: {
+          created_at?: string
+          question_id?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_skill_mappings_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_skill_mappings_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "question_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_skills: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      question_topic_mappings: {
+        Row: {
+          created_at: string
+          question_id: string
+          topic_id: string
+        }
+        Insert: {
+          created_at?: string
+          question_id: string
+          topic_id: string
+        }
+        Update: {
+          created_at?: string
+          question_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_topic_mappings_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_topic_mappings_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "question_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_topics: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          archived_at: string | null
+          category_id: string
+          created_at: string
+          created_by: string
+          difficulty_id: string
+          id: string
+          interview_type_id: string
+          published_at: string | null
+          question_text: string
+          question_text_search: unknown | null
+          status: Database["public"]["Enums"]["question_status_enum"]
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          category_id: string
+          created_at?: string
+          created_by: string
+          difficulty_id: string
+          id?: string
+          interview_type_id: string
+          published_at?: string | null
+          question_text: string
+          question_text_search?: unknown | null
+          status?: Database["public"]["Enums"]["question_status_enum"]
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          category_id?: string
+          created_at?: string
+          created_by?: string
+          difficulty_id?: string
+          id?: string
+          interview_type_id?: string
+          published_at?: string | null
+          question_text?: string
+          question_text_search?: unknown | null
+          status?: Database["public"]["Enums"]["question_status_enum"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "question_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_difficulty_id_fkey"
+            columns: ["difficulty_id"]
+            isOneToOne: false
+            referencedRelation: "question_difficulties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_interview_type_id_fkey"
+            columns: ["interview_type_id"]
+            isOneToOne: false
+            referencedRelation: "question_interview_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_preferences: {
         Row: {
           created_at: string
@@ -319,6 +653,7 @@ export type Database = {
         | "intermediate"
         | "advanced"
       idempotency_status_enum: "processing" | "completed" | "failed"
+      question_status_enum: "draft" | "published" | "archived"
       user_role_enum: "student" | "admin"
     }
     CompositeTypes: {
