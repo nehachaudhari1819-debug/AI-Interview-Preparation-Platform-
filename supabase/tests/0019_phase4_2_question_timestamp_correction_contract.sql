@@ -2,9 +2,10 @@ begin;
 
 select plan(10);
 
-set role service_role;
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-100000000019', 'admin19@test.local');
 update public.users set role = 'admin' where id = '00000000-0000-0000-0000-100000000019';
+
+set role service_role;
 
 insert into public.question_categories (id, slug, name, updated_at) values ('10000000-0000-0000-0000-000000000019', 'cat19', 'Cat19', now() - interval '1 hour');
 insert into public.question_difficulties (id, slug, name) values ('20000000-0000-0000-0000-000000000019', 'diff19', 'Diff19');
