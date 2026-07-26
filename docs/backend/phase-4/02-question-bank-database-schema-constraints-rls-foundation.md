@@ -258,7 +258,10 @@ Full text search is basic English `tsvector`, which meets requirements but may n
 
 ## 40. Migration 19 summary
 
-Restores standard `updated_at` behavior for the `questions` table by replacing the verbose trigger condition from Migration 18 with `when (old.* is distinct from new.*)`. Test 0019 explicitly proves the `updated_at` behavior using actual timestamp comparisons for no-ops, real updates, status changes, and forged timestamps.
+Restores exact and narrow `updated_at` behavior for the `questions` table by replacing broad conditions with strict triggers that react ONLY to genuine mutable fields (`question_text`, `category_id`, `difficulty_id`, `interview_type_id`, `status`). Test 0019 explicitly proves the `updated_at` behavior for taxonomy tables, `public.questions`, and `public.question_internal_data` using actual timestamp comparisons for no-ops, real updates, status changes, and forged timestamps. Forged timestamp attempts correctly normalize without advancing the timestamp.
+
+*Completed in Final Commit: 7844346*
+*Validated by CI: #108*
 
 ## 41. Deferred P4.3 work
 
