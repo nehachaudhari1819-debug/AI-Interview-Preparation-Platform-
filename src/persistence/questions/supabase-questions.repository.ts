@@ -134,7 +134,7 @@ export class SupabaseQuestionsRepository {
 
     // Student RLS guarantees is_active = true is enforced
     const { data, error } = await this.supabase
-      .from(tableName)
+      .from(tableName as any)
       .select("*")
       .order("display_order", { ascending: true })
       .order("name", { ascending: true });
@@ -143,6 +143,6 @@ export class SupabaseQuestionsRepository {
       throw new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, `Failed to fetch ${type}`);
     }
 
-    return data;
+    return data as any[];
   }
 }

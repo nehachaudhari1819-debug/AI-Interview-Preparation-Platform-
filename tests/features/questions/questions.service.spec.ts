@@ -6,7 +6,7 @@ import type { GetQuestionsQuery } from "../../../src/features/questions/question
 describe("QuestionsService", () => {
   it("should calculate pagination metadata correctly", async () => {
     const mockRepo = {
-      getQuestions: jest.fn().mockResolvedValue({
+      getQuestions: jest.fn<any>().mockResolvedValue({
         data: [{ id: "test-id" }],
         count: 55,
       }),
@@ -14,14 +14,14 @@ describe("QuestionsService", () => {
 
     const service = new QuestionsService(mockRepo);
 
-    const query: GetQuestionsQuery = {
+    const query = {
       page: 2,
       limit: 20,
       sortBy: "createdAt",
       sortDir: "desc",
     };
 
-    const result = await service.getQuestions(query);
+    const result = await service.getQuestions(query as GetQuestionsQuery);
 
     expect(result.pagination.totalItems).toBe(55);
     expect(result.pagination.totalPages).toBe(3); // 55 / 20 = 2.75 -> 3
@@ -33,7 +33,7 @@ describe("QuestionsService", () => {
 
   it("should handle empty results gracefully", async () => {
     const mockRepo = {
-      getQuestions: jest.fn().mockResolvedValue({
+      getQuestions: jest.fn<any>().mockResolvedValue({
         data: [],
         count: 0,
       }),
@@ -41,14 +41,14 @@ describe("QuestionsService", () => {
 
     const service = new QuestionsService(mockRepo);
 
-    const query: GetQuestionsQuery = {
+    const query = {
       page: 1,
       limit: 20,
       sortBy: "createdAt",
       sortDir: "desc",
     };
 
-    const result = await service.getQuestions(query);
+    const result = await service.getQuestions(query as GetQuestionsQuery);
 
     expect(result.pagination.totalItems).toBe(0);
     expect(result.pagination.totalPages).toBe(0);
