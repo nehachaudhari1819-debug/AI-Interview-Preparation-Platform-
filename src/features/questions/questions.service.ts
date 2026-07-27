@@ -1,8 +1,19 @@
-import type { SupabaseQuestionsRepository } from "../../persistence/questions/supabase-questions.repository.js";
-import type { GetQuestionsQuery, TaxonomyType } from "./questions.schemas.js";
+import type { GetQuestionsQuery, TaxonomyType, TaxonomyRow } from "./questions.schemas.js";
+import type { QuestionWithMappings } from "./questions-response.mapper.js";
+
+export interface PaginatedQuestionsResult {
+  data: QuestionWithMappings[];
+  count: number;
+}
+
+export interface IQuestionsRepository {
+  getQuestions(query: GetQuestionsQuery): Promise<PaginatedQuestionsResult>;
+  getQuestionById(id: string): Promise<QuestionWithMappings | null>;
+  getTaxonomies(type: TaxonomyType): Promise<TaxonomyRow[]>;
+}
 
 export class QuestionsService {
-  constructor(private readonly repository: SupabaseQuestionsRepository) {}
+  constructor(private readonly repository: IQuestionsRepository) {}
 
   public async getQuestions(query: GetQuestionsQuery) {
     const { data, count } = await this.repository.getQuestions(query);
@@ -31,6 +42,6 @@ export class QuestionsService {
   }
 }
 
-export function createQuestionsService(repository: SupabaseQuestionsRepository): QuestionsService {
+export function createQuestionsService(repository: IQuestionsRepository): QuestionsService {
   return new QuestionsService(repository);
 }

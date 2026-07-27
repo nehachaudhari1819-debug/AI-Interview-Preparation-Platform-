@@ -42,7 +42,13 @@ export const GetQuestionsQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
-    search: z.string().trim().min(3).max(100).optional(),
+    search: z.preprocess((val) => {
+      if (typeof val === "string") {
+        const trimmed = val.trim();
+        return trimmed === "" ? undefined : trimmed;
+      }
+      return val;
+    }, z.string().min(3).max(100).optional()),
     sortBy: SortFieldSchema.default("createdAt"),
     sortDir: SortDirectionSchema.default("desc"),
     categoryId: uuidArrayTransformer,
@@ -51,14 +57,7 @@ export const GetQuestionsQuerySchema = z
     skillId: uuidArrayTransformer,
     topicId: uuidArrayTransformer,
   })
-  .strict()
-  .transform((data) => {
-    // If search is empty string after trim, remove it
-    if (data.search === "") {
-      data.search = undefined;
-    }
-    return data;
-  });
+  .strict();
 
 export type GetQuestionsQuery = z.infer<typeof GetQuestionsQuerySchema>;
 
@@ -89,4 +88,13 @@ export function parseTaxonomyType(type: unknown): TaxonomyType {
     throw new ValidationError("Invalid taxonomy type.", result.error.issues);
   }
   return result.data;
+}
+
+export interface TaxonomyRow {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  display_order: number;
+  is_active: boolean;
 }

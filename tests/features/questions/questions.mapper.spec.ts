@@ -36,13 +36,13 @@ describe("QuestionsResponseMapper", () => {
     expect(summary.topicIds).toEqual(["topic-1"]);
 
     // Strict safety assertions
-    expect((summary as any).status).toBeUndefined();
-    expect((summary as any).reference_answer).toBeUndefined();
-    expect((summary as any).referenceAnswer).toBeUndefined();
-    expect((summary as any).evaluation_guidance).toBeUndefined();
-    expect((summary as any).evaluationGuidance).toBeUndefined();
-    expect((summary as any).created_by).toBeUndefined();
-    expect((summary as any).createdBy).toBeUndefined();
+    expect(Object.hasOwn(summary, "status")).toBe(false);
+    expect(Object.hasOwn(summary, "reference_answer")).toBe(false);
+    expect(Object.hasOwn(summary, "referenceAnswer")).toBe(false);
+    expect(Object.hasOwn(summary, "evaluation_guidance")).toBe(false);
+    expect(Object.hasOwn(summary, "evaluationGuidance")).toBe(false);
+    expect(Object.hasOwn(summary, "created_by")).toBe(false);
+    expect(Object.hasOwn(summary, "createdBy")).toBe(false);
   });
 
   it("should throw error if required database fields are missing (defense in depth)", () => {

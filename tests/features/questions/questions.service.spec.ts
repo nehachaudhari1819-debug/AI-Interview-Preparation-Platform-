@@ -1,16 +1,19 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { QuestionsService } from "../../../src/features/questions/questions.service.js";
-import type { SupabaseQuestionsRepository } from "../../../src/persistence/questions/supabase-questions.repository.js";
+import type { QuestionWithMappings } from "../../../src/features/questions/questions-response.mapper.js";
+import type { IQuestionsRepository } from "../../../src/features/questions/questions.service.js";
 import type { GetQuestionsQuery } from "../../../src/features/questions/questions.schemas.js";
 
 describe("QuestionsService", () => {
   it("should calculate pagination metadata correctly", async () => {
-    const mockRepo = {
+    const mockRepo: IQuestionsRepository = {
       getQuestions: async () => ({
-        data: [{ id: "test-id" }],
+        data: [{ id: "test-id" } as Partial<QuestionWithMappings> as QuestionWithMappings],
         count: 55,
       }),
-    } as unknown as SupabaseQuestionsRepository;
+      getQuestionById: jest.fn<IQuestionsRepository["getQuestionById"]>(),
+      getTaxonomies: jest.fn<IQuestionsRepository["getTaxonomies"]>(),
+    };
 
     const service = new QuestionsService(mockRepo);
 
@@ -32,12 +35,14 @@ describe("QuestionsService", () => {
   });
 
   it("should handle empty results gracefully", async () => {
-    const mockRepo = {
+    const mockRepo: IQuestionsRepository = {
       getQuestions: async () => ({
         data: [],
         count: 0,
       }),
-    } as unknown as SupabaseQuestionsRepository;
+      getQuestionById: jest.fn<IQuestionsRepository["getQuestionById"]>(),
+      getTaxonomies: jest.fn<IQuestionsRepository["getTaxonomies"]>(),
+    };
 
     const service = new QuestionsService(mockRepo);
 

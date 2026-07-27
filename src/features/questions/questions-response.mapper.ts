@@ -1,4 +1,5 @@
 import type { Database } from "../../persistence/database.types.js";
+import type { TaxonomyRow } from "./questions.schemas.js";
 
 type PublishedQuestionRow = Database["public"]["Views"]["published_questions"]["Row"];
 type QuestionSkillMappingRow = Database["public"]["Tables"]["question_skill_mappings"]["Row"];
@@ -68,9 +69,7 @@ export function mapQuestionToDetail(row: QuestionWithMappings): QuestionDetail {
   return mapQuestionToSummary(row);
 }
 
-export function mapTaxonomyToResponse(
-  row: Database["public"]["Tables"]["question_categories"]["Row"],
-): TaxonomyResponse {
+export function mapTaxonomyToResponse(row: TaxonomyRow): TaxonomyResponse {
   return {
     id: row.id,
     slug: row.slug,

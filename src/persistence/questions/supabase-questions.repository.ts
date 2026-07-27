@@ -3,16 +3,17 @@ import type { Database } from "../database.types.js";
 import type {
   GetQuestionsQuery,
   TaxonomyType,
+  TaxonomyRow,
 } from "../../features/questions/questions.schemas.js";
 import type { QuestionWithMappings } from "../../features/questions/questions-response.mapper.js";
 import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js";
 
-export type PaginatedQuestionsResult = {
-  data: QuestionWithMappings[];
-  count: number;
-};
+import type {
+  PaginatedQuestionsResult,
+  IQuestionsRepository,
+} from "../../features/questions/questions.service.js";
 
-export class SupabaseQuestionsRepository {
+export class SupabaseQuestionsRepository implements IQuestionsRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
   public async getQuestions(query: GetQuestionsQuery): Promise<PaginatedQuestionsResult> {
@@ -72,9 +73,12 @@ export class SupabaseQuestionsRepository {
     const to = from + limit - 1;
     dbQuery = dbQuery.range(from, to);
 
-    const { data, count, error } = await dbQuery;
+    const { data, count, error } = await dbQuery.overrideTypes<
+      QuestionWithMappings[],
+      { merge: false }
+    >();
 
-    if (error) {
+    if (error && error.code !== "PGRST103") {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
         "Failed to fetch questions",
@@ -82,7 +86,7 @@ export class SupabaseQuestionsRepository {
     }
 
     return {
-      data: data as unknown as QuestionWithMappings[],
+      data: data || [],
       count: count ?? 0,
     };
   }
@@ -98,7 +102,8 @@ export class SupabaseQuestionsRepository {
       `,
       )
       .eq("id", id)
-      .maybeSingle();
+      .maybeSingle()
+      .overrideTypes<QuestionWithMappings, { merge: false }>();
 
     if (error) {
       throw new PersistenceError(
@@ -110,8 +115,13 @@ export class SupabaseQuestionsRepository {
     return data;
   }
 
-  public async getTaxonomies(type: TaxonomyType) {
-    let tableName: string;
+  public async getTaxonomies(type: TaxonomyType): Promise<TaxonomyRow[]> {
+    let tableName:
+      | "question_categories"
+      | "question_difficulties"
+      | "question_interview_types"
+      | "question_skills"
+      | "question_topics";
     switch (type) {
       case "categories":
         tableName = "question_categories";
@@ -134,8 +144,8 @@ export class SupabaseQuestionsRepository {
 
     // Student RLS guarantees is_active = true is enforced
     const { data, error } = await this.supabase
-      .from(tableName as keyof Database["public"]["Tables"])
-      .select("*")
+      .from(tableName)
+      .select("id, slug, name, description, display_order, is_active")
       .order("display_order", { ascending: true })
       .order("name", { ascending: true });
 
@@ -143,6 +153,13 @@ export class SupabaseQuestionsRepository {
       throw new PersistenceError(PersistenceErrorCode.OPERATION_FAILED, `Failed to fetch ${type}`);
     }
 
-    return data as unknown as Database["public"]["Tables"]["question_categories"]["Row"][];
+    return data.map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      description: row.description,
+      display_order: row.display_order,
+      is_active: row.is_active,
+    }));
   }
 }
