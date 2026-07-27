@@ -16,7 +16,7 @@ describe("QuestionsResponseMapper", () => {
     updated_at: "2026-01-01T00:00:00Z",
     question_skill_mappings: [{ skill_id: "skill-1" }],
     question_topic_mappings: [{ topic_id: "topic-1" }],
-  } as QuestionWithMappings;
+  };
 
   it("should map question to summary and exclude internal fields safely", () => {
     // Inject unsafe data simulating a database leak bypass

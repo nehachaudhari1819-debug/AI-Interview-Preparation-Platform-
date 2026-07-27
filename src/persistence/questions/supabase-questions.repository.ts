@@ -107,7 +107,7 @@ export class SupabaseQuestionsRepository {
       );
     }
 
-    return data as unknown as QuestionWithMappings | null;
+    return data;
   }
 
   public async getTaxonomies(type: TaxonomyType) {
@@ -129,7 +129,7 @@ export class SupabaseQuestionsRepository {
         tableName = "question_topics";
         break;
       default:
-        throw new Error(`Unsupported taxonomy type: ${type}`);
+        throw new Error(`Unsupported taxonomy type: ${String(type)}`);
     }
 
     // Student RLS guarantees is_active = true is enforced

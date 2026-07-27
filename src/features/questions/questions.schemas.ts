@@ -27,10 +27,12 @@ const uuidArrayTransformer = z.preprocess(
       return trimmed.split(",").map((s) => s.trim());
     }
     return undefined; // Let optional handle it if not provided
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
   },
   z
-    .array(z.string().uuid())
+    .array(
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      z.string().uuid(),
+    )
     .max(10)
     .optional()
     .transform((arr) => (arr && arr.length > 0 ? arr : undefined)),
