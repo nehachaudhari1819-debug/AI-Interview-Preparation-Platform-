@@ -4,11 +4,7 @@ import { sendSuccess, sendCollection } from "../../utils/api-response.js";
 import { HTTP_STATUS } from "../../constants/http.constants.js";
 import { NotFoundError } from "../../errors/not-found.error.js";
 import type { QuestionsService } from "./questions.service.js";
-import {
-  parseGetQuestionsQuery,
-  parseQuestionId,
-  parseTaxonomyType,
-} from "./questions.schemas.js";
+import { parseGetQuestionsQuery, parseQuestionId, parseTaxonomyType } from "./questions.schemas.js";
 import {
   mapQuestionToSummary,
   mapQuestionToDetail,
@@ -66,7 +62,7 @@ export function createGetQuestionDetailController() {
 export function createGetTaxonomiesController() {
   return asyncHandler(async (req: Request, res: Response) => {
     const service = getService(res);
-    
+
     // In Express, when defining a route like /taxonomies/:taxonomyType
     // we can parse the type.
     const type = parseTaxonomyType(req.params.taxonomyType);

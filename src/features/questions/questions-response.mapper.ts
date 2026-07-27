@@ -38,7 +38,15 @@ export type TaxonomyResponse = {
  */
 export function mapQuestionToSummary(row: QuestionWithMappings): QuestionSummary {
   // The database view types are nullable because it's a view, but the base table guarantees NOT NULL
-  if (!row.id || !row.question_text || !row.category_id || !row.difficulty_id || !row.interview_type_id || !row.created_at || !row.updated_at) {
+  if (
+    !row.id ||
+    !row.question_text ||
+    !row.category_id ||
+    !row.difficulty_id ||
+    !row.interview_type_id ||
+    !row.created_at ||
+    !row.updated_at
+  ) {
     throw new Error("Invalid question row from database: missing required fields");
   }
 
@@ -60,7 +68,9 @@ export function mapQuestionToDetail(row: QuestionWithMappings): QuestionDetail {
   return mapQuestionToSummary(row);
 }
 
-export function mapTaxonomyToResponse(row: Database["public"]["Tables"]["question_categories"]["Row"]): TaxonomyResponse {
+export function mapTaxonomyToResponse(
+  row: Database["public"]["Tables"]["question_categories"]["Row"],
+): TaxonomyResponse {
   return {
     id: row.id,
     slug: row.slug,

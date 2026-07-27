@@ -39,7 +39,7 @@ export function createQuestionsRouter(options: {
 
   // Taxonomies
   const taxonomyRoutes = ["categories", "difficulties", "interview-types", "skills", "topics"];
-  
+
   for (const type of taxonomyRoutes) {
     router.get(
       `/${type}`,

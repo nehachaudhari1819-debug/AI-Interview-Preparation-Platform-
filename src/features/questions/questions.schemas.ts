@@ -3,25 +3,38 @@ import { ValidationError } from "../../errors/validation.error.js";
 
 const SortFieldSchema = z.enum(["createdAt", "updatedAt"]);
 const SortDirectionSchema = z.enum(["asc", "desc"]);
-export const TaxonomyTypeSchema = z.enum(["categories", "difficulties", "interview-types", "skills", "topics"]);
+export const TaxonomyTypeSchema = z.enum([
+  "categories",
+  "difficulties",
+  "interview-types",
+  "skills",
+  "topics",
+]);
 
 /**
  * Normalizes query parameters into an array of UUIDs.
  * Express parses single parameters as string, repeated as array.
  * We also support comma-separated strings.
  */
-const uuidArrayTransformer = z.preprocess((val) => {
-  if (Array.isArray(val)) {
-    return val as unknown;
-  }
-  if (typeof val === "string") {
-    const trimmed = val.trim();
-    if (trimmed === "") return [];
-    return trimmed.split(",").map((s) => s.trim());
-  }
-  return undefined; // Let optional handle it if not provided
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-}, z.array(z.string().uuid()).max(10).optional().transform(arr => arr && arr.length > 0 ? arr : undefined));
+const uuidArrayTransformer = z.preprocess(
+  (val) => {
+    if (Array.isArray(val)) {
+      return val as unknown;
+    }
+    if (typeof val === "string") {
+      const trimmed = val.trim();
+      if (trimmed === "") return [];
+      return trimmed.split(",").map((s) => s.trim());
+    }
+    return undefined; // Let optional handle it if not provided
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+  },
+  z
+    .array(z.string().uuid())
+    .max(10)
+    .optional()
+    .transform((arr) => (arr && arr.length > 0 ? arr : undefined)),
+);
 
 export const GetQuestionsQuerySchema = z
   .object({
