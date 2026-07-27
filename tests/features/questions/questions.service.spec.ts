@@ -6,7 +6,7 @@ import type { GetQuestionsQuery } from "../../../src/features/questions/question
 describe("QuestionsService", () => {
   it("should calculate pagination metadata correctly", async () => {
     const mockRepo = {
-      getQuestions: jest.fn<any>().mockResolvedValue({
+      getQuestions: async () => ({
         data: [{ id: "test-id" }],
         count: 55,
       }),
@@ -33,7 +33,7 @@ describe("QuestionsService", () => {
 
   it("should handle empty results gracefully", async () => {
     const mockRepo = {
-      getQuestions: jest.fn<any>().mockResolvedValue({
+      getQuestions: async () => ({
         data: [],
         count: 0,
       }),
