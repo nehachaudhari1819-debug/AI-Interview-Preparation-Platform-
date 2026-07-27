@@ -8,7 +8,7 @@ This phase implements the Student Question Bank read APIs, allowing authenticate
 
 ## Endpoints
 
-### 1. Taxonomy Endpoints (`GET /api/v1/questions/taxonomies/:type`)
+### 1. Taxonomy Endpoints (`GET /api/v1/questions/:type`)
 
 Retrieves available filtering options.
 
@@ -38,3 +38,23 @@ Retrieves detailed information for a single question.
 - **Strict Typing**: No `as any` or unjustifiable `as unknown as`.
 - **Typed Repository**: Uses shared `IQuestionsRepository` contract and `TaxonomyRow` interface.
 - **Allow-list Projection**: Maps database rows to summary/detail interfaces excluding administrative fields.
+
+## Validation Metrics
+
+- **Test Suites**: 173 passed
+- **Total Tests**: 738 passed
+- **Coverage**:
+  - Statements: 79.61%
+  - Branches: 72.15%
+  - Functions: 83.49%
+  - Lines: 80.62%
+
+## Known Limitations
+
+- Real users need valid JWTs with `is_active` constraints; current test setup leverages privileged context where necessary for database syntax verification.
+- Pagination is based on exact counts. Extremely large datasets might require cursor-based pagination in future phases.
+
+## Final SHA & CI
+
+- **Final SHA**: [PENDING]
+- **Final CI**: [PENDING]
