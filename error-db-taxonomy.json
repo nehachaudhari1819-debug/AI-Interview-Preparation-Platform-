@@ -1,0 +1,6 @@
+{
+  "code": "23505",
+  "details": null,
+  "hint": null,
+  "message": "duplicate key value violates unique constraint \"idx_question_interview_types_lower_slug\""
+}

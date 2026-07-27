@@ -1,0 +1,8 @@
+{
+  "success": false,
+  "message": "An unexpected error occurred.",
+  "code": "INTERNAL_SERVER_ERROR",
+  "meta": {
+    "requestId": "6d41bd1f-35c3-4734-854e-f53d8d65548b"
+  }
+}

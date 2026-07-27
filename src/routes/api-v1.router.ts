@@ -4,6 +4,7 @@ import { createAuthRouter } from "../features/auth/auth.router.js";
 import { createUserProfileRouter } from "../features/users/index.js";
 
 import { createQuestionsRouter } from "../features/questions/index.js";
+import { createAdminQuestionsRouter } from "../features/questions/admin-questions.router.js";
 
 export function createApiV1Router(config: Readonly<ApplicationConfig>): Router {
   const router = Router();
@@ -16,6 +17,9 @@ export function createApiV1Router(config: Readonly<ApplicationConfig>): Router {
 
   const questionsRouter = createQuestionsRouter({ config });
   router.use("/questions", questionsRouter);
+
+  const adminQuestionsRouter = createAdminQuestionsRouter({ config });
+  router.use("/admin", adminQuestionsRouter);
 
   return router;
 }

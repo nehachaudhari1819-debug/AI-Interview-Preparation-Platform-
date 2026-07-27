@@ -674,6 +674,26 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_create_question: {
+        Args: {
+          p_question_text: string
+          p_category_id: string
+          p_difficulty_id: string
+          p_interview_type_id: string
+          p_reference_answer?: string
+          p_evaluation_guidance?: Json
+          p_skill_ids?: string[]
+          p_topic_ids?: string[]
+        }
+        Returns: string
+      }
+      admin_update_question: {
+        Args: {
+          p_question_id: string
+          p_payload: Json
+        }
+        Returns: undefined
+      }
       complete_idempotency_lease: {
         Args: {
           p_record_id: string

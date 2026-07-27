@@ -15,8 +15,8 @@ export enum PersistenceErrorCode {
 export class PersistenceError extends Error {
   public readonly code: PersistenceErrorCode;
 
-  constructor(code: PersistenceErrorCode, message: string) {
-    super(message);
+  constructor(code: PersistenceErrorCode, message: string, cause?: unknown) {
+    super(message, { cause });
     this.name = "PersistenceError";
     this.code = code;
 
