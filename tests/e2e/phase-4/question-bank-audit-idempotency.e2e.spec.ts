@@ -34,7 +34,10 @@ import type { Express } from "express";
 import type { Server } from "node:http";
 import { createSupabaseAuthGateway } from "../../../src/features/auth/supabase-auth-gateway.js";
 import { randomUUID } from "node:crypto";
-
+import {
+  QUESTION_AUDIT_ACTIONS,
+  TAXONOMY_AUDIT_ACTIONS,
+} from "../../../src/features/questions/admin-questions-audit.constants.js";
 describe("E2E: P4.5 Question Bank Audit, Idempotency, and Concurrency", () => {
   let app: Express;
   let server: Server;
@@ -140,6 +143,51 @@ describe("E2E: P4.5 Question Bank Audit, Idempotency, and Concurrency", () => {
       await cleanupTestUser(uid);
     }
   });
+
+  async function waitForAuditLogs(
+    resourceId: string,
+    action: string,
+    expectedCount = 1,
+    timeoutMs = 3_000,
+  ): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      const { data, error } = await testAdminClient
+        .from("audit_logs")
+        .select("id")
+        .eq("actor_user_id", adminUserId)
+        .eq("resource_id", resourceId)
+        .eq("action", action);
+
+      if (error) {
+        throw error;
+      }
+
+      if ((data?.length ?? 0) >= expectedCount) {
+        // Allow any unintended duplicate asynchronous write to arrive.
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        const { data: settledData, error: settledError } = await testAdminClient
+          .from("audit_logs")
+          .select("id")
+          .eq("actor_user_id", adminUserId)
+          .eq("resource_id", resourceId)
+          .eq("action", action);
+
+        if (settledError) {
+          throw settledError;
+        }
+
+        expect(settledData?.length).toBe(expectedCount);
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    throw new Error(`Timed out waiting for audit action ${action}`);
+  }
 
   // =========================================================================
   // SECTION 1: Authorization Guards — Admin-Only Enforcement
@@ -755,13 +803,7 @@ describe("E2E: P4.5 Question Bank Audit, Idempotency, and Concurrency", () => {
       expect(JSON.stringify(failedRes.body)).not.toMatch(/sql|constraint|postgres/i);
 
       // Verify only 1 audit log was generated for the successful transition
-      const { data: auditLogs } = await testAdminClient
-        .from("audit_logs")
-        .select("id")
-        .eq("resource_id", taxId)
-        .eq("action", "TAXONOMY_ARCHIVED");
-
-      expect(auditLogs?.length).toBe(1);
+      await waitForAuditLogs(taxId, TAXONOMY_AUDIT_ACTIONS.QUESTION_TAXONOMY_ARCHIVED);
     });
 
     it("concurrent question lifecycle requests with different idempotency keys return 409", async () => {
@@ -804,13 +846,7 @@ describe("E2E: P4.5 Question Bank Audit, Idempotency, and Concurrency", () => {
       expect(JSON.stringify(failedRes.body)).not.toMatch(/sql|constraint|postgres/i);
 
       // Verify only 1 audit log was generated for the successful transition
-      const { data: auditLogs } = await testAdminClient
-        .from("audit_logs")
-        .select("id")
-        .eq("resource_id", qId)
-        .eq("action", "QUESTION_PUBLISHED");
-
-      expect(auditLogs?.length).toBe(1);
+      await waitForAuditLogs(qId, QUESTION_AUDIT_ACTIONS.QUESTION_PUBLISHED);
     });
   });
 });
