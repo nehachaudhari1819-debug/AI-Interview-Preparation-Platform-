@@ -88,6 +88,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const res = await request(app)
         .post("/api/v1/admin/taxonomies/skills")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-1-${suiteSuffix}`)
         .send({
           slug: `test-skill-admin-${suiteSuffix}`,
           name: `Test Skill Admin ${suiteSuffix}`,
@@ -107,6 +108,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const res1 = await request(app)
         .post("/api/v1/admin/taxonomies/skills")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-2-${suiteSuffix}`)
         .send({
           slug: duplicateSlug,
           name: `Original Skill ${suiteSuffix}`,
@@ -117,6 +119,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const res2 = await request(app)
         .post("/api/v1/admin/taxonomies/skills")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-3-${suiteSuffix}`)
         .send({
           slug: duplicateSlug,
           name: `Duplicate Skill ${suiteSuffix}`,
@@ -151,6 +154,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const r1 = await request(app)
         .post("/api/v1/admin/taxonomies/categories")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-4-${suiteSuffix}`)
         .send({ slug: taxonomySlugs.category, name: `Cat Admin ${suiteSuffix}` });
       expect(r1.status).toBe(201);
       categoryId = r1.body.data.id;
@@ -158,6 +162,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const r2 = await request(app)
         .post("/api/v1/admin/taxonomies/difficulties")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-5-${suiteSuffix}`)
         .send({ slug: taxonomySlugs.difficulty, name: `Diff Admin ${suiteSuffix}` });
       expect(r2.status).toBe(201);
       difficultyId = r2.body.data.id;
@@ -165,6 +170,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const r3 = await request(app)
         .post("/api/v1/admin/taxonomies/interview-types")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-6-${suiteSuffix}`)
         .send({ slug: taxonomySlugs.interviewType, name: `Type Admin ${suiteSuffix}` });
       expect(r3.status).toBe(201);
       interviewTypeId = r3.body.data.id;
@@ -172,6 +178,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const r4 = await request(app)
         .post("/api/v1/admin/taxonomies/skills")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-7-${suiteSuffix}`)
         .send({ slug: taxonomySlugs.skill, name: `Skill Admin ${suiteSuffix}` });
       expect(r4.status).toBe(201);
       skillId = r4.body.data.id;
@@ -181,6 +188,7 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
       const res = await request(app)
         .post("/api/v1/admin/questions")
         .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-8-${suiteSuffix}`)
         .send({
           questionText: "What is the meaning of life?",
           categoryId,
@@ -200,7 +208,8 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
     it("should publish a draft question", async () => {
       const res = await request(app)
         .post(`/api/v1/admin/questions/${questionId}/publish`)
-        .set("Authorization", `Bearer ${adminAccessToken}`);
+        .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-9-${suiteSuffix}`);
 
       expect(res.status).toBe(HTTP_STATUS.OK);
       expect(res.body.success).toBe(true);
@@ -210,7 +219,8 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
     it("should archive a published question", async () => {
       const res = await request(app)
         .post(`/api/v1/admin/questions/${questionId}/archive`)
-        .set("Authorization", `Bearer ${adminAccessToken}`);
+        .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-10-${suiteSuffix}`);
 
       expect(res.status).toBe(HTTP_STATUS.OK);
       expect(res.body.success).toBe(true);
@@ -220,7 +230,8 @@ describe("E2E: Admin Questions API (Phase 4.4)", () => {
     it("should restore an archived question", async () => {
       const res = await request(app)
         .post(`/api/v1/admin/questions/${questionId}/restore`)
-        .set("Authorization", `Bearer ${adminAccessToken}`);
+        .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `test-key-11-${suiteSuffix}`);
 
       expect(res.status).toBe(HTTP_STATUS.OK);
       expect(res.body.success).toBe(true);

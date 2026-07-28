@@ -65,7 +65,7 @@ export class AdminQuestionsService implements IAdminQuestionsService {
     if (question.status === "published") {
       throw new ValidationError("Question is already published");
     }
-    return this.repository.updateQuestionStatus(id, "published");
+    return this.repository.updateQuestionStatus(id, "published", question.status);
   }
 
   public async archiveQuestion(id: string): Promise<AdminQuestionDetail> {
@@ -73,7 +73,7 @@ export class AdminQuestionsService implements IAdminQuestionsService {
     if (question.status !== "published") {
       throw new ValidationError("Only published questions can be archived");
     }
-    return this.repository.updateQuestionStatus(id, "archived");
+    return this.repository.updateQuestionStatus(id, "archived", "published");
   }
 
   public async restoreQuestion(id: string): Promise<AdminQuestionDetail> {
@@ -81,7 +81,7 @@ export class AdminQuestionsService implements IAdminQuestionsService {
     if (question.status !== "archived") {
       throw new ValidationError("Only archived questions can be restored");
     }
-    return this.repository.updateQuestionStatus(id, "draft");
+    return this.repository.updateQuestionStatus(id, "draft", "archived");
   }
 
   public async createTaxonomy(type: TaxonomyType, data: CreateTaxonomyBody): Promise<TaxonomyRow> {

@@ -35,6 +35,7 @@ export interface IAdminQuestionsRepository {
   updateQuestionStatus(
     id: string,
     status: "published" | "archived" | "draft",
+    expectedStatus?: "published" | "archived" | "draft",
   ): Promise<AdminQuestionDetail>;
   createTaxonomy(type: TaxonomyType, data: CreateTaxonomyBody): Promise<TaxonomyRow>;
   updateTaxonomy(type: TaxonomyType, id: string, data: UpdateTaxonomyBody): Promise<TaxonomyRow>;

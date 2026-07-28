@@ -240,6 +240,7 @@ export class SupabaseAdminQuestionsRepository implements IAdminQuestionsReposito
   public async updateQuestionStatus(
     id: string,
     status: "published" | "archived" | "draft",
+    expectedStatus?: "published" | "archived" | "draft",
   ): Promise<AdminQuestionDetail> {
     const payload: Database["public"]["Tables"]["questions"]["Update"] = {
       status,
@@ -256,13 +257,26 @@ export class SupabaseAdminQuestionsRepository implements IAdminQuestionsReposito
       payload.published_at = null;
     }
 
-    const { error } = await this.supabase.from("questions").update(payload).eq("id", id);
+    let query = this.supabase.from("questions").update(payload).eq("id", id);
+    if (expectedStatus) {
+      query = query.eq("status", expectedStatus);
+    }
+
+    // Select to ensure we can verify if the row was actually updated
+    const { data, error } = await query.select("id");
 
     if (error) {
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
         "Failed to update status",
         error,
+      );
+    }
+
+    if (expectedStatus && data.length === 0) {
+      throw new PersistenceError(
+        PersistenceErrorCode.OPERATION_FAILED,
+        "Question status changed concurrently",
       );
     }
 
@@ -370,10 +384,18 @@ export class SupabaseAdminQuestionsRepository implements IAdminQuestionsReposito
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
+      .eq("is_active", true)
       .select()
       .single();
 
     if (error) {
+      if (error.code === "PGRST116") {
+        throw new PersistenceError(
+          PersistenceErrorCode.OPERATION_FAILED,
+          "Taxonomy state changed concurrently or does not exist",
+          error,
+        );
+      }
       // Map constraint violations to validation errors or standard persistence errors
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
@@ -393,10 +415,18 @@ export class SupabaseAdminQuestionsRepository implements IAdminQuestionsReposito
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
+      .eq("is_active", false)
       .select()
       .single();
 
     if (error) {
+      if (error.code === "PGRST116") {
+        throw new PersistenceError(
+          PersistenceErrorCode.OPERATION_FAILED,
+          "Taxonomy state changed concurrently or does not exist",
+          error,
+        );
+      }
       throw new PersistenceError(
         PersistenceErrorCode.OPERATION_FAILED,
         "Failed to restore taxonomy",

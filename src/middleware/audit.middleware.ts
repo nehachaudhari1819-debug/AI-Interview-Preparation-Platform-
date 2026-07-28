@@ -39,6 +39,13 @@ export function createAuditMiddleware(
     res.on("finish", () => {
       // Only audit successful mutations (2xx).
       if (res.statusCode >= 200 && res.statusCode < 300) {
+        // P4.5: Skip audit for idempotency replays to prevent duplicate audit events.
+        // The idempotency middleware sets isIdempotencyReplay = true on res.locals
+        // before sending the cached response.
+        if (res.locals.isIdempotencyReplay === true) {
+          return;
+        }
+
         const actorUserId =
           req.context.authentication.state === "authenticated"
             ? req.context.authentication.principal.userId
