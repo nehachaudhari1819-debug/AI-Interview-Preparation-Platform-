@@ -648,8 +648,9 @@ describe("E2E: P4.5 Question Bank Audit, Idempotency, and Concurrency", () => {
 
   describe("Concurrency protection", () => {
     it("concurrent identical creates with same idempotency key do not duplicate resources", async () => {
-      const concurrentKey = `p45-concurrent-create-${randomUUID()}`;
-      const concurrentSlug = `p45-concurrent-tax-${randomUUID()}`;
+      const testRunId = randomUUID();
+      const concurrentKey = `p45-concurrent-create-${testRunId}`;
+      const concurrentSlug = `p45-concurrent-tax-${testRunId}`;
 
       // Fire two requests simultaneously with the same key
       const [res1, res2] = await Promise.all([
@@ -658,13 +659,13 @@ describe("E2E: P4.5 Question Bank Audit, Idempotency, and Concurrency", () => {
           .set("Authorization", `Bearer ${adminAccessToken}`)
           .set("Idempotency-Key", concurrentKey)
           .set("Content-Type", "application/json")
-          .send({ slug: concurrentSlug, name: "Concurrent Topic" }),
+          .send({ slug: concurrentSlug, name: `Concurrent Topic ${testRunId}` }),
         request(app)
           .post("/api/v1/admin/taxonomies/topics")
           .set("Authorization", `Bearer ${adminAccessToken}`)
           .set("Idempotency-Key", concurrentKey)
           .set("Content-Type", "application/json")
-          .send({ slug: concurrentSlug, name: "Concurrent Topic" }),
+          .send({ slug: concurrentSlug, name: `Concurrent Topic ${testRunId}` }),
       ]);
 
       // At least one must succeed

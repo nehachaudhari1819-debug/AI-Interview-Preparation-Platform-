@@ -53,6 +53,7 @@ describe("Idempotency Wrapper", () => {
 
     mockResponse = {
       statusCode: 200,
+      locals: {},
       json: jest.fn<any>().mockReturnThis(),
       status: jest.fn<any>().mockReturnThis(),
       send: jest.fn<any>().mockReturnThis(),
