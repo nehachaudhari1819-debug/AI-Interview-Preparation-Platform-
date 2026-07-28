@@ -65,7 +65,18 @@ export class AdminQuestionsService implements IAdminQuestionsService {
     if (question.status === "published") {
       throw new ValidationError("Question is already published");
     }
-    return this.repository.updateQuestionStatus(id, "published", question.status);
+    try {
+      return await this.repository.updateQuestionStatus(id, "published", question.status);
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.RESOURCE_CONFLICT,
+          message: "Question state changed concurrently",
+        });
+      }
+      throw error;
+    }
   }
 
   public async archiveQuestion(id: string): Promise<AdminQuestionDetail> {
@@ -73,7 +84,18 @@ export class AdminQuestionsService implements IAdminQuestionsService {
     if (question.status !== "published") {
       throw new ValidationError("Only published questions can be archived");
     }
-    return this.repository.updateQuestionStatus(id, "archived", "published");
+    try {
+      return await this.repository.updateQuestionStatus(id, "archived", "published");
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.RESOURCE_CONFLICT,
+          message: "Question state changed concurrently",
+        });
+      }
+      throw error;
+    }
   }
 
   public async restoreQuestion(id: string): Promise<AdminQuestionDetail> {
@@ -81,7 +103,18 @@ export class AdminQuestionsService implements IAdminQuestionsService {
     if (question.status !== "archived") {
       throw new ValidationError("Only archived questions can be restored");
     }
-    return this.repository.updateQuestionStatus(id, "draft", "archived");
+    try {
+      return await this.repository.updateQuestionStatus(id, "draft", "archived");
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.RESOURCE_CONFLICT,
+          message: "Question state changed concurrently",
+        });
+      }
+      throw error;
+    }
   }
 
   public async createTaxonomy(type: TaxonomyType, data: CreateTaxonomyBody): Promise<TaxonomyRow> {
@@ -119,10 +152,32 @@ export class AdminQuestionsService implements IAdminQuestionsService {
   }
 
   public async archiveTaxonomy(type: TaxonomyType, id: string): Promise<TaxonomyRow> {
-    return this.repository.archiveTaxonomy(type, id);
+    try {
+      return await this.repository.archiveTaxonomy(type, id);
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.RESOURCE_CONFLICT,
+          message: "Taxonomy state changed concurrently",
+        });
+      }
+      throw error;
+    }
   }
 
   public async restoreTaxonomy(type: TaxonomyType, id: string): Promise<TaxonomyRow> {
-    return this.repository.restoreTaxonomy(type, id);
+    try {
+      return await this.repository.restoreTaxonomy(type, id);
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.RESOURCE_CONFLICT,
+          message: "Taxonomy state changed concurrently",
+        });
+      }
+      throw error;
+    }
   }
 }

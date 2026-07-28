@@ -722,5 +722,95 @@ describe("E2E: P4.5 Question Bank Audit, Idempotency, and Concurrency", () => {
       // No database or SQL details in error
       expect(JSON.stringify(res.body)).not.toMatch(/sql|constraint|postgres/i);
     });
+    it("concurrent taxonomy lifecycle requests with different idempotency keys return 409", async () => {
+      // 1. Create a taxonomy
+      const runId = randomUUID();
+      const taxRes = await request(app)
+        .post("/api/v1/admin/taxonomies/topics")
+        .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `p45-tax-lifecycle-${runId}`)
+        .set("Content-Type", "application/json")
+        .send({ slug: `tax-lifecycle-${runId}`, name: `Lifecycle Topic ${runId}` });
+      expect(taxRes.status).toBe(201);
+      const taxId = taxRes.body.data.id;
+
+      // 2. Fire two simultaneous archive requests with DIFFERENT idempotency keys
+      const [res1, res2] = await Promise.all([
+        request(app)
+          .post(`/api/v1/admin/taxonomies/topics/${taxId}/archive`)
+          .set("Authorization", `Bearer ${adminAccessToken}`)
+          .set("Idempotency-Key", `p45-tax-archive-1-${runId}`),
+        request(app)
+          .post(`/api/v1/admin/taxonomies/topics/${taxId}/archive`)
+          .set("Authorization", `Bearer ${adminAccessToken}`)
+          .set("Idempotency-Key", `p45-tax-archive-2-${runId}`),
+      ]);
+
+      const statuses = [res1.status, res2.status];
+      expect(statuses).toContain(200); // One must succeed
+      expect(statuses).toContain(409); // One must hit RESOURCE_CONFLICT
+
+      const failedRes = res1.status === 409 ? res1 : res2;
+      expect(failedRes.body.success).toBe(false);
+      expect(JSON.stringify(failedRes.body)).not.toMatch(/sql|constraint|postgres/i);
+
+      // Verify only 1 audit log was generated for the successful transition
+      const { data: auditLogs } = await testAdminClient
+        .from("audit_logs")
+        .select("id")
+        .eq("resource_id", taxId)
+        .eq("action", "TAXONOMY_ARCHIVED");
+
+      expect(auditLogs?.length).toBe(1);
+    });
+
+    it("concurrent question lifecycle requests with different idempotency keys return 409", async () => {
+      // 1. Create a question
+      const runId = randomUUID();
+      const qRes = await request(app)
+        .post("/api/v1/admin/questions")
+        .set("Authorization", `Bearer ${adminAccessToken}`)
+        .set("Idempotency-Key", `p45-q-lifecycle-${runId}`)
+        .set("Content-Type", "application/json")
+        .send({
+          questionText: `Question for lifecycle test ${runId}`,
+          categoryId,
+          difficultyId,
+          interviewTypeId,
+          skillIds: [skillId],
+          referenceAnswer: "Some answer",
+        });
+      expect(qRes.status).toBe(201);
+      const qId = qRes.body.data.id;
+
+      // 2. Fire two simultaneous publish requests with DIFFERENT idempotency keys
+      const [res1, res2] = await Promise.all([
+        request(app)
+          .post(`/api/v1/admin/questions/${qId}/publish`)
+          .set("Authorization", `Bearer ${adminAccessToken}`)
+          .set("Idempotency-Key", `p45-q-publish-1-${runId}`),
+        request(app)
+          .post(`/api/v1/admin/questions/${qId}/publish`)
+          .set("Authorization", `Bearer ${adminAccessToken}`)
+          .set("Idempotency-Key", `p45-q-publish-2-${runId}`),
+      ]);
+
+      const statuses = [res1.status, res2.status];
+      expect(statuses).toContain(200); // One must succeed
+      expect(statuses).toContain(409); // One must hit RESOURCE_CONFLICT
+
+      const failedRes = res1.status === 409 ? res1 : res2;
+      expect(failedRes.body.success).toBe(false);
+      expect(JSON.stringify(failedRes.body)).not.toMatch(/sql|constraint|postgres/i);
+
+      // Verify only 1 audit log was generated for the successful transition
+      const { data: auditLogs } = await testAdminClient
+        .from("audit_logs")
+        .select("id")
+        .eq("resource_id", qId)
+        .eq("action", "QUESTION_PUBLISHED");
+
+      expect(auditLogs?.length).toBe(1);
+    });
   });
 });

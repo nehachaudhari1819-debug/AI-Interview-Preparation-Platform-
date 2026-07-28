@@ -275,7 +275,7 @@ export class SupabaseAdminQuestionsRepository implements IAdminQuestionsReposito
 
     if (expectedStatus && data.length === 0) {
       throw new PersistenceError(
-        PersistenceErrorCode.OPERATION_FAILED,
+        PersistenceErrorCode.RECORD_UPDATE_CONFLICT,
         "Question status changed concurrently",
       );
     }
@@ -391,7 +391,7 @@ export class SupabaseAdminQuestionsRepository implements IAdminQuestionsReposito
     if (error) {
       if (error.code === "PGRST116") {
         throw new PersistenceError(
-          PersistenceErrorCode.OPERATION_FAILED,
+          PersistenceErrorCode.RECORD_UPDATE_CONFLICT,
           "Taxonomy state changed concurrently or does not exist",
           error,
         );
@@ -422,7 +422,7 @@ export class SupabaseAdminQuestionsRepository implements IAdminQuestionsReposito
     if (error) {
       if (error.code === "PGRST116") {
         throw new PersistenceError(
-          PersistenceErrorCode.OPERATION_FAILED,
+          PersistenceErrorCode.RECORD_UPDATE_CONFLICT,
           "Taxonomy state changed concurrently or does not exist",
           error,
         );
