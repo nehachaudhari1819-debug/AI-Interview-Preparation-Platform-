@@ -152,6 +152,251 @@ export type Database = {
           },
         ]
       }
+      interview_session_questions: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          question_id: string
+          question_snapshot_version: number
+          question_text_snapshot: string
+          session_id: string
+          taxonomy_snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          display_order: number
+          id?: string
+          question_id: string
+          question_snapshot_version?: number
+          question_text_snapshot: string
+          session_id: string
+          taxonomy_snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          question_id?: string
+          question_snapshot_version?: number
+          question_text_snapshot?: string
+          session_id?: string
+          taxonomy_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_session_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "published_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_session_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_session_questions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_sessions: {
+        Row: {
+          completed_at: string | null
+          config_snapshot: Json
+          config_snapshot_version: number
+          created_at: string
+          id: string
+          interview_id: string
+          last_transition_at: string
+          paused_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["interview_session_status_enum"]
+          total_paused_seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          config_snapshot: Json
+          config_snapshot_version?: number
+          created_at?: string
+          id?: string
+          interview_id: string
+          last_transition_at?: string
+          paused_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["interview_session_status_enum"]
+          total_paused_seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          config_snapshot?: Json
+          config_snapshot_version?: number
+          created_at?: string
+          id?: string
+          interview_id?: string
+          last_transition_at?: string
+          paused_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["interview_session_status_enum"]
+          total_paused_seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_sessions_interview_id_user_id_fkey"
+            columns: ["interview_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "interview_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_skill_mappings: {
+        Row: {
+          created_at: string
+          interview_id: string
+          skill_id: string
+        }
+        Insert: {
+          created_at?: string
+          interview_id: string
+          skill_id: string
+        }
+        Update: {
+          created_at?: string
+          interview_id?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_skill_mappings_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_skill_mappings_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "question_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_topic_mappings: {
+        Row: {
+          created_at: string
+          interview_id: string
+          topic_id: string
+        }
+        Insert: {
+          created_at?: string
+          interview_id: string
+          topic_id: string
+        }
+        Update: {
+          created_at?: string
+          interview_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_topic_mappings_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_topic_mappings_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "question_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews: {
+        Row: {
+          created_at: string
+          difficulty_id: string
+          id: string
+          interview_type_id: string
+          question_count: number
+          target_role: string
+          time_limit_minutes: number | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty_id: string
+          id?: string
+          interview_type_id: string
+          question_count: number
+          target_role: string
+          time_limit_minutes?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty_id?: string
+          id?: string
+          interview_type_id?: string
+          question_count?: number
+          target_role?: string
+          time_limit_minutes?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_difficulty_id_fkey"
+            columns: ["difficulty_id"]
+            isOneToOne: false
+            referencedRelation: "question_difficulties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_interview_type_id_fkey"
+            columns: ["interview_type_id"]
+            isOneToOne: false
+            referencedRelation: "question_interview_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_categories: {
         Row: {
           created_at: string
@@ -745,6 +990,11 @@ export type Database = {
         | "intermediate"
         | "advanced"
       idempotency_status_enum: "processing" | "completed" | "failed"
+      interview_session_status_enum:
+        | "ready"
+        | "in_progress"
+        | "paused"
+        | "completed"
       question_status_enum: "draft" | "published" | "archived"
       user_role_enum: "student" | "admin"
     }
