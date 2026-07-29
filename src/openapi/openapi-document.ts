@@ -13,6 +13,13 @@ import { userProfileSchemas } from "./components/user-profile.components.js";
 import { userProfilePaths } from "./paths/user-profile.paths.js";
 import { userPreferencesSchemas } from "./components/user-preferences.components.js";
 import { userPreferencesPaths } from "./paths/user-preferences.paths.js";
+import {
+  questionSchemas,
+  questionResponses,
+  questionParameters,
+} from "./components/questions.components.js";
+import { questionPaths } from "./paths/questions.paths.js";
+import { adminQuestionPaths } from "./paths/admin-questions.paths.js";
 
 export const openApiDocument: OpenApiDocument = {
   openapi: "3.1.0",
@@ -36,6 +43,8 @@ export const openApiDocument: OpenApiDocument = {
     ...authPaths,
     ...userProfilePaths,
     ...userPreferencesPaths,
+    ...questionPaths,
+    ...adminQuestionPaths,
   },
   components: {
     schemas: {
@@ -44,11 +53,16 @@ export const openApiDocument: OpenApiDocument = {
       ...healthSchemas,
       ...userProfileSchemas,
       ...userPreferencesSchemas,
+      ...questionSchemas,
     },
     responses: {
       ...commonResponses,
       ...authResponses,
       ...healthResponses,
+      ...questionResponses,
+    },
+    parameters: {
+      ...questionParameters,
     },
     headers: {
       ...commonHeaders,

@@ -9,9 +9,11 @@ export interface OpenApiDocument {
     url: string;
     description?: string;
   }>;
-  paths: Record<string, PathItemObject>;
+  paths: PathsObject;
   components?: ComponentsObject;
 }
+
+export type PathsObject = Record<string, PathItemObject>;
 
 export interface PathItemObject {
   summary?: string;
@@ -24,6 +26,7 @@ export interface PathItemObject {
   head?: OperationObject;
   patch?: OperationObject;
   trace?: OperationObject;
+  parameters?: Array<ParameterObject | ReferenceObject>;
 }
 
 export interface OperationObject {
@@ -31,7 +34,7 @@ export interface OperationObject {
   summary?: string;
   description?: string;
   operationId?: string;
-  parameters?: ParameterObject[];
+  parameters?: Array<ParameterObject | ReferenceObject>;
   requestBody?: RequestBodyObject;
   responses: ResponsesObject;
   security?: SecurityRequirementObject[];
@@ -68,9 +71,17 @@ export interface HeaderObject {
   schema?: SchemaObject | ReferenceObject;
 }
 
+export interface ExampleObject {
+  summary?: string;
+  description?: string;
+  value?: unknown;
+  externalValue?: string;
+}
+
 export interface MediaTypeObject {
   schema?: SchemaObject | ReferenceObject;
   example?: unknown;
+  examples?: Record<string, ExampleObject | ReferenceObject>;
 }
 
 export interface SchemaObject {
@@ -96,6 +107,7 @@ export interface SchemaObject {
   allOf?: Array<SchemaObject | ReferenceObject>;
   example?: unknown;
   pattern?: string;
+  default?: unknown;
 }
 
 export interface ReferenceObject {

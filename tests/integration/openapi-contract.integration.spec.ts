@@ -6,6 +6,8 @@ import { bootstrapObservability } from "../../src/observability/index.js";
 import { createSafeConfigSummary } from "../../src/config/index.js";
 import { createHttpServer } from "../../src/server/create-http-server.js";
 import express from "express";
+import { ERROR_CODES } from "../../src/constants/error-codes.constants.js";
+import type { ResponseObject } from "../../src/openapi/openapi.types.js";
 
 describe("OpenAPI Contract Integration", () => {
   it("should match runtime health response structure", async () => {
@@ -60,6 +62,56 @@ describe("OpenAPI Contract Integration", () => {
     expect(notFoundRes.body).toHaveProperty("success", false);
     expect(notFoundRes.body).toHaveProperty("code", "RESOURCE_NOT_FOUND");
     expect(notFoundRes.body).toHaveProperty("meta");
+
+    observability.unregisterProcessHandlers();
+  });
+
+  it("should match OpenAPI contract for Question Bank unauthenticated errors", async () => {
+    const config = createTestApplicationConfig();
+    const tempApp = express();
+    const server = createHttpServer(tempApp, config);
+    const observability = bootstrapObservability({ config, server });
+
+    const app = createApp({
+      config,
+      observability,
+      configSummary: createSafeConfigSummary(config),
+    });
+
+    const isRecord = (value: unknown): value is Record<string, unknown> =>
+      typeof value === "object" && value !== null && !Array.isArray(value);
+
+    const unauthRes = await request(app).get("/api/v1/questions");
+
+    const authResponse = openApiDocument.components?.responses?.["QuestionAuthRequired"];
+    if (!authResponse || "$ref" in authResponse || !authResponse.content) {
+      throw new Error("Invalid QuestionAuthRequired response component");
+    }
+
+    const mediaType = authResponse.content["application/json"];
+
+    if (!mediaType?.schema || !("$ref" in mediaType.schema)) {
+      throw new Error("QuestionAuthRequired must reference the standard error schema");
+    }
+
+    expect(mediaType.schema.$ref).toBe("#/components/schemas/StandardErrorResponse");
+
+    if (!isRecord(mediaType.example)) {
+      throw new Error("QuestionAuthRequired must contain a valid example");
+    }
+
+    expect(mediaType.example).toMatchObject({
+      success: false,
+      code: ERROR_CODES.AUTHENTICATION_REQUIRED,
+    });
+    expect(typeof mediaType.example.message).toBe("string");
+
+    expect(unauthRes.status).toBe(401);
+    expect(unauthRes.body).toMatchObject({
+      success: false,
+      code: ERROR_CODES.AUTHENTICATION_REQUIRED,
+    });
+    expect(typeof unauthRes.body.message).toBe("string");
 
     observability.unregisterProcessHandlers();
   });

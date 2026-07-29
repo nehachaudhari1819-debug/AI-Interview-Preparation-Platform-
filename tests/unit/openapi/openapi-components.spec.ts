@@ -24,7 +24,7 @@ describe("OpenAPI Components", () => {
 
   it("should verify all local references resolve", () => {
     const jsonString = JSON.stringify(openApiDocument);
-    const regex = /"\$ref":\s*"#\/components\/(schemas|responses|headers)\/([^"]+)"/g;
+    const regex = /"\$ref":\s*"#\/components\/(schemas|responses|headers|parameters)\/([^"]+)"/g;
     let match;
 
     while ((match = regex.exec(jsonString)) !== null) {

@@ -37,4 +37,53 @@ describe("OpenAPI Security Boundaries", () => {
     const hasCookie = refreshRoute.post?.security?.some((req) => req.CookieAuth !== undefined);
     expect(hasCookie).toBe(true);
   });
+
+  it("should require BearerAuth for all student question routes", () => {
+    const studentRoutes = [
+      { path: "/api/v1/questions", method: "get" },
+      { path: "/api/v1/questions/{questionId}", method: "get" },
+      { path: "/api/v1/questions/categories", method: "get" },
+      { path: "/api/v1/questions/difficulties", method: "get" },
+      { path: "/api/v1/questions/interview-types", method: "get" },
+      { path: "/api/v1/questions/skills", method: "get" },
+      { path: "/api/v1/questions/topics", method: "get" },
+    ];
+
+    for (const route of studentRoutes) {
+      const pathItem = requirePath(route.path);
+      const operation = (pathItem as any)[route.method];
+      expect(operation.security).toBeDefined();
+      const hasBearer = operation.security.some((req: any) => req.BearerAuth !== undefined);
+      expect(hasBearer).toBe(true);
+    }
+  });
+
+  it("should require BearerAuth and document 403 Forbidden for all admin question routes", () => {
+    const adminRoutes = [
+      { path: "/api/v1/admin/questions", method: "get" },
+      { path: "/api/v1/admin/questions", method: "post" },
+      { path: "/api/v1/admin/questions/{questionId}", method: "get" },
+      { path: "/api/v1/admin/questions/{questionId}", method: "patch" },
+      { path: "/api/v1/admin/questions/{questionId}/publish", method: "post" },
+      { path: "/api/v1/admin/questions/{questionId}/archive", method: "post" },
+      { path: "/api/v1/admin/questions/{questionId}/restore", method: "post" },
+      { path: "/api/v1/admin/taxonomies/{taxonomyType}", method: "post" },
+      { path: "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}", method: "patch" },
+      { path: "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/archive", method: "post" },
+      { path: "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/restore", method: "post" },
+    ];
+
+    for (const route of adminRoutes) {
+      const pathItem = requirePath(route.path);
+      const operation = (pathItem as any)[route.method];
+
+      // Check Bearer Auth
+      expect(operation.security).toBeDefined();
+      const hasBearer = operation.security.some((req: any) => req.BearerAuth !== undefined);
+      expect(hasBearer).toBe(true);
+
+      // Check 403 Forbidden is documented
+      expect(operation.responses["403"]).toBeDefined();
+    }
+  });
 });

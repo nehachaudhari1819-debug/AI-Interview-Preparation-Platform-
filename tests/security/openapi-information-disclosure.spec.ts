@@ -30,4 +30,45 @@ describe("OpenAPI Information Disclosure", () => {
     const paths = openApiDocument.paths;
     expect(paths["/health/config"]).toBeUndefined();
   });
+
+  it("should not expose AdminQuestionDetail properties in student question responses", () => {
+    const studentRoutes = [
+      { path: "/api/v1/questions", method: "get" },
+      { path: "/api/v1/questions/{questionId}", method: "get" },
+    ];
+
+    for (const route of studentRoutes) {
+      const pathItem = openApiDocument.paths[route.path];
+      const operation = (pathItem as any)[route.method];
+
+      const responseSchema = operation.responses["200"]?.content?.["application/json"]?.schema;
+      expect(responseSchema).toBeDefined();
+
+      // Ensure that the referenced schema for data or data.items is not AdminQuestionDetail
+      const jsonStr = JSON.stringify(responseSchema);
+      expect(jsonStr).not.toMatch(/AdminQuestionDetail/);
+      expect(jsonStr).toMatch(/QuestionSummary/);
+    }
+  });
+
+  it("should not expose AdminTaxonomyRow in student taxonomy responses", () => {
+    const studentTaxonomyRoutes = [
+      "/api/v1/questions/categories",
+      "/api/v1/questions/difficulties",
+      "/api/v1/questions/interview-types",
+      "/api/v1/questions/skills",
+      "/api/v1/questions/topics",
+    ];
+    for (const route of studentTaxonomyRoutes) {
+      const pathItem = openApiDocument.paths[route];
+      const operation = (pathItem as any)["get"];
+
+      const responseSchema = operation.responses["200"]?.content?.["application/json"]?.schema;
+      expect(responseSchema).toBeDefined();
+
+      const jsonStr = JSON.stringify(responseSchema);
+      expect(jsonStr).not.toMatch(/AdminTaxonomyRow/);
+      expect(jsonStr).toMatch(/TaxonomyResponse/);
+    }
+  });
 });

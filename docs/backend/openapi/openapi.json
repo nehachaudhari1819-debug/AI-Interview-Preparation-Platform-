@@ -569,6 +569,1654 @@
           }
         }
       }
+    },
+    "/api/v1/questions": {
+      "get": {
+        "tags": ["Student Questions"],
+        "summary": "List Published Questions",
+        "operationId": "listPublishedQuestions",
+        "description": "Returns a paginated list of published questions with optional filtering and sorting.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryPage"
+          },
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySearch"
+          },
+          {
+            "$ref": "#/components/parameters/StudentQuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortDir"
+          },
+          {
+            "$ref": "#/components/parameters/QueryCategoryId"
+          },
+          {
+            "$ref": "#/components/parameters/QueryDifficultyId"
+          },
+          {
+            "$ref": "#/components/parameters/QueryInterviewTypeId"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySkillId"
+          },
+          {
+            "$ref": "#/components/parameters/QueryTopicId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta", "pagination"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/QuestionSummary"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "required": [
+                        "page",
+                        "limit",
+                        "totalItems",
+                        "totalPages",
+                        "hasNextPage",
+                        "hasPreviousPage"
+                      ],
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "totalItems": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        },
+                        "hasNextPage": {
+                          "type": "boolean"
+                        },
+                        "hasPreviousPage": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "questionText": "What is a promise in JavaScript?",
+                        "categoryId": "00000000-0000-4000-8000-000000000010",
+                        "difficultyId": "00000000-0000-4000-8000-000000000011",
+                        "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                        "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                        "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "updatedAt": "2024-01-01T00:00:00.000Z"
+                      }
+                    ],
+                    "meta": {
+                      "requestId": "req-1234"
+                    },
+                    "pagination": {
+                      "page": 1,
+                      "limit": 20,
+                      "totalItems": 1,
+                      "totalPages": 1,
+                      "hasNextPage": false,
+                      "hasPreviousPage": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          }
+        }
+      }
+    },
+    "/api/v1/questions/{questionId}": {
+      "get": {
+        "tags": ["Student Questions"],
+        "summary": "Get Published Question Details",
+        "operationId": "getPublishedQuestion",
+        "description": "Returns the details of a specific published question.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QuestionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/QuestionSummary"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "questionText": "What is a promise in JavaScript?",
+                      "categoryId": "00000000-0000-4000-8000-000000000010",
+                      "difficultyId": "00000000-0000-4000-8000-000000000011",
+                      "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                      "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                      "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z"
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "404": {
+            "$ref": "#/components/responses/QuestionNotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/questions/categories": {
+      "get": {
+        "tags": ["Student Questions"],
+        "summary": "Get Categories",
+        "operationId": "listCategories",
+        "description": "Returns active category taxonomy items.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TaxonomyResponse"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000010",
+                        "slug": "frontend",
+                        "name": "Frontend Development",
+                        "description": "Frontend questions",
+                        "displayOrder": 1,
+                        "isActive": true
+                      }
+                    ],
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          }
+        }
+      }
+    },
+    "/api/v1/questions/difficulties": {
+      "get": {
+        "tags": ["Student Questions"],
+        "summary": "Get Difficulties",
+        "operationId": "listDifficulties",
+        "description": "Returns active difficulty taxonomy items.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TaxonomyResponse"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000011",
+                        "slug": "medium",
+                        "name": "Medium",
+                        "description": "Medium difficulty",
+                        "displayOrder": 2,
+                        "isActive": true
+                      }
+                    ],
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          }
+        }
+      }
+    },
+    "/api/v1/questions/interview-types": {
+      "get": {
+        "tags": ["Student Questions"],
+        "summary": "Get Interview Types",
+        "operationId": "listInterviewTypes",
+        "description": "Returns active interview type taxonomy items.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TaxonomyResponse"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000012",
+                        "slug": "technical",
+                        "name": "Technical",
+                        "description": "Technical interview",
+                        "displayOrder": 1,
+                        "isActive": true
+                      }
+                    ],
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          }
+        }
+      }
+    },
+    "/api/v1/questions/skills": {
+      "get": {
+        "tags": ["Student Questions"],
+        "summary": "Get Skills",
+        "operationId": "listSkills",
+        "description": "Returns active skill taxonomy items.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TaxonomyResponse"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000013",
+                        "slug": "javascript",
+                        "name": "JavaScript",
+                        "description": "JS questions",
+                        "displayOrder": 1,
+                        "isActive": true
+                      }
+                    ],
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          }
+        }
+      }
+    },
+    "/api/v1/questions/topics": {
+      "get": {
+        "tags": ["Student Questions"],
+        "summary": "Get Topics",
+        "operationId": "listTopics",
+        "description": "Returns active topic taxonomy items.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TaxonomyResponse"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000014",
+                        "slug": "async-await",
+                        "name": "Async Await",
+                        "description": "Async/Await questions",
+                        "displayOrder": 1,
+                        "isActive": true
+                      }
+                    ],
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/questions": {
+      "get": {
+        "tags": ["Admin Questions"],
+        "summary": "List Questions (Admin)",
+        "operationId": "listAdminQuestions",
+        "description": "Returns a paginated list of all questions with optional status filtering.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryPage"
+          },
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySearch"
+          },
+          {
+            "$ref": "#/components/parameters/AdminQuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortDir"
+          },
+          {
+            "$ref": "#/components/parameters/AdminQueryStatus"
+          },
+          {
+            "$ref": "#/components/parameters/QueryCategoryId"
+          },
+          {
+            "$ref": "#/components/parameters/QueryDifficultyId"
+          },
+          {
+            "$ref": "#/components/parameters/QueryInterviewTypeId"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySkillId"
+          },
+          {
+            "$ref": "#/components/parameters/QueryTopicId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminQuestionDetail"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "required": [
+                        "requestId",
+                        "totalItems",
+                        "totalPages",
+                        "currentPage",
+                        "limit",
+                        "hasNextPage",
+                        "hasPreviousPage"
+                      ],
+                      "properties": {
+                        "requestId": {
+                          "type": "string"
+                        },
+                        "totalItems": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        },
+                        "currentPage": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "hasNextPage": {
+                          "type": "boolean"
+                        },
+                        "hasPreviousPage": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "questionText": "What is a promise in JavaScript?",
+                        "categoryId": "00000000-0000-4000-8000-000000000010",
+                        "difficultyId": "00000000-0000-4000-8000-000000000011",
+                        "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                        "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                        "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                        "status": "draft",
+                        "publishedAt": null,
+                        "archivedAt": null,
+                        "createdAt": "2024-01-01T00:00:00.000Z",
+                        "updatedAt": "2024-01-01T00:00:00.000Z",
+                        "referenceAnswer": "A promise is an object...",
+                        "evaluationGuidance": {}
+                      }
+                    ],
+                    "meta": {
+                      "requestId": "req-1234",
+                      "totalItems": 1,
+                      "totalPages": 1,
+                      "currentPage": 1,
+                      "limit": 20,
+                      "hasNextPage": false,
+                      "hasPreviousPage": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Admin Questions"],
+        "summary": "Create Question (Admin)",
+        "operationId": "createAdminQuestion",
+        "description": "Creates a new draft question. Supports identical-key replay without duplicate mutation or audit event. Replays stored status/body on exact key match. Rejects duplicate mutations and handles concurrent lifecycle conflicts.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuestionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Question created",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminQuestionDetail"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "questionText": "What is a promise in JavaScript?",
+                      "categoryId": "00000000-0000-4000-8000-000000000010",
+                      "difficultyId": "00000000-0000-4000-8000-000000000011",
+                      "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                      "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                      "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                      "status": "draft",
+                      "publishedAt": null,
+                      "archivedAt": null,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z",
+                      "referenceAnswer": "A promise is an object...",
+                      "evaluationGuidance": {}
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/questions/{questionId}": {
+      "get": {
+        "tags": ["Admin Questions"],
+        "summary": "Get Question Details (Admin)",
+        "operationId": "getAdminQuestion",
+        "description": "Returns the detailed schema of a specific question.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QuestionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminQuestionDetail"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "questionText": "What is a promise in JavaScript?",
+                      "categoryId": "00000000-0000-4000-8000-000000000010",
+                      "difficultyId": "00000000-0000-4000-8000-000000000011",
+                      "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                      "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                      "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                      "status": "draft",
+                      "publishedAt": null,
+                      "archivedAt": null,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z",
+                      "referenceAnswer": "A promise is an object...",
+                      "evaluationGuidance": {}
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/QuestionNotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Admin Questions"],
+        "summary": "Update Question (Admin)",
+        "operationId": "updateAdminQuestion",
+        "description": "Updates a question. Supports identical-key replay returning the same stored status/body. Prevents duplicate mutations and audit events on replay. Exposes 409 QuestionConflict on concurrent modifications.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/QuestionId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuestionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Question updated",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminQuestionDetail"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "questionText": "What is a promise in JavaScript?",
+                      "categoryId": "00000000-0000-4000-8000-000000000010",
+                      "difficultyId": "00000000-0000-4000-8000-000000000011",
+                      "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                      "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                      "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                      "status": "draft",
+                      "publishedAt": null,
+                      "archivedAt": null,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z",
+                      "referenceAnswer": "A promise is an object...",
+                      "evaluationGuidance": {}
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/QuestionNotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/questions/{questionId}/publish": {
+      "post": {
+        "tags": ["Admin Questions"],
+        "summary": "Publish Question (Admin)",
+        "operationId": "publishAdminQuestion",
+        "description": "Publishes a draft question. Emits audit events securely, blocks duplicate execution on replay, and returns stored body for identical idempotency keys. Rejects concurrent state mutation with a 409 conflict.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/QuestionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Question published",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminQuestionDetail"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "questionText": "What is a promise in JavaScript?",
+                      "categoryId": "00000000-0000-4000-8000-000000000010",
+                      "difficultyId": "00000000-0000-4000-8000-000000000011",
+                      "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                      "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                      "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                      "status": "published",
+                      "publishedAt": "2024-01-01T00:00:00.000Z",
+                      "archivedAt": null,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z",
+                      "referenceAnswer": "A promise is an object...",
+                      "evaluationGuidance": {}
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/QuestionNotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/questions/{questionId}/archive": {
+      "post": {
+        "tags": ["Admin Questions"],
+        "summary": "Archive Question (Admin)",
+        "operationId": "archiveAdminQuestion",
+        "description": "Archives a published question. Emits audit events securely, blocks duplicate execution on replay, and returns stored body for identical idempotency keys. Rejects concurrent state mutation with a 409 conflict.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/QuestionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Question archived",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminQuestionDetail"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "questionText": "What is a promise in JavaScript?",
+                      "categoryId": "00000000-0000-4000-8000-000000000010",
+                      "difficultyId": "00000000-0000-4000-8000-000000000011",
+                      "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                      "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                      "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                      "status": "archived",
+                      "publishedAt": "2024-01-01T00:00:00.000Z",
+                      "archivedAt": "2024-01-02T00:00:00.000Z",
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-02T00:00:00.000Z",
+                      "referenceAnswer": "A promise is an object...",
+                      "evaluationGuidance": {}
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/QuestionNotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/questions/{questionId}/restore": {
+      "post": {
+        "tags": ["Admin Questions"],
+        "summary": "Restore Question (Admin)",
+        "operationId": "restoreAdminQuestion",
+        "description": "Restores an archived question to draft. Emits audit events securely, blocks duplicate execution on replay, and returns stored body for identical idempotency keys. Rejects concurrent state mutation with a 409 conflict.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/QuestionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Question restored",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminQuestionDetail"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "questionText": "What is a promise in JavaScript?",
+                      "categoryId": "00000000-0000-4000-8000-000000000010",
+                      "difficultyId": "00000000-0000-4000-8000-000000000011",
+                      "interviewTypeId": "00000000-0000-4000-8000-000000000012",
+                      "skillIds": ["00000000-0000-4000-8000-000000000013"],
+                      "topicIds": ["00000000-0000-4000-8000-000000000014"],
+                      "status": "draft",
+                      "publishedAt": "2024-01-01T00:00:00.000Z",
+                      "archivedAt": null,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-02T00:00:00.000Z",
+                      "referenceAnswer": "A promise is an object...",
+                      "evaluationGuidance": {}
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/QuestionNotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/taxonomies/{taxonomyType}": {
+      "post": {
+        "tags": ["Admin Taxonomies"],
+        "summary": "Create Taxonomy (Admin)",
+        "operationId": "createAdminTaxonomy",
+        "description": "Creates a new taxonomy item. Follows strict idempotency. Returns stored response body and skips audit log on identical-key replay.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/TaxonomyType"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaxonomyBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Taxonomy created",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTaxonomyRow"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000010",
+                      "slug": "frontend",
+                      "name": "Frontend",
+                      "description": "Frontend questions",
+                      "displayOrder": 1,
+                      "isActive": true,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z"
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}": {
+      "patch": {
+        "tags": ["Admin Taxonomies"],
+        "summary": "Update Taxonomy (Admin)",
+        "operationId": "updateAdminTaxonomy",
+        "description": "Updates an existing taxonomy item. Ensures replay safety with no duplicate mutation or audit logs.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/TaxonomyType"
+          },
+          {
+            "$ref": "#/components/parameters/TaxonomyId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaxonomyBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Taxonomy updated",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTaxonomyRow"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000010",
+                      "slug": "frontend",
+                      "name": "Frontend",
+                      "description": "Frontend questions",
+                      "displayOrder": 1,
+                      "isActive": true,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z"
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/archive": {
+      "post": {
+        "tags": ["Admin Taxonomies"],
+        "summary": "Archive Taxonomy (Admin)",
+        "operationId": "archiveAdminTaxonomy",
+        "description": "Archives a taxonomy item by setting is_active to false. Safely avoids duplicate audits on identical-key replays.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/TaxonomyType"
+          },
+          {
+            "$ref": "#/components/parameters/TaxonomyId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Taxonomy archived",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTaxonomyRow"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000010",
+                      "slug": "frontend",
+                      "name": "Frontend",
+                      "description": "Frontend questions",
+                      "displayOrder": 1,
+                      "isActive": false,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z"
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/restore": {
+      "post": {
+        "tags": ["Admin Taxonomies"],
+        "summary": "Restore Taxonomy (Admin)",
+        "operationId": "restoreAdminTaxonomy",
+        "description": "Restores a taxonomy item by setting is_active to true. Safely avoids duplicate audits on identical-key replays.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/TaxonomyType"
+          },
+          {
+            "$ref": "#/components/parameters/TaxonomyId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Taxonomy restored",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["success", "data", "meta"],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AdminTaxonomyRow"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiMeta"
+                    }
+                  },
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "00000000-0000-4000-8000-000000000010",
+                      "slug": "frontend",
+                      "name": "Frontend",
+                      "description": "Frontend questions",
+                      "displayOrder": 1,
+                      "isActive": true,
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z"
+                    },
+                    "meta": {
+                      "requestId": "req-1234"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/QuestionValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/QuestionAuthRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuestionForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/QuestionConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyServiceUnavailableError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1050,6 +2698,388 @@
           }
         },
         "additionalProperties": false
+      },
+      "QuestionSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "questionText",
+          "categoryId",
+          "difficultyId",
+          "interviewTypeId",
+          "skillIds",
+          "topicIds",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "questionText": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "difficultyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interviewTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "skillIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "topicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminQuestionDetail": {
+        "type": "object",
+        "required": [
+          "id",
+          "questionText",
+          "categoryId",
+          "difficultyId",
+          "interviewTypeId",
+          "skillIds",
+          "topicIds",
+          "status",
+          "publishedAt",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+          "referenceAnswer",
+          "evaluationGuidance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "questionText": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "difficultyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interviewTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "skillIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "topicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "published", "archived"]
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "archivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "referenceAnswer": {
+            "type": "string"
+          },
+          "evaluationGuidance": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "TaxonomyResponse": {
+        "type": "object",
+        "required": ["id", "slug", "name", "description", "displayOrder", "isActive"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayOrder": {
+            "type": "integer"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AdminTaxonomyRow": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "display_order",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "display_order": {
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateQuestionBody": {
+        "type": "object",
+        "required": [
+          "questionText",
+          "categoryId",
+          "difficultyId",
+          "interviewTypeId",
+          "skillIds",
+          "referenceAnswer"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "questionText": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 2000
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "difficultyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interviewTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "skillIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 10
+          },
+          "topicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 10,
+            "default": []
+          },
+          "referenceAnswer": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 5000
+          },
+          "evaluationGuidance": {
+            "type": "object",
+            "additionalProperties": true,
+            "default": {}
+          }
+        }
+      },
+      "UpdateQuestionBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "questionText": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 2000
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "difficultyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "interviewTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "skillIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 10
+          },
+          "topicIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 10,
+            "default": []
+          },
+          "referenceAnswer": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 5000
+          },
+          "evaluationGuidance": {
+            "type": "object",
+            "additionalProperties": true,
+            "default": {}
+          }
+        }
+      },
+      "CreateTaxonomyBody": {
+        "type": "object",
+        "required": ["slug", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true,
+            "default": null
+          },
+          "displayOrder": {
+            "type": "integer",
+            "default": 0
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "UpdateTaxonomyBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true,
+            "default": null
+          },
+          "displayOrder": {
+            "type": "integer",
+            "default": 0
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
       }
     },
     "responses": {
@@ -1487,6 +3517,366 @@
               "$ref": "#/components/schemas/ReadinessUnavailableResponse"
             }
           }
+        }
+      },
+      "QuestionAuthRequired": {
+        "description": "Authentication is required.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Authentication required",
+              "code": "AUTHENTICATION_REQUIRED",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "QuestionForbidden": {
+        "description": "Access is forbidden. Requires Admin role.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Forbidden access",
+              "code": "FORBIDDEN_ACCESS",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "QuestionNotFound": {
+        "description": "The requested question or resource was not found.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Resource not found",
+              "code": "RESOURCE_NOT_FOUND",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      },
+      "QuestionValidationError": {
+        "description": "Validation error (e.g. invalid request body or missing idempotency key).",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "examples": {
+              "ValidationError": {
+                "value": {
+                  "success": false,
+                  "message": "Validation failed.",
+                  "code": "VALIDATION_ERROR",
+                  "meta": {
+                    "requestId": "00000000-0000-4000-8000-000000000000"
+                  }
+                }
+              },
+              "IdempotencyKeyRequired": {
+                "value": {
+                  "success": false,
+                  "message": "Idempotency-Key header is required.",
+                  "code": "IDEMPOTENCY_KEY_REQUIRED",
+                  "meta": {
+                    "requestId": "00000000-0000-4000-8000-000000000000"
+                  }
+                }
+              },
+              "IdempotencyKeyInvalid": {
+                "value": {
+                  "success": false,
+                  "message": "Invalid Idempotency-Key header format.",
+                  "code": "IDEMPOTENCY_KEY_INVALID",
+                  "meta": {
+                    "requestId": "00000000-0000-4000-8000-000000000000"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "QuestionConflict": {
+        "description": "Resource conflict (e.g. concurrent state modification, duplicate, or idempotency conflict).",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "examples": {
+              "ResourceConflict": {
+                "value": {
+                  "success": false,
+                  "message": "Resource conflict",
+                  "code": "RESOURCE_CONFLICT",
+                  "meta": {
+                    "requestId": "00000000-0000-4000-8000-000000000000"
+                  }
+                }
+              },
+              "IdempotencyConflict": {
+                "value": {
+                  "success": false,
+                  "message": "Idempotency key already exists with different request parameters.",
+                  "code": "IDEMPOTENCY_CONFLICT",
+                  "meta": {
+                    "requestId": "00000000-0000-4000-8000-000000000000"
+                  }
+                }
+              },
+              "IdempotencyInProgress": {
+                "value": {
+                  "success": false,
+                  "message": "A request with this Idempotency-Key is currently in progress.",
+                  "code": "IDEMPOTENCY_IN_PROGRESS",
+                  "meta": {
+                    "requestId": "00000000-0000-4000-8000-000000000000"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "IdempotencyServiceUnavailableError": {
+        "description": "Idempotency service is currently unavailable.",
+        "headers": {
+          "X-Request-ID": {
+            "$ref": "#/components/headers/RequestId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StandardErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "message": "Idempotency service is currently unavailable.",
+              "code": "IDEMPOTENCY_SERVICE_UNAVAILABLE",
+              "meta": {
+                "requestId": "00000000-0000-4000-8000-000000000000"
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Stable uniqueness key to prevent duplicate mutations. Max 255 chars. Cannot be empty or contain control characters.",
+        "schema": {
+          "type": "string",
+          "maxLength": 255,
+          "minLength": 1
+        }
+      },
+      "QuestionId": {
+        "name": "questionId",
+        "in": "path",
+        "required": true,
+        "description": "UUID of the question",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "TaxonomyType": {
+        "name": "taxonomyType",
+        "in": "path",
+        "required": true,
+        "description": "The type of taxonomy",
+        "schema": {
+          "type": "string",
+          "enum": ["categories", "difficulties", "interview-types", "skills", "topics"]
+        }
+      },
+      "TaxonomyId": {
+        "name": "taxonomyId",
+        "in": "path",
+        "required": true,
+        "description": "UUID of the taxonomy entry (uses questionId format under the hood)",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "QueryPage": {
+        "name": "page",
+        "in": "query",
+        "description": "Page number",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "QueryLimit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Results per page",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "QuerySearch": {
+        "name": "search",
+        "in": "query",
+        "description": "Full text search query. Min 3, max 100 chars.",
+        "schema": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 100
+        }
+      },
+      "QuerySortDir": {
+        "name": "sortDir",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["asc", "desc"],
+          "default": "desc"
+        }
+      },
+      "StudentQuerySortBy": {
+        "name": "sortBy",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["createdAt", "updatedAt"],
+          "default": "createdAt"
+        }
+      },
+      "AdminQuerySortBy": {
+        "name": "sortBy",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["createdAt", "updatedAt", "publishedAt"],
+          "default": "createdAt"
+        }
+      },
+      "AdminQueryStatus": {
+        "name": "status",
+        "in": "query",
+        "description": "Filter by question statuses (comma separated or multiple). Max 3.",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["draft", "published", "archived"]
+          },
+          "maxItems": 3
+        }
+      },
+      "QueryCategoryId": {
+        "name": "categoryId",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 10
+        }
+      },
+      "QueryDifficultyId": {
+        "name": "difficultyId",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 10
+        }
+      },
+      "QueryInterviewTypeId": {
+        "name": "interviewTypeId",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 10
+        }
+      },
+      "QuerySkillId": {
+        "name": "skillId",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 10
+        }
+      },
+      "QueryTopicId": {
+        "name": "topicId",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 10
         }
       }
     },
