@@ -3,7 +3,7 @@ import { openApiDocument } from "../../../src/openapi/openapi-document.js";
 describe("OpenAPI Operations", () => {
   it("should have a non-empty, unique operationId for all Question Bank operations", () => {
     const paths = Object.keys(openApiDocument.paths).filter(
-      (p) => p.includes("/questions") || p.includes("/taxonomies"),
+      (p) => (p.includes("/questions") || p.includes("/taxonomies")) && !p.includes("/interviews"),
     );
 
     const operationIds = new Set<string>();

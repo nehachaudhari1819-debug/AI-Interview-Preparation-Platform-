@@ -977,6 +977,27 @@ export type Database = {
         }
         Returns: Json
       }
+      student_create_interview_config: {
+        Args: {
+          p_title: string
+          p_target_role: string
+          p_interview_type_id: string
+          p_difficulty_id: string
+          p_question_count: number
+          p_time_limit_minutes: number
+          p_skill_ids: string[]
+          p_topic_ids: string[]
+        }
+        Returns: string
+      }
+      student_update_interview_config: {
+        Args: {
+          p_interview_id: string
+          p_expected_updated_at: string
+          p_update_payload: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
       account_status_enum:

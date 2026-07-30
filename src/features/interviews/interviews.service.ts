@@ -1,0 +1,259 @@
+import type { IInterviewsRepository } from "./interviews.repository.js";
+import type {
+  DbInterview,
+  DbSession,
+  DbSessionQuestion,
+} from "../../persistence/interviews/supabase-interviews.repository.js";
+import type {
+  CreateInterviewBody,
+  UpdateInterviewBody,
+  GetInterviewsQuery,
+} from "./interviews.schemas.js";
+import { NotFoundError } from "../../errors/not-found.error.js";
+import { AppError } from "../../errors/app-error.js";
+import { ForbiddenError } from "../../errors/forbidden.error.js";
+import { InternalServerError } from "../../errors/internal-server.error.js";
+import { HTTP_STATUS } from "../../constants/http.constants.js";
+import { ERROR_CODES } from "../../constants/error-codes.constants.js";
+import { PersistenceError, PersistenceErrorCode } from "../../persistence/persistence-error.js";
+
+export interface PaginatedInterviewsResult {
+  items: DbInterview[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface PaginatedSessionsResult {
+  items: DbSession[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface PaginatedSessionQuestionsResult {
+  items: DbSessionQuestion[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface IInterviewsService {
+  createInterview(data: CreateInterviewBody): Promise<DbInterview>;
+  updateInterview(id: string, data: UpdateInterviewBody): Promise<DbInterview>;
+  getInterviews(query: GetInterviewsQuery): Promise<PaginatedInterviewsResult>;
+  getInterviewById(id: string): Promise<DbInterview>;
+  getInterviewSessions(
+    interviewId: string,
+    query: GetInterviewsQuery,
+  ): Promise<PaginatedSessionsResult>;
+  getInterviewSessionById(interviewId: string, sessionId: string): Promise<DbSession>;
+  getSessionQuestions(
+    interviewId: string,
+    sessionId: string,
+    query: GetInterviewsQuery,
+  ): Promise<PaginatedSessionQuestionsResult>;
+  getSessionQuestionById(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+  ): Promise<DbSessionQuestion>;
+}
+
+export class InterviewsService implements IInterviewsService {
+  constructor(private readonly repository: IInterviewsRepository) {}
+
+  public async createInterview(data: CreateInterviewBody): Promise<DbInterview> {
+    try {
+      const id = await this.repository.createInterview(data);
+      const interview = await this.repository.getInterviewById(id);
+      if (!interview) {
+        throw new InternalServerError("Created interview could not be retrieved");
+      }
+      return interview;
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.UNAUTHORIZED_ACCESS)) {
+        throw new ForbiddenError(error.message);
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.VALIDATION_FAILED)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.BAD_REQUEST,
+          code: ERROR_CODES.VALIDATION_ERROR,
+          message: error.message,
+        });
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_NOT_FOUND)) {
+        throw new NotFoundError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  public async updateInterview(id: string, data: UpdateInterviewBody): Promise<DbInterview> {
+    try {
+      const updatedId = await this.repository.updateInterview(id, data);
+      const interview = await this.repository.getInterviewById(updatedId);
+      if (!interview) {
+        throw new InternalServerError("Updated interview could not be retrieved");
+      }
+      return interview;
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.UNAUTHORIZED_ACCESS)) {
+        throw new ForbiddenError(error.message);
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.RESOURCE_CONFLICT,
+          message: error.message,
+        });
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.VALIDATION_FAILED)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.BAD_REQUEST,
+          code: ERROR_CODES.VALIDATION_ERROR,
+          message: error.message,
+        });
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_NOT_FOUND)) {
+        throw new NotFoundError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  public async getInterviews(query: GetInterviewsQuery): Promise<PaginatedInterviewsResult> {
+    const { interviews, total } = await this.repository.getInterviews(query);
+    const totalPages = total === 0 ? 0 : Math.ceil(total / query.limit);
+
+    return {
+      items: interviews,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        totalItems: total,
+        totalPages,
+        hasNextPage: query.page < totalPages,
+        hasPreviousPage: query.page > 1,
+      },
+    };
+  }
+
+  public async getInterviewById(id: string): Promise<DbInterview> {
+    const interview = await this.repository.getInterviewById(id);
+    if (!interview) {
+      throw new NotFoundError("Interview not found");
+    }
+    return interview;
+  }
+
+  public async getInterviewSessions(
+    interviewId: string,
+    query: GetInterviewsQuery,
+  ): Promise<PaginatedSessionsResult> {
+    // Verify the interview exists and belongs to the user
+    await this.getInterviewById(interviewId);
+
+    const { sessions, total } = await this.repository.getInterviewSessions(interviewId, query);
+    const totalPages = total === 0 ? 0 : Math.ceil(total / query.limit);
+
+    return {
+      items: sessions,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        totalItems: total,
+        totalPages,
+        hasNextPage: query.page < totalPages,
+        hasPreviousPage: query.page > 1,
+      },
+    };
+  }
+
+  public async getInterviewSessionById(interviewId: string, sessionId: string): Promise<DbSession> {
+    // Verify the interview exists and belongs to the user
+    await this.getInterviewById(interviewId);
+
+    const session = await this.repository.getInterviewSessionById(interviewId, sessionId);
+    if (!session) {
+      throw new NotFoundError("Session not found");
+    }
+    return session;
+  }
+
+  public async getSessionQuestions(
+    interviewId: string,
+    sessionId: string,
+    query: GetInterviewsQuery,
+  ): Promise<PaginatedSessionQuestionsResult> {
+    const session = await this.getInterviewSessionById(interviewId, sessionId);
+
+    if (session.status === "ready") {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.RESOURCE_CONFLICT,
+        message: "Questions are not disclosed while the session is in ready status",
+      });
+    }
+
+    const { questions, total } = await this.repository.getSessionQuestions(
+      interviewId,
+      sessionId,
+      query,
+    );
+    const totalPages = total === 0 ? 0 : Math.ceil(total / query.limit);
+
+    return {
+      items: questions,
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        totalItems: total,
+        totalPages,
+        hasNextPage: query.page < totalPages,
+        hasPreviousPage: query.page > 1,
+      },
+    };
+  }
+
+  public async getSessionQuestionById(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+  ): Promise<DbSessionQuestion> {
+    const session = await this.getInterviewSessionById(interviewId, sessionId);
+
+    if (session.status === "ready") {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.RESOURCE_CONFLICT,
+        message: "Questions are not disclosed while the session is in ready status",
+      });
+    }
+
+    const question = await this.repository.getSessionQuestionById(
+      interviewId,
+      sessionId,
+      sessionQuestionId,
+    );
+    if (!question) {
+      throw new NotFoundError("Session question not found");
+    }
+    return question;
+  }
+}

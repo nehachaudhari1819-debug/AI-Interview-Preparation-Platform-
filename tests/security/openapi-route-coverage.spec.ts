@@ -50,6 +50,17 @@ describe("OpenAPI Route Coverage", () => {
       { path: "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}", method: "patch" },
       { path: "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/archive", method: "post" },
       { path: "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/restore", method: "post" },
+      { path: "/api/v1/interviews", method: "get" },
+      { path: "/api/v1/interviews", method: "post" },
+      { path: "/api/v1/interviews/{interviewId}", method: "get" },
+      { path: "/api/v1/interviews/{interviewId}", method: "patch" },
+      { path: "/api/v1/interviews/{interviewId}/sessions", method: "get" },
+      { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}", method: "get" },
+      { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions", method: "get" },
+      {
+        path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}",
+        method: "get",
+      },
     ];
 
     for (const route of requiredRoutes) {
@@ -92,6 +103,12 @@ describe("OpenAPI Route Coverage", () => {
       "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}",
       "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/archive",
       "/api/v1/admin/taxonomies/{taxonomyType}/{taxonomyId}/restore",
+      "/api/v1/interviews",
+      "/api/v1/interviews/{interviewId}",
+      "/api/v1/interviews/{interviewId}/sessions",
+      "/api/v1/interviews/{interviewId}/sessions/{sessionId}",
+      "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions",
+      "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}",
     ];
 
     for (const documented of documentedPaths) {

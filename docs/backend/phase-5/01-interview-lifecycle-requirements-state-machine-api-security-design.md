@@ -37,7 +37,7 @@ Define a comprehensive, implementation-ready architectural blueprint for Intervi
 - **POST /api/v1/interviews**: Candidate (Changed to separate Configuration creation).
 - **POST /api/v1/interviews/:interviewId/start**: Candidate (Changed to Session start).
 - **GET /api/v1/interviews/:interviewId/questions**: Candidate.
-- **GET /api/v1/interviews/:interviewId/questions/:questionId**: Candidate.
+- **GET /api/v1/interviews/:interviewId/questions/:sessionQuestionId**: Candidate.
 - **POST /api/v1/interviews/:interviewId/complete**: Candidate.
 - **POST /api/v1/interviews/:interviewId/responses**: Deferred to a later formally authorized phase.
 - **GET /api/v1/interviews/:interviewId/responses/:responseId**: Deferred to a later formally authorized phase.

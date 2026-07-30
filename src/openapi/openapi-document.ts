@@ -20,6 +20,8 @@ import {
 } from "./components/questions.components.js";
 import { questionPaths } from "./paths/questions.paths.js";
 import { adminQuestionPaths } from "./paths/admin-questions.paths.js";
+import { interviewSchemas } from "./components/interviews.components.js";
+import { interviewsPaths } from "./paths/interviews.paths.js";
 
 export const openApiDocument: OpenApiDocument = {
   openapi: "3.1.0",
@@ -45,6 +47,7 @@ export const openApiDocument: OpenApiDocument = {
     ...userPreferencesPaths,
     ...questionPaths,
     ...adminQuestionPaths,
+    ...interviewsPaths,
   },
   components: {
     schemas: {
@@ -54,6 +57,7 @@ export const openApiDocument: OpenApiDocument = {
       ...userProfileSchemas,
       ...userPreferencesSchemas,
       ...questionSchemas,
+      ...interviewSchemas,
     },
     responses: {
       ...commonResponses,

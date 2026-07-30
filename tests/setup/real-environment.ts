@@ -102,9 +102,34 @@ export function generateTestIdentity(prefix: string) {
  */
 export async function cleanupTestUser(userId: string) {
   if (!userId) return;
-  const { error } = await testAdminClient.auth.admin.deleteUser(userId);
-  if (error) {
-    // Some Supabase errors don't have a message property or it's an object, so stringify the whole error to debug
-    console.error(`Failed to cleanup test user ${userId}:`, JSON.stringify(error, null, 2));
+
+  // First, explicitly delete dependent rows that might cause foreign key locking/AuthRetryableFetchError
+  try {
+    await testAdminClient
+      .from("interview_session_questions")
+      .delete()
+      .eq("session_id", "ignored")
+      .neq("id", "00000000-0000-0000-0000-000000000000"); // Broad delete isn't easy here, let's just delete interviews which cascade
+    await testAdminClient.from("interviews").delete().eq("user_id", userId);
+    await testAdminClient.from("users").delete().eq("id", userId);
+  } catch (e) {
+    console.warn(`Failed to cleanup public.users or dependents for ${userId}`, e);
+  }
+
+  let retries = 2;
+  while (retries >= 0) {
+    const { error } = await testAdminClient.auth.admin.deleteUser(userId);
+    if (!error) return;
+
+    if (retries === 0) {
+      console.warn(
+        `[BEST EFFORT] Failed to cleanup test user ${userId}: Auth deletion failed after retries`,
+      );
+      return;
+    }
+
+    console.warn(`Retryable Auth user cleanup failure for ${userId}, retrying in 500ms...`);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    retries--;
   }
 }

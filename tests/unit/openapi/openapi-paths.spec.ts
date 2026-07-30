@@ -32,7 +32,7 @@ describe("OpenAPI Paths", () => {
 
   it("should document exactly 16 paths and 18 operations for Question Bank", () => {
     const paths = Object.keys(openApiDocument.paths).filter(
-      (p) => p.includes("/questions") || p.includes("/taxonomies"),
+      (p) => (p.includes("/questions") || p.includes("/taxonomies")) && !p.includes("/interviews"),
     );
 
     // We expect exactly 16 paths

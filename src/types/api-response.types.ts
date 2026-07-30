@@ -31,6 +31,24 @@ export type PaginationMeta = {
   hasPreviousPage: boolean;
 };
 
-export type ApiCollectionResponse<T> = ApiSuccessResponse<T[]> & {
+export type ApiCollectionResponse<T> = {
+  success: true;
+  message?: string;
+  data: T[];
   pagination: PaginationMeta;
+  meta: ApiMeta;
+};
+
+export type ApiMetaCollectionResponse<T> = {
+  success: true;
+  message?: string;
+  data: T[];
+  meta: ApiMeta & {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 };

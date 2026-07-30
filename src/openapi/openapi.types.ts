@@ -100,6 +100,7 @@ export interface SchemaObject {
   maxItems?: number;
   minProperties?: number;
   maxProperties?: number;
+  uniqueItems?: boolean;
   additionalProperties?: boolean | SchemaObject | ReferenceObject;
   enum?: unknown[];
   oneOf?: Array<SchemaObject | ReferenceObject>;
