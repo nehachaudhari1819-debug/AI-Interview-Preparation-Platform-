@@ -9,12 +9,15 @@ import {
   parseGetInterviewsQuery,
   parsePaginationQuery,
   parseId,
+  parseStrictEmptyBody,
 } from "./interviews.schemas.js";
+import { ValidationError } from "../../errors/validation.error.js";
 import {
   mapInterviewToResponse,
   mapSessionToResponse,
   mapSessionQuestionToResponse,
 } from "./interviews-response.mapper.js";
+import { parseIdempotencyKey } from "../../domain/idempotency/idempotency-key.js";
 
 function getService(res: Response): IInterviewsService {
   const service = res.locals.interviewsService as IInterviewsService | undefined;
@@ -159,6 +162,127 @@ export function createInterviewsController() {
         sessionQuestionId,
       );
       const safeData = mapSessionQuestionToResponse(question);
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: safeData,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    startSession: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+
+      parseStrictEmptyBody(req.body);
+
+      const { replayed, snapshot } = await service.startSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+      );
+      const safeData = mapSessionToResponse(snapshot);
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: safeData,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    pauseSession: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+      parseStrictEmptyBody(req.body);
+
+      const { replayed, snapshot } = await service.pauseSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+      );
+      const safeData = mapSessionToResponse(snapshot);
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: safeData,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    resumeSession: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+      parseStrictEmptyBody(req.body);
+
+      const { replayed, snapshot } = await service.resumeSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+      );
+      const safeData = mapSessionToResponse(snapshot);
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: safeData,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    completeSession: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+      parseStrictEmptyBody(req.body);
+
+      const { replayed, snapshot } = await service.completeSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+      );
+      const safeData = mapSessionToResponse(snapshot);
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
 
       return sendSuccess({
         response: res,

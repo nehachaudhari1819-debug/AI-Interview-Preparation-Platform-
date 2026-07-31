@@ -33,4 +33,29 @@ export interface IInterviewsRepository {
     sessionId: string,
     sessionQuestionId: string,
   ): Promise<DbSessionQuestion | null>;
+
+  startSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+  pauseSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+  resumeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+  completeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
 }

@@ -16,6 +16,7 @@ import { InternalServerError } from "../../errors/internal-server.error.js";
 import { HTTP_STATUS } from "../../constants/http.constants.js";
 import { ERROR_CODES } from "../../constants/error-codes.constants.js";
 import { PersistenceError, PersistenceErrorCode } from "../../persistence/persistence-error.js";
+import { generateRequestFingerprint } from "../../domain/idempotency/request-fingerprint.js";
 
 export interface PaginatedInterviewsResult {
   items: DbInterview[];
@@ -73,6 +74,27 @@ export interface IInterviewsService {
     sessionId: string,
     sessionQuestionId: string,
   ): Promise<DbSessionQuestion>;
+
+  startSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+  pauseSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+  resumeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+  completeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
 }
 
 export class InterviewsService implements IInterviewsService {
@@ -255,5 +277,129 @@ export class InterviewsService implements IInterviewsService {
       throw new NotFoundError("Session question not found");
     }
     return question;
+  }
+
+  private getLifecycleFingerprint(
+    operation: string,
+    routeSuffix: string,
+    interviewId: string,
+    sessionId: string,
+  ): string {
+    return generateRequestFingerprint({
+      apiVersion: "v1",
+      method: "POST",
+      routePattern: `/v1/interviews/:interviewId/sessions/:sessionId/${routeSuffix}`,
+      operation,
+      body: { interviewId, sessionId },
+    });
+  }
+
+  private handleLifecycleError(error: unknown): never {
+    if (PersistenceError.is(error, PersistenceErrorCode.RECORD_NOT_FOUND)) {
+      throw new NotFoundError(error.message);
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.UNAUTHORIZED_ACCESS)) {
+      throw new ForbiddenError(error.message);
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.RESOURCE_CONFLICT,
+        message: error.message,
+      });
+    }
+    throw error;
+  }
+
+  public async startSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    try {
+      const requestHash = this.getLifecycleFingerprint(
+        "SESSION_STARTED",
+        "start",
+        interviewId,
+        sessionId,
+      );
+      return await this.repository.startSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+        requestHash,
+      );
+    } catch (error) {
+      this.handleLifecycleError(error);
+    }
+  }
+
+  public async pauseSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    try {
+      const requestHash = this.getLifecycleFingerprint(
+        "SESSION_PAUSED",
+        "pause",
+        interviewId,
+        sessionId,
+      );
+      return await this.repository.pauseSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+        requestHash,
+      );
+    } catch (error) {
+      this.handleLifecycleError(error);
+    }
+  }
+
+  public async resumeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    try {
+      const requestHash = this.getLifecycleFingerprint(
+        "SESSION_RESUMED",
+        "resume",
+        interviewId,
+        sessionId,
+      );
+      return await this.repository.resumeSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+        requestHash,
+      );
+    } catch (error) {
+      this.handleLifecycleError(error);
+    }
+  }
+
+  public async completeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    try {
+      const requestHash = this.getLifecycleFingerprint(
+        "SESSION_COMPLETED",
+        "complete",
+        interviewId,
+        sessionId,
+      );
+      return await this.repository.completeSession(
+        interviewId,
+        sessionId,
+        idempotencyKey,
+        requestHash,
+      );
+    } catch (error) {
+      this.handleLifecycleError(error);
+    }
   }
 }

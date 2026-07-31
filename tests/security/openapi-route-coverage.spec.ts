@@ -56,6 +56,10 @@ describe("OpenAPI Route Coverage", () => {
       { path: "/api/v1/interviews/{interviewId}", method: "patch" },
       { path: "/api/v1/interviews/{interviewId}/sessions", method: "get" },
       { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}", method: "get" },
+      { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/start", method: "post" },
+      { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/pause", method: "post" },
+      { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/resume", method: "post" },
+      { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/complete", method: "post" },
       { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions", method: "get" },
       {
         path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}",
@@ -107,6 +111,10 @@ describe("OpenAPI Route Coverage", () => {
       "/api/v1/interviews/{interviewId}",
       "/api/v1/interviews/{interviewId}/sessions",
       "/api/v1/interviews/{interviewId}/sessions/{sessionId}",
+      "/api/v1/interviews/{interviewId}/sessions/{sessionId}/start",
+      "/api/v1/interviews/{interviewId}/sessions/{sessionId}/pause",
+      "/api/v1/interviews/{interviewId}/sessions/{sessionId}/resume",
+      "/api/v1/interviews/{interviewId}/sessions/{sessionId}/complete",
       "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions",
       "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}",
     ];

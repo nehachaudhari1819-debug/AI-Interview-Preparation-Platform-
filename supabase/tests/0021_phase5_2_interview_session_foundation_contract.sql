@@ -297,18 +297,30 @@ SELECT throws_ok(
     'Interview session questions are strictly immutable and cannot be updated or deleted.', 'Trigger prevents deleting session questions'
 );
 
+-- Create a dedicated interview for the no-op test
+INSERT INTO public.interviews (id, user_id, title, target_role, interview_type_id, difficulty_id, question_count)
+VALUES ('00000000-0000-0000-0021-000000000090', '00000000-0000-0000-0000-000000000001', 'No-op Fixture', 'Tester', '00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0002-000000000001', 5);
+
+-- Create a fresh session precisely for the no-op test to avoid interference
+INSERT INTO public.interview_sessions (id, interview_id, user_id, config_snapshot, status, last_transition_at, created_at, updated_at)
+VALUES ('00000000-0000-0000-0021-000000000091', '00000000-0000-0000-0021-000000000090', '00000000-0000-0000-0000-000000000001', '{}', 'ready', now(), now(), now());
+
 CREATE TEMP TABLE session_timestamp_evidence (
     before_noop timestamptz, after_noop timestamptz, after_change timestamptz
 ) ON COMMIT DROP;
 
-INSERT INTO session_timestamp_evidence (before_noop) SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0008-000000000001';
-UPDATE public.interview_sessions SET status = status WHERE id = '00000000-0000-0000-0008-000000000001';
-UPDATE session_timestamp_evidence SET after_noop = (SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0008-000000000001');
+INSERT INTO session_timestamp_evidence (before_noop) SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0021-000000000091';
+
+-- Execute a genuine no-op setting values to their exact current values
+UPDATE public.interview_sessions SET status = status, started_at = started_at, paused_at = paused_at, completed_at = completed_at, total_paused_seconds = total_paused_seconds, last_transition_at = last_transition_at WHERE id = '00000000-0000-0000-0021-000000000091';
+
+UPDATE session_timestamp_evidence SET after_noop = (SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0021-000000000091');
 
 SELECT is((SELECT after_noop FROM session_timestamp_evidence), (SELECT before_noop FROM session_timestamp_evidence), 'True no-op preserves updated_at');
 
-UPDATE public.interview_sessions SET status = 'in_progress', started_at = now(), last_transition_at = now() WHERE id = '00000000-0000-0000-0008-000000000001';
-UPDATE session_timestamp_evidence SET after_change = (SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0008-000000000001');
+-- Execute a real state change
+UPDATE public.interview_sessions SET status = 'in_progress', started_at = now(), last_transition_at = now() WHERE id = '00000000-0000-0000-0021-000000000091';
+UPDATE session_timestamp_evidence SET after_change = (SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0021-000000000091');
 
 SELECT cmp_ok((SELECT after_change FROM session_timestamp_evidence), '>', (SELECT after_noop FROM session_timestamp_evidence), 'Real update advances updated_at');
 

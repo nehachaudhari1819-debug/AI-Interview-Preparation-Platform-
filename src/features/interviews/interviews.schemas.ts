@@ -131,3 +131,15 @@ export function parseId(id: unknown): string {
   }
   return result.data;
 }
+
+export const StrictEmptyBodySchema = z
+  .object({})
+  .strict()
+  .refine((data) => Object.keys(data).length === 0, "Request body must be strictly empty");
+
+export function parseStrictEmptyBody(body: unknown): void {
+  const result = StrictEmptyBodySchema.safeParse(body);
+  if (!result.success) {
+    throw new ValidationError("Invalid request body", result.error.issues);
+  }
+}

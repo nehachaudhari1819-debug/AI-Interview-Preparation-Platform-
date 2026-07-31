@@ -43,5 +43,10 @@ export function createInterviewsRouter(options: {
     controller.getSessionQuestionById,
   );
 
+  router.post("/:interviewId/sessions/:sessionId/start", controller.startSession);
+  router.post("/:interviewId/sessions/:sessionId/pause", controller.pauseSession);
+  router.post("/:interviewId/sessions/:sessionId/resume", controller.resumeSession);
+  router.post("/:interviewId/sessions/:sessionId/complete", controller.completeSession);
+
   return router;
 }

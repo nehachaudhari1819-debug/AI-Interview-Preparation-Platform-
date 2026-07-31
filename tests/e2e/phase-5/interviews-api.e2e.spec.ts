@@ -297,4 +297,140 @@ describe("E2E: Interviews API (Phase 5.3)", () => {
         .expect(HTTP_STATUS.NOT_FOUND);
     });
   });
+
+  describe("Lifecycle API Endpoints", () => {
+    let sessionId: string;
+    beforeAll(async () => {
+      // Seed a session for lifecycle tests
+      sessionId = randomUUID();
+      const now = new Date().toISOString();
+      await testAdminClient.from("interview_sessions").insert({
+        id: sessionId,
+        interview_id: createdInterviewId,
+        user_id: testUsers[0] as string,
+        status: "ready",
+        config_snapshot: {},
+        config_snapshot_version: 1,
+        total_paused_seconds: 0,
+        last_transition_at: now,
+        created_at: now,
+        updated_at: now,
+      });
+    });
+
+    afterAll(async () => {
+      await testAdminClient.from("interview_sessions").delete().eq("id", sessionId);
+    });
+
+    it("POST /api/v1/interviews/:id/sessions/:sessionId/start should reject invalid bodies", async () => {
+      // Null body
+      await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/start`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "start-key-invalid-1")
+        .set("Content-Type", "application/json")
+        .send(null as any)
+        .expect(400);
+
+      // Malformed JSON
+      await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/start`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "start-key-invalid-json")
+        .set("Content-Type", "application/json")
+        .send("{bad_json")
+        .expect(400);
+
+      // Unknown field
+      await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/start`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "start-key-invalid-2")
+        .set("Content-Type", "application/json")
+        .send({ unknownField: "bad" })
+        .expect(422);
+
+      // Missing Idempotency-Key
+      await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/start`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Content-Type", "application/json")
+        .send({})
+        .expect(422);
+
+      // Invalid UUID
+      await request(app)
+        .post(`/api/v1/interviews/invalid-uuid/sessions/${sessionId}/start`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "start-key-invalid-3")
+        .set("Content-Type", "application/json")
+        .send({})
+        .expect(422);
+    });
+
+    it("POST /api/v1/interviews/:id/sessions/:sessionId/start should start session and replay", async () => {
+      const idempotencyKey = "start-key-123";
+
+      const res = await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/start`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", idempotencyKey)
+        .set("Content-Type", "application/json")
+        .send({})
+        .expect(HTTP_STATUS.OK);
+
+      expect(res.body.data.status).toBe("in_progress");
+      expect(res.header["x-idempotency-replay"]).toBeUndefined();
+
+      // Test replay
+      const replay = await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/start`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", idempotencyKey)
+        .set("Content-Type", "application/json")
+        .send({})
+        .expect(HTTP_STATUS.OK);
+
+      expect(replay.header["x-idempotency-replay"]).toBe("true");
+      expect(replay.body.data.status).toBe("in_progress");
+    });
+
+    it("POST /api/v1/interviews/:id/sessions/:sessionId/pause should pause session", async () => {
+      const res = await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/pause`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "pause-key-123")
+        .set("Content-Type", "application/json")
+        .send({})
+        .expect(HTTP_STATUS.OK);
+
+      expect(res.body.data.status).toBe("paused");
+      expect(res.body.data.pausedAt).toBeDefined();
+    });
+
+    it("POST /api/v1/interviews/:id/sessions/:sessionId/resume should resume session", async () => {
+      const res = await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/resume`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "resume-key-123")
+        .set("Content-Type", "application/json")
+        .send({})
+        .expect(HTTP_STATUS.OK);
+
+      expect(res.body.data.status).toBe("in_progress");
+    });
+
+    it("POST /api/v1/interviews/:id/sessions/:sessionId/complete should complete session", async () => {
+      const res = await request(app)
+        .post(`/api/v1/interviews/${createdInterviewId}/sessions/${sessionId}/complete`)
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "complete-key-123")
+        .set("Content-Type", "application/json")
+        .send({})
+        .expect(HTTP_STATUS.OK);
+
+      expect(res.body.data.status).toBe("completed");
+      expect(res.body.data.completedAt).toBeDefined();
+    });
+  });
 });

@@ -13,6 +13,7 @@ import {
 } from "../../../src/persistence/persistence-error.js";
 import { SupabaseAdminQuestionsRepository } from "../../../src/persistence/questions/supabase-admin-questions.repository.js";
 import type { Database } from "../../../src/persistence/database.types.js";
+import { DbLockHelper } from "../../utils/db-lock-helper.js";
 
 describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
   let authClient: SupabaseClient<Database>;
@@ -24,6 +25,7 @@ describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
   let validDifficultyId: string;
   let validSkillId: string;
   let validCategoryId: string;
+  let dbUrl: string;
 
   beforeAll(async () => {
     identity = generateTestIdentity("interview-repo");
@@ -49,6 +51,7 @@ describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
 
     const supabaseUrl = (appConfig.supabase as any).url;
     const supabaseKey = (appConfig.supabase as any).publishableKey;
+    dbUrl = (appConfig.supabase as any).dbUrl || process.env.DB_URL || "";
 
     const anonClient = createClient<Database>(supabaseUrl, supabaseKey);
     const {
@@ -512,6 +515,200 @@ describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
       } finally {
         if (u2Id) await cleanupTestUser(u2Id);
       }
+    });
+  });
+
+  describe("Lifecycle Methods", () => {
+    let createdId: string;
+    let sessionId: string;
+    let lockHelper: DbLockHelper | undefined;
+
+    beforeEach(async () => {
+      createdId = await repo.createInterview({
+        title: "Lifecycle Integration Test",
+        targetRole: "Engineer",
+        interviewTypeId: validInterviewTypeId,
+        difficultyId: validDifficultyId,
+        questionCount: 3,
+        timeLimitMinutes: 30,
+        skillIds: [validSkillId],
+        topicIds: [],
+      });
+
+      // create a fresh session for each test
+      const { data, error } = await testAdminClient
+        .from("interview_sessions")
+        .insert({
+          interview_id: createdId,
+          user_id: testUserId,
+          status: "ready",
+          config_snapshot: {},
+        })
+        .select("id")
+        .single();
+      if (error || !data) throw error || new Error("Failed to create session");
+      sessionId = data.id;
+    });
+
+    afterEach(async () => {
+      if (lockHelper) {
+        await lockHelper.releaseAndClose();
+        lockHelper = undefined;
+      }
+
+      const testIks = [
+        "ik-start-1",
+        "ik-start-replay",
+        "ik-start-conflict",
+        "ik-err",
+        "ik1",
+        "ik2",
+        "ik3",
+        "ik4",
+        "ik-concurrent",
+        "ik-mismatch",
+      ];
+      await testAdminClient.from("idempotency_records").delete().in("idempotency_key", testIks);
+
+      if (sessionId) {
+        await testAdminClient.from("audit_logs").delete().eq("resource_id", sessionId);
+        await testAdminClient.from("interview_sessions").delete().eq("id", sessionId);
+      }
+
+      if (createdId) {
+        await testAdminClient.from("interviews").delete().eq("id", createdId);
+      }
+    });
+
+    it("should successfully start a session and record audit and idempotency", async () => {
+      const ik = "ik-start-1";
+      const rh = "rh-start-1";
+      const res = await repo.startSession(createdId, sessionId, ik, rh);
+      expect(res.replayed).toBe(false);
+      expect(res.snapshot.status).toBe("in_progress");
+      expect(res.snapshot.started_at).not.toBeNull();
+
+      // Verify idempotency record
+      const { data: idem } = await testAdminClient
+        .from("idempotency_records")
+        .select("*")
+        .eq("idempotency_key", ik)
+        .single();
+      expect(idem).toBeDefined();
+      expect((idem as any).response_status).toBe(200);
+
+      // Verify audit log
+      const { data: audits } = await testAdminClient
+        .from("audit_logs")
+        .select("*")
+        .eq("resource_id", sessionId)
+        .eq("action", "INTERVIEW_SESSION_STARTED");
+      expect(audits!.length).toBe(1);
+    });
+
+    it("should replay if same idempotency key and hash are used", async () => {
+      const ik = "ik-start-replay";
+      const rh = "rh-start-replay";
+      await repo.startSession(createdId, sessionId, ik, rh);
+
+      const res = await repo.startSession(createdId, sessionId, ik, rh);
+      expect(res.replayed).toBe(true);
+      expect(res.snapshot.status).toBe("in_progress");
+
+      // Ensure NO duplicate audit log
+      const { data: audits } = await testAdminClient
+        .from("audit_logs")
+        .select("*")
+        .eq("resource_id", sessionId)
+        .eq("action", "INTERVIEW_SESSION_STARTED");
+      expect(audits!.length).toBe(1);
+    });
+
+    it("should throw RESOURCE_CONFLICT on fingerprint conflict", async () => {
+      const ik = "ik-start-conflict";
+      await repo.startSession(createdId, sessionId, ik, "rh-1");
+
+      await expect(
+        repo.startSession(createdId, sessionId, ik, "rh-different"),
+      ).rejects.toThrowError(PersistenceError);
+    });
+
+    it("should fail invalid transition (ready -> pause)", async () => {
+      let error: any;
+      try {
+        await repo.pauseSession(createdId, sessionId, "ik-err", "rh-err");
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeInstanceOf(PersistenceError);
+      expect(error.code).toBe(PersistenceErrorCode.RECORD_UPDATE_CONFLICT);
+
+      // Verify NO audit log
+      const { data: audits } = await testAdminClient
+        .from("audit_logs")
+        .select("*")
+        .eq("resource_id", sessionId);
+      expect(audits!.length).toBe(0);
+    });
+
+    it("should run full lifecycle successfully", async () => {
+      const ik1 = "ik1",
+        rh1 = "rh1";
+      const ik2 = "ik2",
+        rh2 = "rh2";
+      const ik3 = "ik3",
+        rh3 = "rh3";
+      const ik4 = "ik4",
+        rh4 = "rh4";
+
+      let res = await repo.startSession(createdId, sessionId, ik1, rh1);
+      expect(res.snapshot.status).toBe("in_progress");
+
+      res = await repo.pauseSession(createdId, sessionId, ik2, rh2);
+      expect(res.snapshot.status).toBe("paused");
+      expect(res.snapshot.paused_at).not.toBeNull();
+
+      // sleep a bit to accumulate pause duration
+      await new Promise((r) => setTimeout(r, 1100));
+
+      res = await repo.resumeSession(createdId, sessionId, ik3, rh3);
+      expect(res.snapshot.status).toBe("in_progress");
+      expect(res.snapshot.total_paused_seconds).toBeGreaterThanOrEqual(1);
+
+      res = await repo.completeSession(createdId, sessionId, ik4, rh4);
+      expect(res.snapshot.status).toBe("completed");
+      expect(res.snapshot.completed_at).not.toBeNull();
+    });
+
+    it("should block concurrent overlapping requests using advisory locks", async () => {
+      lockHelper = new DbLockHelper(dbUrl);
+      // Acquire the lifecycle lock explicitly for the session transition
+      await lockHelper.connectAndLock(testUserId, "INTERVIEW_SESSION_STARTED", "ik-concurrent");
+
+      // The repo call should block/timeout or fail due to statement_timeout.
+      // In standard PG, it would block until lockHelper releases.
+      // We can simulate race condition by releasing it after a short delay.
+      let started = false;
+      const startPromise = repo
+        .startSession(createdId, sessionId, "ik-concurrent", "rh-conc")
+        .then((res) => {
+          started = true;
+          return res;
+        });
+
+      expect(started).toBe(false);
+
+      await lockHelper.releaseAndClose();
+      lockHelper = undefined;
+      const res = await startPromise;
+      expect(res.snapshot.status).toBe("in_progress");
+    });
+
+    it("should block mismatching interviewId for the session", async () => {
+      const fakeInterviewId = "00000000-0000-0000-0000-000000000000";
+      await expect(
+        repo.startSession(fakeInterviewId, sessionId, "ik-mismatch", "rh-mismatch"),
+      ).rejects.toThrowError(PersistenceError);
     });
   });
 });

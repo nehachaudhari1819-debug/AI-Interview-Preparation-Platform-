@@ -331,13 +331,117 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
       .overrideTypes<DbSessionQuestion, { merge: false }>();
 
     if (error) {
-      throw new PersistenceError(
-        PersistenceErrorCode.OPERATION_FAILED,
-        "Failed to fetch session question detail",
-      );
+      normalizeRpcError(error);
     }
 
-    if (!data) return null;
     return data;
   }
+
+  public async startSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    const { data, error } = await this.supabase.rpc("student_start_interview_session", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseLifecycleResult(data);
+  }
+
+  public async pauseSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    const { data, error } = await this.supabase.rpc("student_pause_interview_session", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseLifecycleResult(data);
+  }
+
+  public async resumeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    const { data, error } = await this.supabase.rpc("student_resume_interview_session", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseLifecycleResult(data);
+  }
+
+  public async completeSession(
+    interviewId: string,
+    sessionId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    const { data, error } = await this.supabase.rpc("student_complete_interview_session", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseLifecycleResult(data);
+  }
+}
+
+import { z } from "zod";
+
+const LifecycleResultSchema = z
+  .object({
+    replayed: z.boolean(),
+    response_status: z.literal(200),
+    snapshot: z
+      .object({
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        id: z.string().uuid(),
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        interview_id: z.string().uuid(),
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        user_id: z.string().uuid(),
+        status: z.enum(["ready", "in_progress", "paused", "completed"]),
+        config_snapshot: z.record(z.string(), z.unknown()),
+        config_snapshot_version: z.number().int().positive(),
+        started_at: z.iso.datetime({ offset: true }).nullable(),
+        paused_at: z.iso.datetime({ offset: true }).nullable(),
+        total_paused_seconds: z.number().int().nonnegative(),
+        completed_at: z.iso.datetime({ offset: true }).nullable(),
+        last_transition_at: z.iso.datetime({ offset: true }),
+        created_at: z.iso.datetime({ offset: true }),
+        updated_at: z.iso.datetime({ offset: true }),
+      })
+      .strict(),
+  })
+  .strict();
+
+function parseLifecycleResult(data: unknown): { replayed: boolean; snapshot: DbSession } {
+  const result = LifecycleResultSchema.safeParse(data);
+  if (!result.success) {
+    throw new PersistenceError(
+      PersistenceErrorCode.OPERATION_FAILED,
+      "Invalid lifecycle response envelope",
+      result.error,
+    );
+  }
+  return {
+    replayed: result.data.replayed,
+    snapshot: result.data.snapshot,
+  };
 }

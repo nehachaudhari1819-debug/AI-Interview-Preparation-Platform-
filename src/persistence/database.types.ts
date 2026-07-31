@@ -977,6 +977,15 @@ export type Database = {
         }
         Returns: Json
       }
+      student_complete_interview_session: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_idempotency_key: string
+          p_request_hash: string
+        }
+        Returns: Json
+      }
       student_create_interview_config: {
         Args: {
           p_title: string
@@ -989,6 +998,33 @@ export type Database = {
           p_topic_ids: string[]
         }
         Returns: string
+      }
+      student_pause_interview_session: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_idempotency_key: string
+          p_request_hash: string
+        }
+        Returns: Json
+      }
+      student_resume_interview_session: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_idempotency_key: string
+          p_request_hash: string
+        }
+        Returns: Json
+      }
+      student_start_interview_session: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_idempotency_key: string
+          p_request_hash: string
+        }
+        Returns: Json
       }
       student_update_interview_config: {
         Args: {

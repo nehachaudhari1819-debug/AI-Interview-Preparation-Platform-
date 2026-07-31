@@ -1,6 +1,7 @@
 import {
   parseCreateInterviewBody,
   parseUpdateInterviewBody,
+  parseStrictEmptyBody,
 } from "../../../../src/features/interviews/interviews.schemas.js";
 import { ValidationError } from "../../../../src/errors/validation.error.js";
 import { randomUUID } from "crypto";
@@ -35,7 +36,9 @@ describe("Interviews Schemas", () => {
         skillIds: [id, id],
       };
 
-      expect(() => parseCreateInterviewBody(invalid)).toThrow(ValidationError);
+      expect(() => {
+        parseCreateInterviewBody(invalid);
+      }).toThrow(ValidationError);
     });
 
     it("should reject more than 20 questions", () => {
@@ -48,7 +51,9 @@ describe("Interviews Schemas", () => {
         skillIds: [randomUUID()],
       };
 
-      expect(() => parseCreateInterviewBody(invalid)).toThrow(ValidationError);
+      expect(() => {
+        parseCreateInterviewBody(invalid);
+      }).toThrow(ValidationError);
     });
   });
 
@@ -71,7 +76,35 @@ describe("Interviews Schemas", () => {
         payload: {},
       };
 
-      expect(() => parseUpdateInterviewBody(invalid)).toThrow(ValidationError);
+      expect(() => {
+        parseUpdateInterviewBody(invalid);
+      }).toThrow(ValidationError);
+    });
+  });
+
+  describe("StrictEmptyBodySchema", () => {
+    it("should accept empty object", () => {
+      expect(() => {
+        parseStrictEmptyBody({});
+      }).not.toThrow();
+    });
+
+    it("should reject object with unknown fields", () => {
+      expect(() => {
+        parseStrictEmptyBody({ someField: "value" });
+      }).toThrow(ValidationError);
+    });
+
+    it("should reject non-objects", () => {
+      expect(() => {
+        parseStrictEmptyBody("string");
+      }).toThrow(ValidationError);
+      expect(() => {
+        parseStrictEmptyBody(null);
+      }).toThrow(ValidationError);
+      expect(() => {
+        parseStrictEmptyBody(123);
+      }).toThrow(ValidationError);
     });
   });
 });
