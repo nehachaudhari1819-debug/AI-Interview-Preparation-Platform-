@@ -306,7 +306,10 @@ INSERT INTO public.interview_sessions (id, interview_id, user_id, config_snapsho
 VALUES ('00000000-0000-0000-0021-000000000091', '00000000-0000-0000-0021-000000000090', '00000000-0000-0000-0000-000000000001', '{}', 'ready', now(), now(), now());
 
 CREATE TEMP TABLE session_timestamp_evidence (
-    before_noop timestamptz, after_noop timestamptz, after_change timestamptz
+    before_noop timestamptz,
+    after_noop timestamptz,
+    before_change timestamptz,
+    after_change timestamptz
 ) ON COMMIT DROP;
 
 INSERT INTO session_timestamp_evidence (before_noop) SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0021-000000000091';
@@ -318,11 +321,42 @@ UPDATE session_timestamp_evidence SET after_noop = (SELECT updated_at FROM publi
 
 SELECT is((SELECT after_noop FROM session_timestamp_evidence), (SELECT before_noop FROM session_timestamp_evidence), 'True no-op preserves updated_at');
 
--- Execute a real state change
-UPDATE public.interview_sessions SET status = 'in_progress', started_at = now(), last_transition_at = now() WHERE id = '00000000-0000-0000-0021-000000000091';
-UPDATE session_timestamp_evidence SET after_change = (SELECT updated_at FROM public.interview_sessions WHERE id = '00000000-0000-0000-0021-000000000091');
+-- Clean up dedicated no-op fixtures so they do not leak into later RLS assertions for User 1
+DELETE FROM public.interview_sessions WHERE id = '00000000-0000-0000-0021-000000000091';
+DELETE FROM public.interviews WHERE id = '00000000-0000-0000-0021-000000000090';
 
-SELECT cmp_ok((SELECT after_change FROM session_timestamp_evidence), '>', (SELECT after_noop FROM session_timestamp_evidence), 'Real update advances updated_at');
+-- Restore the canonical real transition
+UPDATE session_timestamp_evidence
+SET before_change = (
+    SELECT updated_at
+    FROM public.interview_sessions
+    WHERE id = '00000000-0000-0000-0008-000000000001'
+);
+
+WITH transition_clock AS (
+    SELECT clock_timestamp() AS occurred_at
+)
+UPDATE public.interview_sessions AS session
+SET
+    status = 'in_progress',
+    started_at = transition_clock.occurred_at,
+    last_transition_at = transition_clock.occurred_at
+FROM transition_clock
+WHERE session.id = '00000000-0000-0000-0008-000000000001';
+
+UPDATE session_timestamp_evidence
+SET after_change = (
+    SELECT updated_at
+    FROM public.interview_sessions
+    WHERE id = '00000000-0000-0000-0008-000000000001'
+);
+
+SELECT cmp_ok(
+    (SELECT after_change FROM session_timestamp_evidence),
+    '>',
+    (SELECT before_change FROM session_timestamp_evidence),
+    'Real update advances updated_at'
+);
 
 -------------------------------------------------------------------------------
 -- 7. Indexes (6 assertions)
