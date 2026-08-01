@@ -8,6 +8,7 @@ import type {
   CreateInterviewBody,
   UpdateInterviewBody,
   GetInterviewsQuery,
+  GetSessionsQuery,
 } from "./interviews.schemas.js";
 import { NotFoundError } from "../../errors/not-found.error.js";
 import { AppError } from "../../errors/app-error.js";
@@ -61,19 +62,20 @@ export interface IInterviewsService {
   getInterviewById(id: string): Promise<DbInterview>;
   getInterviewSessions(
     interviewId: string,
-    query: GetInterviewsQuery,
+    query: GetSessionsQuery,
   ): Promise<PaginatedSessionsResult>;
   getInterviewSessionById(interviewId: string, sessionId: string): Promise<DbSession>;
-  getSessionQuestions(
-    interviewId: string,
-    sessionId: string,
-    query: GetInterviewsQuery,
-  ): Promise<PaginatedSessionQuestionsResult>;
+  getSessionQuestions(interviewId: string, sessionId: string): Promise<DbSessionQuestion[]>;
   getSessionQuestionById(
     interviewId: string,
     sessionId: string,
     sessionQuestionId: string,
   ): Promise<DbSessionQuestion>;
+
+  createSession(
+    interviewId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
 
   startSession(
     interviewId: string,
@@ -186,7 +188,7 @@ export class InterviewsService implements IInterviewsService {
 
   public async getInterviewSessions(
     interviewId: string,
-    query: GetInterviewsQuery,
+    query: GetSessionsQuery,
   ): Promise<PaginatedSessionsResult> {
     // Verify the interview exists and belongs to the user
     await this.getInterviewById(interviewId);
@@ -221,8 +223,7 @@ export class InterviewsService implements IInterviewsService {
   public async getSessionQuestions(
     interviewId: string,
     sessionId: string,
-    query: GetInterviewsQuery,
-  ): Promise<PaginatedSessionQuestionsResult> {
+  ): Promise<DbSessionQuestion[]> {
     const session = await this.getInterviewSessionById(interviewId, sessionId);
 
     if (session.status === "ready") {
@@ -233,24 +234,9 @@ export class InterviewsService implements IInterviewsService {
       });
     }
 
-    const { questions, total } = await this.repository.getSessionQuestions(
-      interviewId,
-      sessionId,
-      query,
-    );
-    const totalPages = total === 0 ? 0 : Math.ceil(total / query.limit);
+    const questions = await this.repository.getSessionQuestions(interviewId, sessionId);
 
-    return {
-      items: questions,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: total,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
+    return questions;
   }
 
   public async getSessionQuestionById(
@@ -279,6 +265,59 @@ export class InterviewsService implements IInterviewsService {
     return question;
   }
 
+  public async createSession(
+    interviewId: string,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    try {
+      const requestHash = generateRequestFingerprint({
+        apiVersion: "v1",
+        method: "POST",
+        routePattern: "/api/v1/interviews/:interviewId/sessions",
+        operation: "INTERVIEWS_CREATE_SESSION",
+        body: { interviewId },
+      });
+      return await this.repository.createSession(interviewId, idempotencyKey, requestHash);
+    } catch (error: unknown) {
+      if (PersistenceError.is(error, PersistenceErrorCode.UNAUTHORIZED_ACCESS)) {
+        throw new ForbiddenError(error.message);
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.IDEMPOTENCY_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.IDEMPOTENCY_CONFLICT,
+          message: error.message,
+        });
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.IDEMPOTENCY_IN_PROGRESS)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.IDEMPOTENCY_IN_PROGRESS,
+          message: error.message,
+        });
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_NOT_FOUND)) {
+        throw new NotFoundError(error.message);
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: ERROR_CODES.RESOURCE_CONFLICT,
+          message: error.message,
+        });
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.INSUFFICIENT_ELIGIBLE_QUESTIONS)) {
+        // e.g. insufficient questions
+        throw new AppError({
+          statusCode: HTTP_STATUS.CONFLICT,
+          code: "INSUFFICIENT_ELIGIBLE_QUESTIONS",
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  }
+
   private getLifecycleFingerprint(
     operation: string,
     routeSuffix: string,
@@ -305,6 +344,20 @@ export class InterviewsService implements IInterviewsService {
       throw new AppError({
         statusCode: HTTP_STATUS.CONFLICT,
         code: ERROR_CODES.RESOURCE_CONFLICT,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.IDEMPOTENCY_CONFLICT)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.IDEMPOTENCY_CONFLICT,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.IDEMPOTENCY_IN_PROGRESS)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.IDEMPOTENCY_IN_PROGRESS,
         message: error.message,
       });
     }

@@ -70,6 +70,7 @@ describe("InterviewsService", () => {
       getInterviewSessionById: jest.fn(),
       getSessionQuestions: jest.fn(),
       getSessionQuestionById: jest.fn(),
+      createSession: jest.fn<IInterviewsRepository["createSession"]>(),
       startSession: jest.fn(),
       pauseSession: jest.fn(),
       resumeSession: jest.fn(),
@@ -79,36 +80,24 @@ describe("InterviewsService", () => {
   });
 
   describe("getSessionQuestions", () => {
-    const sessionQuestionsQuery = {
-      page: 1,
-      limit: 20,
-      sortBy: "createdAt" as const,
-      sortDir: "desc" as const,
-    };
     it("should throw NotFoundError if interview missing", async () => {
       mockRepository.getInterviewById.mockResolvedValue(null);
 
-      await expect(
-        service.getSessionQuestions("i-id", "s-id", sessionQuestionsQuery),
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.getSessionQuestions("i-id", "s-id")).rejects.toThrow(NotFoundError);
     });
 
     it("should throw NotFoundError if session missing", async () => {
       mockRepository.getInterviewById.mockResolvedValue(buildDbInterview({ id: "i-id" }));
       mockRepository.getInterviewSessionById.mockResolvedValue(null);
 
-      await expect(
-        service.getSessionQuestions("i-id", "s-id", sessionQuestionsQuery),
-      ).rejects.toThrow(NotFoundError);
+      await expect(service.getSessionQuestions("i-id", "s-id")).rejects.toThrow(NotFoundError);
     });
 
     it("should reject with RESOURCE_CONFLICT when session is ready", async () => {
       mockRepository.getInterviewById.mockResolvedValue(buildDbInterview({ id: "i-id" }));
       mockRepository.getInterviewSessionById.mockResolvedValue(buildDbSession({ status: "ready" }));
 
-      await expect(
-        service.getSessionQuestions("i-id", "s-id", sessionQuestionsQuery),
-      ).rejects.toMatchObject({
+      await expect(service.getSessionQuestions("i-id", "s-id")).rejects.toMatchObject({
         statusCode: HTTP_STATUS.CONFLICT,
         code: ERROR_CODES.RESOURCE_CONFLICT,
       });
@@ -119,26 +108,12 @@ describe("InterviewsService", () => {
       mockRepository.getInterviewSessionById.mockResolvedValue(
         buildDbSession({ status: "in_progress" }),
       );
-      mockRepository.getSessionQuestions.mockResolvedValue({ questions: [], total: 0 });
+      mockRepository.getSessionQuestions.mockResolvedValue([]);
 
-      const res = await service.getSessionQuestions("i-id", "s-id", sessionQuestionsQuery);
+      const res = await service.getSessionQuestions("i-id", "s-id");
 
-      expect(mockRepository.getSessionQuestions).toHaveBeenCalledWith(
-        "i-id",
-        "s-id",
-        sessionQuestionsQuery,
-      );
-      expect(res).toEqual({
-        items: [],
-        pagination: {
-          page: 1,
-          limit: 20,
-          totalItems: 0,
-          totalPages: 0,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        },
-      });
+      expect(mockRepository.getSessionQuestions).toHaveBeenCalledWith("i-id", "s-id");
+      expect(res).toEqual([]);
     });
   });
 
@@ -196,6 +171,38 @@ describe("InterviewsService", () => {
     });
   });
   describe("lifecycle methods", () => {
+    it("should generate fingerprint and call createSession", async () => {
+      const snapshot = buildDbSession({ id: "s1" });
+      mockRepository.createSession.mockResolvedValue({ replayed: false, snapshot });
+
+      const getCreateSessionRequestHash = (callIndex: number): string => {
+        const call = mockRepository.createSession.mock.calls[callIndex];
+        if (!call) {
+          throw new Error(`Expected createSession call ${callIndex + 1} to exist`);
+        }
+        return call[2];
+      };
+
+      const res = await service.createSession("i1", "key1");
+      expect(mockRepository.createSession).toHaveBeenCalledWith("i1", "key1", expect.any(String));
+      expect(res).toEqual({ replayed: false, snapshot });
+
+      // Verify stability of the hash
+      await service.createSession("i1", "key1");
+      expect(mockRepository.createSession).toHaveBeenCalledTimes(2);
+
+      const firstHash = getCreateSessionRequestHash(0);
+      const secondHash = getCreateSessionRequestHash(1);
+      expect(firstHash).toEqual(secondHash); // Same interview id produces same hash
+
+      // Verify diff for another interview
+      await service.createSession("i2", "key1");
+      expect(mockRepository.createSession).toHaveBeenCalledTimes(3);
+
+      const thirdHash = getCreateSessionRequestHash(2);
+      expect(firstHash).not.toEqual(thirdHash);
+    });
+
     it("should generate fingerprint and call startSession", async () => {
       const snapshot = buildDbSession({ id: "s1" });
       mockRepository.startSession.mockResolvedValue({ replayed: false, snapshot });

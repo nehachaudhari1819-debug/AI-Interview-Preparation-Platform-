@@ -274,6 +274,57 @@ describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
         if (u2Id) await cleanupTestUser(u2Id);
       }
     });
+
+    it("should reject session creation with P0006 when 64-bit advisory lock is already held", async () => {
+      const { Client } = await import("pg");
+      const client = new Client({ connectionString: dbUrl });
+      await client.connect();
+      try {
+        const operation = "INTERVIEWS_CREATE_SESSION";
+        const idempotencyKey = "session-create-lock-contention";
+
+        await client.query("BEGIN");
+
+        const lockResult = await client.query<{ acquired: boolean }>(
+          `
+            SELECT pg_try_advisory_xact_lock(
+              hashtextextended(
+                jsonb_build_array(
+                  $1::text,
+                  $2::text,
+                  $3::text
+                )::text,
+                0
+              )
+            ) AS acquired
+          `,
+          [testUserId, operation, idempotencyKey],
+        );
+
+        expect(lockResult.rows[0]?.acquired).toBe(true);
+
+        const createdId = await repo.createInterview({
+          interviewTypeId: validInterviewTypeId,
+          difficultyId: validDifficultyId,
+          questionCount: 3,
+          timeLimitMinutes: 30,
+          skillIds: [validSkillId],
+          topicIds: [],
+          title: "Concurrency Lock Test",
+          targetRole: "Dev",
+        });
+
+        // Use a separately acquired database client for the RPC
+        await expect(
+          repo.createSession(createdId, idempotencyKey, "a".repeat(64)),
+        ).rejects.toMatchObject({
+          code: PersistenceErrorCode.IDEMPOTENCY_IN_PROGRESS,
+        });
+      } finally {
+        await client.query("ROLLBACK");
+        await client.end();
+      }
+    });
   });
 
   describe("Read operations and ownership", () => {
@@ -449,15 +500,21 @@ describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
         const questionId = questionData.id;
 
         // User 1 accesses their own data
-        const pagination = { page: 1, limit: 10 };
+        const pagination = {
+          page: 1,
+          limit: 10,
+          sortBy: "createdAt",
+          sortDir: "desc",
+        } satisfies Parameters<typeof repo.getInterviewSessions>[1];
         const sessionsResult = await repo.getInterviewSessions(createdId, pagination);
         expect(sessionsResult.total).toBe(1);
 
         const sessionDetail = await repo.getInterviewSessionById(createdId, sessionId);
         expect(sessionDetail).toBeDefined();
 
-        const questionsResult = await repo.getSessionQuestions(createdId, sessionId, pagination);
-        expect(questionsResult.total).toBe(1);
+        const questions = await repo.getSessionQuestions(createdId, sessionId);
+        expect(questions).toHaveLength(1);
+        expect(questions[0]?.session_id).toBe(sessionId);
 
         const questionDetail = await repo.getSessionQuestionById(createdId, sessionId, questionId);
         expect(questionDetail).toBeDefined();
@@ -507,8 +564,8 @@ describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
         const sDet2 = await repo2.getInterviewSessionById(createdId, sessionId);
         expect(sDet2).toBeNull();
 
-        const qRes2 = await repo2.getSessionQuestions(createdId, sessionId, pagination);
-        expect(qRes2.total).toBe(0);
+        const qRes2 = await repo2.getSessionQuestions(createdId, sessionId);
+        expect(qRes2).toHaveLength(0);
 
         const qDet2 = await repo2.getSessionQuestionById(createdId, sessionId, questionId);
         expect(qDet2).toBeNull();

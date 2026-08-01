@@ -54,6 +54,7 @@ describe("Idempotency Wrapper", () => {
     mockResponse = {
       statusCode: 200,
       locals: {},
+      setHeader: jest.fn<any>(),
       json: jest.fn<any>().mockReturnThis(),
       status: jest.fn<any>().mockReturnThis(),
       send: jest.fn<any>().mockReturnThis(),
@@ -122,6 +123,7 @@ describe("Idempotency Wrapper", () => {
 
     await wrapper(mockRequest as Request, mockResponse as Response, nextFunction);
 
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("X-Idempotency-Replay", "true");
     expect(mockResponse.status).toHaveBeenCalledWith(201);
     expect(mockResponse.json).toHaveBeenCalledWith({ success: true });
     expect(mockHandler).not.toHaveBeenCalled();

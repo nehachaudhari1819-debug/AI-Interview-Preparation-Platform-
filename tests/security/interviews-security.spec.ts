@@ -15,4 +15,10 @@ describe("Interviews API Security", () => {
     const res = await request(app).get("/api/v1/interviews");
     expect(res.status).toBe(401);
   });
+
+  it("should deny unauthenticated POST /api/v1/interviews/:id/sessions", async () => {
+    const { app } = createTestApp();
+    const res = await request(app).post("/api/v1/interviews/123/sessions").send({});
+    expect(res.status).toBe(401);
+  });
 });

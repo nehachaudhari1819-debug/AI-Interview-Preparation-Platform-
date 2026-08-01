@@ -7,7 +7,7 @@ import {
   parseCreateInterviewBody,
   parseUpdateInterviewBody,
   parseGetInterviewsQuery,
-  parsePaginationQuery,
+  parseGetSessionsQuery,
   parseId,
   parseStrictEmptyBody,
 } from "./interviews.schemas.js";
@@ -29,22 +29,24 @@ function getService(res: Response): IInterviewsService {
 
 export function createInterviewsController() {
   return {
-    createInterview: asyncHandler(async (req: Request, res: Response) => {
+    createInterviewHandler: async (req: Request, res: Response) => {
       const service = getService(res);
       const body = parseCreateInterviewBody(req.body);
 
       const interview = await service.createInterview(body);
       const safeData = mapInterviewToResponse(interview);
 
-      return sendSuccess({
-        response: res,
-        statusCode: HTTP_STATUS.CREATED,
-        data: safeData,
-        requestId: req.context.requestId,
-      });
-    }),
+      return {
+        status: HTTP_STATUS.CREATED,
+        body: {
+          success: true,
+          data: safeData,
+          meta: { requestId: req.context.requestId },
+        },
+      };
+    },
 
-    updateInterview: asyncHandler(async (req: Request, res: Response) => {
+    updateInterviewHandler: async (req: Request, res: Response) => {
       const service = getService(res);
       const id = parseId(req.params.interviewId);
       const body = parseUpdateInterviewBody(req.body);
@@ -52,13 +54,15 @@ export function createInterviewsController() {
       const interview = await service.updateInterview(id, body);
       const safeData = mapInterviewToResponse(interview);
 
-      return sendSuccess({
-        response: res,
-        statusCode: HTTP_STATUS.OK,
-        data: safeData,
-        requestId: req.context.requestId,
-      });
-    }),
+      return {
+        status: HTTP_STATUS.OK,
+        body: {
+          success: true,
+          data: safeData,
+          meta: { requestId: req.context.requestId },
+        },
+      };
+    },
 
     getInterviews: asyncHandler(async (req: Request, res: Response) => {
       const service = getService(res);
@@ -94,13 +98,9 @@ export function createInterviewsController() {
     getInterviewSessions: asyncHandler(async (req: Request, res: Response) => {
       const service = getService(res);
       const interviewId = parseId(req.params.interviewId);
-      const query = parsePaginationQuery(req.query);
+      const query = parseGetSessionsQuery(req.query);
 
-      const result = await service.getInterviewSessions(interviewId, {
-        ...query,
-        sortBy: "createdAt",
-        sortDir: "desc",
-      });
+      const result = await service.getInterviewSessions(interviewId, query);
       const safeData = result.items.map(mapSessionToResponse);
 
       return sendMetaCollection({
@@ -108,6 +108,36 @@ export function createInterviewsController() {
         statusCode: HTTP_STATUS.OK,
         data: safeData,
         pagination: result.pagination,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    createSession: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+
+      const contentType = req.get("Content-Type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new ValidationError("Content-Type must be application/json");
+      }
+      parseStrictEmptyBody(req.body);
+
+      const { replayed, snapshot } = await service.createSession(interviewId, idempotencyKey);
+      const safeData = mapSessionToResponse(snapshot);
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.CREATED,
+        data: safeData,
         requestId: req.context.requestId,
       });
     }),
@@ -132,20 +162,14 @@ export function createInterviewsController() {
       const service = getService(res);
       const interviewId = parseId(req.params.interviewId);
       const sessionId = parseId(req.params.sessionId);
-      const query = parsePaginationQuery(req.query);
 
-      const result = await service.getSessionQuestions(interviewId, sessionId, {
-        ...query,
-        sortBy: "createdAt",
-        sortDir: "asc",
-      });
-      const safeData = result.items.map(mapSessionQuestionToResponse);
+      const questions = await service.getSessionQuestions(interviewId, sessionId);
+      const safeData = questions.map(mapSessionQuestionToResponse);
 
-      return sendMetaCollection({
+      return sendSuccess({
         response: res,
         statusCode: HTTP_STATUS.OK,
         data: safeData,
-        pagination: result.pagination,
         requestId: req.context.requestId,
       });
     }),

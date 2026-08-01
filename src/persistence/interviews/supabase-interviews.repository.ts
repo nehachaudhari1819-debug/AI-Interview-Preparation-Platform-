@@ -4,7 +4,7 @@ import type {
   CreateInterviewBody,
   UpdateInterviewBody,
   GetInterviewsQuery,
-  PaginationQuery,
+  GetSessionsQuery,
 } from "../../features/interviews/interviews.schemas.js";
 import type { IInterviewsRepository } from "../../features/interviews/interviews.repository.js";
 import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js";
@@ -21,6 +21,18 @@ function normalizeRpcError(error: unknown): never {
     throw new PersistenceError(PersistenceErrorCode.RECORD_UPDATE_CONFLICT, "Resource conflict");
   } else if (code === "P0004") {
     throw new PersistenceError(PersistenceErrorCode.VALIDATION_FAILED, "Validation error");
+  } else if (code === "P0006") {
+    throw new PersistenceError(
+      PersistenceErrorCode.IDEMPOTENCY_IN_PROGRESS,
+      "Idempotency in progress",
+    );
+  } else if (code === "P0007") {
+    throw new PersistenceError(PersistenceErrorCode.IDEMPOTENCY_CONFLICT, "Idempotency conflict");
+  } else if (code === "P0008") {
+    throw new PersistenceError(
+      PersistenceErrorCode.INSUFFICIENT_ELIGIBLE_QUESTIONS,
+      "Insufficient eligible questions",
+    );
   }
   throw new PersistenceError(
     PersistenceErrorCode.OPERATION_FAILED,
@@ -47,7 +59,7 @@ export interface DbInterview {
 export interface DbSession {
   id: string;
   interview_id: string;
-  status: "ready" | "in_progress" | "paused" | "completed" | "expired";
+  status: "ready" | "in_progress" | "paused" | "completed";
   config_snapshot: Record<string, unknown>;
   started_at: string | null;
   paused_at: string | null;
@@ -195,14 +207,9 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
 
   public async getInterviewSessions(
     interviewId: string,
-    query: PaginationQuery,
+    query: GetSessionsQuery,
   ): Promise<{ sessions: DbSession[]; total: number }> {
-    // Note: Implicit auth.uid() filtering happens via RLS. But we need to ensure the parent interview is owned by the user.
-    // If the interview isn't owned, we won't see its sessions due to RLS, or we can enforce it explicitly.
-    // However, the instructions say "Nested resource queries must validate the complete ownership chain".
-    // We can do this safely by joining the interviews table (which has user_id ownership enforced by RLS).
-
-    const { page, limit } = query;
+    const { page, limit, sortBy, sortDir, status, createdFrom, createdTo } = query;
     let dbQuery = this.supabase
       .from("interview_sessions")
       .select(
@@ -213,9 +220,23 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
       `,
         { count: "exact" },
       )
-      .eq("interview_id", interviewId)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false }); // deterministic
+      .eq("interview_id", interviewId);
+
+    if (status && status.length > 0) {
+      dbQuery = dbQuery.in("status", status);
+    }
+    if (createdFrom) {
+      dbQuery = dbQuery.gte("created_at", createdFrom);
+    }
+    if (createdTo) {
+      dbQuery = dbQuery.lte("created_at", createdTo);
+    }
+
+    const orderColumn = sortBy === "createdAt" ? "created_at" : "updated_at";
+
+    dbQuery = dbQuery
+      .order(orderColumn, { ascending: sortDir === "asc", nullsFirst: false })
+      .order("id", { ascending: sortDir === "asc" });
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -265,10 +286,8 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
   public async getSessionQuestions(
     interviewId: string,
     sessionId: string,
-    query: PaginationQuery,
-  ): Promise<{ questions: DbSessionQuestion[]; total: number }> {
-    const { page, limit } = query;
-    let dbQuery = this.supabase
+  ): Promise<DbSessionQuestion[]> {
+    const dbQuery = this.supabase
       .from("interview_session_questions")
       .select(
         `
@@ -279,20 +298,12 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
           interviews!inner(id)
         )
       `,
-        { count: "exact" },
       )
       .eq("session_id", sessionId)
       .eq("interview_sessions.interview_id", interviewId) // Chain ownership explicitly
       .order("display_order", { ascending: true });
 
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    dbQuery = dbQuery.range(from, to);
-
-    const { data, count, error } = await dbQuery.overrideTypes<
-      DbSessionQuestion[],
-      { merge: false }
-    >();
+    const { data, error } = await dbQuery.overrideTypes<DbSessionQuestion[], { merge: false }>();
 
     if (error) {
       throw new PersistenceError(
@@ -301,10 +312,7 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
       );
     }
 
-    return {
-      questions: data,
-      total: count ?? 0,
-    };
+    return data;
   }
 
   public async getSessionQuestionById(
@@ -335,6 +343,20 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
     }
 
     return data;
+  }
+
+  public async createSession(
+    interviewId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }> {
+    const { data, error } = await this.supabase.rpc("student_create_interview_session", {
+      p_interview_id: interviewId,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseCreateSessionResult(data);
   }
 
   public async startSession(
@@ -404,30 +426,40 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
 
 import { z } from "zod";
 
+const SessionSnapshotSchema = z
+  .object({
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    id: z.string().uuid(),
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    interview_id: z.string().uuid(),
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    user_id: z.string().uuid(),
+    status: z.enum(["ready", "in_progress", "paused", "completed"]),
+    config_snapshot: z.record(z.string(), z.unknown()),
+    config_snapshot_version: z.number().int().positive(),
+    started_at: z.iso.datetime({ offset: true }).nullable(),
+    paused_at: z.iso.datetime({ offset: true }).nullable(),
+    total_paused_seconds: z.number().int().nonnegative(),
+    completed_at: z.iso.datetime({ offset: true }).nullable(),
+    last_transition_at: z.iso.datetime({ offset: true }),
+    created_at: z.iso.datetime({ offset: true }),
+    updated_at: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
 const LifecycleResultSchema = z
   .object({
     replayed: z.boolean(),
     response_status: z.literal(200),
-    snapshot: z
-      .object({
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        id: z.string().uuid(),
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        interview_id: z.string().uuid(),
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        user_id: z.string().uuid(),
-        status: z.enum(["ready", "in_progress", "paused", "completed"]),
-        config_snapshot: z.record(z.string(), z.unknown()),
-        config_snapshot_version: z.number().int().positive(),
-        started_at: z.iso.datetime({ offset: true }).nullable(),
-        paused_at: z.iso.datetime({ offset: true }).nullable(),
-        total_paused_seconds: z.number().int().nonnegative(),
-        completed_at: z.iso.datetime({ offset: true }).nullable(),
-        last_transition_at: z.iso.datetime({ offset: true }),
-        created_at: z.iso.datetime({ offset: true }),
-        updated_at: z.iso.datetime({ offset: true }),
-      })
-      .strict(),
+    snapshot: SessionSnapshotSchema,
+  })
+  .strict();
+
+const CreateSessionResultSchema = z
+  .object({
+    replayed: z.boolean(),
+    response_status: z.literal(201),
+    snapshot: SessionSnapshotSchema,
   })
   .strict();
 
@@ -440,6 +472,23 @@ function parseLifecycleResult(data: unknown): { replayed: boolean; snapshot: DbS
       result.error,
     );
   }
+  return {
+    replayed: result.data.replayed,
+    snapshot: result.data.snapshot,
+  };
+}
+
+function parseCreateSessionResult(data: unknown): { replayed: boolean; snapshot: DbSession } {
+  const result = CreateSessionResultSchema.safeParse(data);
+
+  if (!result.success) {
+    throw new PersistenceError(
+      PersistenceErrorCode.OPERATION_FAILED,
+      "Invalid create-session response envelope",
+      result.error,
+    );
+  }
+
   return {
     replayed: result.data.replayed,
     snapshot: result.data.snapshot,

@@ -51,11 +51,23 @@ export function mapInterviewToResponse(row: DbInterview): InterviewDetail {
 }
 
 export function mapSessionToResponse(row: DbSession): InterviewSession {
+  const configSnapshot = row.config_snapshot;
+  const safeConfig = {
+    title: configSnapshot.title,
+    targetRole: configSnapshot.targetRole,
+    questionCount: configSnapshot.questionCount,
+    timeLimitMinutes: configSnapshot.timeLimitMinutes,
+    interviewType: configSnapshot.interviewType,
+    difficulty: configSnapshot.difficulty,
+    skills: configSnapshot.skills,
+    topics: configSnapshot.topics,
+  };
+
   return {
     id: row.id,
     interviewId: row.interview_id,
     status: row.status,
-    configSnapshot: row.config_snapshot,
+    configSnapshot: safeConfig,
     startedAt: row.started_at,
     pausedAt: row.paused_at,
     totalPausedSeconds: row.total_paused_seconds,
@@ -67,12 +79,21 @@ export function mapSessionToResponse(row: DbSession): InterviewSession {
 }
 
 export function mapSessionQuestionToResponse(row: DbSessionQuestion): SessionQuestion {
+  const taxSnapshot = row.taxonomy_snapshot;
+  const safeTaxonomy = taxSnapshot
+    ? {
+        question_categories: taxSnapshot.question_categories,
+        question_difficulties: taxSnapshot.question_difficulties,
+        question_interview_types: taxSnapshot.question_interview_types,
+      }
+    : null;
+
   return {
     id: row.id,
     sessionId: row.session_id,
     displayOrder: row.display_order,
     questionTextSnapshot: row.question_text_snapshot,
-    taxonomySnapshot: row.taxonomy_snapshot,
+    taxonomySnapshot: safeTaxonomy,
     createdAt: row.created_at,
   };
 }

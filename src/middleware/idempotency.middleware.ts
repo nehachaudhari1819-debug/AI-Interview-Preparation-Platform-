@@ -208,6 +208,7 @@ export function withIdempotency<T = unknown>(
           // fire-and-forget audit middleware can detect and skip it, preventing
           // duplicate audit log entries on repeat calls. (P4.5 requirement)
           res.locals.isIdempotencyReplay = true;
+          res.setHeader("X-Idempotency-Replay", "true");
           if (result.responseStatus) res.status(result.responseStatus);
           let bodyToSend = result.responseBody;
           if (typeof bodyToSend === "string") {

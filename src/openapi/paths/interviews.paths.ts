@@ -156,14 +156,20 @@ export const interviewsPaths: PathsObject = {
           schema: { type: "string", format: "uuid" },
         },
         {
-          name: "page",
+          name: "status",
           in: "query",
-          schema: { type: "integer", default: 1 },
+          schema: { type: "string" },
+          description: "Comma-separated list of session statuses",
         },
         {
-          name: "limit",
+          name: "createdFrom",
           in: "query",
-          schema: { type: "integer", default: 20 },
+          schema: { type: "string", format: "date-time" },
+        },
+        {
+          name: "createdTo",
+          in: "query",
+          schema: { type: "string", format: "date-time" },
         },
       ],
       responses: {
@@ -178,6 +184,43 @@ export const interviewsPaths: PathsObject = {
         "401": { $ref: "#/components/responses/Unauthorized" },
         "403": { $ref: "#/components/responses/Forbidden" },
         "404": { $ref: "#/components/responses/NotFound" },
+      },
+    },
+    post: {
+      tags: ["Interviews"],
+      summary: "Create session",
+      operationId: "createInterviewSession",
+      description: "Create a new interview session.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "interviewId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "Idempotency-Key",
+          in: "header",
+          required: true,
+          schema: { type: "string" },
+        },
+      ],
+      responses: {
+        "201": {
+          description: "Successful response",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/InterviewSessionResponse" },
+            },
+          },
+        },
+        "400": { $ref: "#/components/responses/BadRequest" },
+        "401": { $ref: "#/components/responses/Unauthorized" },
+        "403": { $ref: "#/components/responses/Forbidden" },
+        "404": { $ref: "#/components/responses/NotFound" },
+        "409": { $ref: "#/components/responses/Conflict" },
+        "422": { $ref: "#/components/responses/ValidationError" },
       },
     },
   },
@@ -238,23 +281,22 @@ export const interviewsPaths: PathsObject = {
           required: true,
           schema: { type: "string", format: "uuid" },
         },
-        {
-          name: "page",
-          in: "query",
-          schema: { type: "integer", default: 1 },
-        },
-        {
-          name: "limit",
-          in: "query",
-          schema: { type: "integer", default: 20 },
-        },
       ],
       responses: {
         "200": {
           description: "Successful response",
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/PaginatedSessionQuestionsResponse" },
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean" },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/SessionQuestion" },
+                  },
+                },
+              },
             },
           },
         },

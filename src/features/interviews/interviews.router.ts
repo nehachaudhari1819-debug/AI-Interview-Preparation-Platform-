@@ -6,6 +6,7 @@ import { authNoStoreMiddleware } from "../auth/auth-no-store.middleware.js";
 import { createRequireActiveAccountMiddleware } from "../../auth/require-active-account.middleware.js";
 import { createInterviewsServiceMiddleware } from "./interviews.middleware.js";
 import { createInterviewsController } from "./interviews.controller.js";
+import { withIdempotency } from "../../middleware/idempotency.middleware.js";
 
 export function createInterviewsRouter(options: {
   config: Readonly<ApplicationConfig>;
@@ -29,11 +30,34 @@ export function createInterviewsRouter(options: {
   // Root middleware
   router.use(authNoStoreMiddleware, authMiddleware, activeAccountMiddleware, serviceMiddleware);
 
-  router.post("/", controller.createInterview);
+  router.post(
+    "/",
+    withIdempotency(
+      options.config,
+      {
+        operation: "INTERVIEWS_CREATE_INTERVIEW",
+        routePattern: "/api/v1/interviews",
+        apiVersion: "v1",
+      },
+      controller.createInterviewHandler,
+    ),
+  );
   router.get("/", controller.getInterviews);
   router.get("/:interviewId", controller.getInterviewById);
-  router.patch("/:interviewId", controller.updateInterview);
+  router.patch(
+    "/:interviewId",
+    withIdempotency(
+      options.config,
+      {
+        operation: "INTERVIEWS_UPDATE_INTERVIEW",
+        routePattern: "/api/v1/interviews/:interviewId",
+        apiVersion: "v1",
+      },
+      controller.updateInterviewHandler,
+    ),
+  );
 
+  router.post("/:interviewId/sessions", controller.createSession);
   router.get("/:interviewId/sessions", controller.getInterviewSessions);
   router.get("/:interviewId/sessions/:sessionId", controller.getInterviewSessionById);
 

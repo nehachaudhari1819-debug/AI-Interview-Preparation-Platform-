@@ -104,6 +104,54 @@ export function parseGetInterviewsQuery(query: unknown): GetInterviewsQuery {
   return result.data;
 }
 
+const SessionStatusSchema = z.enum(["ready", "in_progress", "paused", "completed"]);
+
+export const GetSessionsQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    sortBy: SortFieldSchema.default("createdAt"),
+    sortDir: SortDirectionSchema.default("desc"),
+    status: z
+      .union([z.string(), z.array(z.string())])
+      .transform((val) => (Array.isArray(val) ? val.join(",") : val))
+      .transform((val) =>
+        val
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      )
+      .transform((arr) => [...new Set(arr)])
+      .transform((arr) => {
+        const parsed = arr.map((s) => SessionStatusSchema.safeParse(s));
+        return parsed.filter((res) => res.success).map((res) => res.data);
+      })
+      .refine((arr) => arr.length > 0, "No valid status provided")
+      .optional(),
+    createdFrom: z.iso.datetime({ offset: true }).optional(),
+    createdTo: z.iso.datetime({ offset: true }).optional(),
+  })
+  .strict()
+  .refine(
+    (data) => {
+      if (data.createdFrom && data.createdTo) {
+        return new Date(data.createdFrom) <= new Date(data.createdTo);
+      }
+      return true;
+    },
+    { message: "createdFrom must be less than or equal to createdTo", path: ["createdFrom"] },
+  );
+
+export type GetSessionsQuery = z.infer<typeof GetSessionsQuerySchema>;
+
+export function parseGetSessionsQuery(query: unknown): GetSessionsQuery {
+  const result = GetSessionsQuerySchema.safeParse(query);
+  if (!result.success) {
+    throw new ValidationError("Invalid query parameters", result.error.issues);
+  }
+  return result.data;
+}
+
 export const PaginationQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),

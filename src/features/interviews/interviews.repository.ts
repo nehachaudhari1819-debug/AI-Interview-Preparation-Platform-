@@ -2,7 +2,7 @@ import type {
   CreateInterviewBody,
   UpdateInterviewBody,
   GetInterviewsQuery,
-  PaginationQuery,
+  GetSessionsQuery,
 } from "./interviews.schemas.js";
 import type {
   DbInterview,
@@ -19,20 +19,22 @@ export interface IInterviewsRepository {
 
   getInterviewSessions(
     interviewId: string,
-    query: PaginationQuery,
+    query: GetSessionsQuery,
   ): Promise<{ sessions: DbSession[]; total: number }>;
   getInterviewSessionById(interviewId: string, sessionId: string): Promise<DbSession | null>;
 
-  getSessionQuestions(
-    interviewId: string,
-    sessionId: string,
-    query: PaginationQuery,
-  ): Promise<{ questions: DbSessionQuestion[]; total: number }>;
+  getSessionQuestions(interviewId: string, sessionId: string): Promise<DbSessionQuestion[]>;
   getSessionQuestionById(
     interviewId: string,
     sessionId: string,
     sessionQuestionId: string,
   ): Promise<DbSessionQuestion | null>;
+
+  createSession(
+    interviewId: string,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbSession }>;
 
   startSession(
     interviewId: string,

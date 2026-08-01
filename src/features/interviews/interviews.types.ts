@@ -20,7 +20,7 @@ export interface InterviewDetail {
 export interface InterviewSession {
   id: string;
   interviewId: string;
-  status: "ready" | "in_progress" | "paused" | "completed" | "expired";
+  status: "ready" | "in_progress" | "paused" | "completed";
   configSnapshot: Record<string, unknown>;
   startedAt: string | null;
   pausedAt: string | null;

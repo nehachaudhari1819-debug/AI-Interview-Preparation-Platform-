@@ -168,6 +168,7 @@ describe("E2E: Interviews API (Phase 5.3)", () => {
       const res = await request(app)
         .post("/api/v1/interviews")
         .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "p5-5-create-config-e2e-001")
         .send(payload)
         .expect(HTTP_STATUS.CREATED);
 
@@ -177,6 +178,16 @@ describe("E2E: Interviews API (Phase 5.3)", () => {
 
       createdInterviewId = res.body.data.id;
       interviewUpdatedAt = res.body.data.updatedAt;
+
+      // Replay
+      const replayRes = await request(app)
+        .post("/api/v1/interviews")
+        .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "p5-5-create-config-e2e-001")
+        .send(payload)
+        .expect(HTTP_STATUS.CREATED);
+      expect(replayRes.body.data.id).toBe(createdInterviewId);
+      expect(replayRes.header["x-idempotency-replay"]).toBe("true");
     });
 
     it("PATCH /api/v1/interviews/:id should update successfully", async () => {
@@ -187,6 +198,7 @@ describe("E2E: Interviews API (Phase 5.3)", () => {
       const res = await request(app)
         .patch(`/api/v1/interviews/${createdInterviewId}`)
         .set("Authorization", `Bearer ${u1Token}`)
+        .set("Idempotency-Key", "p5-5-update-config-e2e-001")
         .send({
           expectedUpdatedAt: interviewUpdatedAt,
           payload: { title: "Updated Title" },

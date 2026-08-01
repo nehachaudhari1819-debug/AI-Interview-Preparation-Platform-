@@ -2453,19 +2453,27 @@
             }
           },
           {
-            "name": "page",
+            "name": "status",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "default": 1
+              "type": "string"
+            },
+            "description": "Comma-separated list of session statuses"
+          },
+          {
+            "name": "createdFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           },
           {
-            "name": "limit",
+            "name": "createdTo",
             "in": "query",
             "schema": {
-              "type": "integer",
-              "default": 20
+              "type": "string",
+              "format": "date-time"
             }
           }
         ],
@@ -2488,6 +2496,66 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Interviews"],
+        "summary": "Create session",
+        "operationId": "createInterviewSession",
+        "description": "Create a new interview session.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "interviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           }
         }
       }
@@ -2575,22 +2643,6 @@
               "type": "string",
               "format": "uuid"
             }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 1
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 20
-            }
           }
         ],
         "responses": {
@@ -2599,7 +2651,18 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedSessionQuestionsResponse"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SessionQuestion"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -3992,7 +4055,7 @@
           },
           "status": {
             "type": "string",
-            "enum": ["ready", "in_progress", "paused", "completed", "expired"]
+            "enum": ["ready", "in_progress", "paused", "completed"]
           },
           "configSnapshot": {
             "type": "object",

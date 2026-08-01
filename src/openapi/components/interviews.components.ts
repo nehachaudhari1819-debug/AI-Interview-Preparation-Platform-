@@ -51,7 +51,7 @@ export const interviewSchemas: ComponentsObject["schemas"] = {
       interviewId: { type: "string", format: "uuid" },
       status: {
         type: "string",
-        enum: ["ready", "in_progress", "paused", "completed", "expired"],
+        enum: ["ready", "in_progress", "paused", "completed"],
       },
       configSnapshot: { type: "object", additionalProperties: true },
       startedAt: { type: "string", format: "date-time", nullable: true },

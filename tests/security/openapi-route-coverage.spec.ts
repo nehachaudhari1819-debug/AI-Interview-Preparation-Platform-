@@ -55,6 +55,7 @@ describe("OpenAPI Route Coverage", () => {
       { path: "/api/v1/interviews/{interviewId}", method: "get" },
       { path: "/api/v1/interviews/{interviewId}", method: "patch" },
       { path: "/api/v1/interviews/{interviewId}/sessions", method: "get" },
+      { path: "/api/v1/interviews/{interviewId}/sessions", method: "post" },
       { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}", method: "get" },
       { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/start", method: "post" },
       { path: "/api/v1/interviews/{interviewId}/sessions/{sessionId}/pause", method: "post" },
