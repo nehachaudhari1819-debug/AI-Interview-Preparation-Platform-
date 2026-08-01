@@ -982,6 +982,7 @@ export type Database = {
           p_interview_id: string
           p_session_id: string
           p_idempotency_key: string
+          p_request_hash: string
         }
         Returns: Json
       }
@@ -1011,6 +1012,7 @@ export type Database = {
           p_interview_id: string
           p_session_id: string
           p_idempotency_key: string
+          p_request_hash: string
         }
         Returns: Json
       }
@@ -1019,6 +1021,7 @@ export type Database = {
           p_interview_id: string
           p_session_id: string
           p_idempotency_key: string
+          p_request_hash: string
         }
         Returns: Json
       }
@@ -1027,6 +1030,7 @@ export type Database = {
           p_interview_id: string
           p_session_id: string
           p_idempotency_key: string
+          p_request_hash: string
         }
         Returns: Json
       }
