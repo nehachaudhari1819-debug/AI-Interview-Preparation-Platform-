@@ -52,8 +52,26 @@ describe("InterviewsController Lifecycle Methods", () => {
           snapshot: {
             id: "123e4567-e89b-12d3-a456-426614174001",
             interview_id: "123e4567-e89b-12d3-a456-426614174000",
+            user_id: "123e4567-e89b-12d3-a456-426614174002",
             status: "in_progress",
             started_at: new Date().toISOString(),
+            paused_at: null,
+            total_paused_seconds: 0,
+            completed_at: null,
+            last_transition_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            config_snapshot_version: 1,
+            config_snapshot: {
+              title: "Test",
+              targetRole: "Dev",
+              questionCount: 3,
+              timeLimitMinutes: 30,
+              interviewType: { id: "type-1", name: "Type" },
+              difficulty: { id: "diff-1", name: "Diff" },
+              skills: [{ id: "skill-1", name: "Skill" }],
+              topics: [{ id: "topic-1", name: "Topic" }],
+            },
           },
         });
 
@@ -78,8 +96,26 @@ describe("InterviewsController Lifecycle Methods", () => {
           snapshot: {
             id: "123e4567-e89b-12d3-a456-426614174001",
             interview_id: "123e4567-e89b-12d3-a456-426614174000",
+            user_id: "123e4567-e89b-12d3-a456-426614174002",
             status: "in_progress",
             started_at: new Date().toISOString(),
+            paused_at: null,
+            total_paused_seconds: 0,
+            completed_at: null,
+            last_transition_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            config_snapshot_version: 1,
+            config_snapshot: {
+              title: "Test",
+              targetRole: "Dev",
+              questionCount: 3,
+              timeLimitMinutes: 30,
+              interviewType: { id: "type-1", name: "Type" },
+              difficulty: { id: "diff-1", name: "Diff" },
+              skills: [{ id: "skill-1", name: "Skill" }],
+              topics: [{ id: "topic-1", name: "Topic" }],
+            },
           },
         });
 
