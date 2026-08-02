@@ -616,8 +616,11 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (
-        SELECT 1 FROM public.interview_sessions
-        WHERE id = p_session_id AND interview_id = p_interview_id AND user_id = v_user_id
+        SELECT 1
+        FROM public.interview_sessions AS owned_session
+        WHERE owned_session.id = p_session_id
+          AND owned_session.interview_id = p_interview_id
+          AND owned_session.user_id = v_user_id
     ) THEN
         RAISE EXCEPTION 'RESOURCE_NOT_FOUND' USING ERRCODE = 'P0002';
     END IF;
@@ -664,8 +667,11 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (
-        SELECT 1 FROM public.interview_sessions
-        WHERE id = p_session_id AND interview_id = p_interview_id AND user_id = v_user_id
+        SELECT 1
+        FROM public.interview_sessions AS owned_session
+        WHERE owned_session.id = p_session_id
+          AND owned_session.interview_id = p_interview_id
+          AND owned_session.user_id = v_user_id
     ) THEN
         RAISE EXCEPTION 'RESOURCE_NOT_FOUND' USING ERRCODE = 'P0002';
     END IF;
@@ -722,8 +728,11 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (
-        SELECT 1 FROM public.interview_sessions
-        WHERE id = p_session_id AND interview_id = p_interview_id AND user_id = v_user_id
+        SELECT 1
+        FROM public.interview_sessions AS owned_session
+        WHERE owned_session.id = p_session_id
+          AND owned_session.interview_id = p_interview_id
+          AND owned_session.user_id = v_user_id
     ) THEN
         RAISE EXCEPTION 'RESOURCE_NOT_FOUND' USING ERRCODE = 'P0002';
     END IF;
@@ -773,8 +782,11 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (
-        SELECT 1 FROM public.interview_sessions
-        WHERE id = p_session_id AND interview_id = p_interview_id AND user_id = v_user_id
+        SELECT 1
+        FROM public.interview_sessions AS owned_session
+        WHERE owned_session.id = p_session_id
+          AND owned_session.interview_id = p_interview_id
+          AND owned_session.user_id = v_user_id
     ) THEN
         RAISE EXCEPTION 'RESOURCE_NOT_FOUND' USING ERRCODE = 'P0002';
     END IF;
