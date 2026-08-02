@@ -152,6 +152,199 @@ export type Database = {
           },
         ]
       }
+      interview_answer_evaluations: {
+        Row: {
+          answer_id: string
+          attempt_count: number
+          completed_at: string | null
+          created_at: string
+          dimension_scores: Json | null
+          evaluation_version: number
+          evaluator_metadata: Json | null
+          failed_at: string | null
+          failure_code: string | null
+          id: string
+          improvement_areas: string[] | null
+          interview_id: string
+          lease_expires_at: string | null
+          lease_token: string | null
+          model: string | null
+          overall_score: number | null
+          prompt_version: number | null
+          provider: string | null
+          rubric_version: number | null
+          scoring_version: number | null
+          session_id: string
+          session_question_id: string
+          started_at: string | null
+          status: string
+          strengths: string[] | null
+          student_feedback: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_id: string
+          attempt_count?: number
+          completed_at?: string | null
+          created_at?: string
+          dimension_scores?: Json | null
+          evaluation_version?: number
+          evaluator_metadata?: Json | null
+          failed_at?: string | null
+          failure_code?: string | null
+          id?: string
+          improvement_areas?: string[] | null
+          interview_id: string
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          model?: string | null
+          overall_score?: number | null
+          prompt_version?: number | null
+          provider?: string | null
+          rubric_version?: number | null
+          scoring_version?: number | null
+          session_id: string
+          session_question_id: string
+          started_at?: string | null
+          status: string
+          strengths?: string[] | null
+          student_feedback?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_id?: string
+          attempt_count?: number
+          completed_at?: string | null
+          created_at?: string
+          dimension_scores?: Json | null
+          evaluation_version?: number
+          evaluator_metadata?: Json | null
+          failed_at?: string | null
+          failure_code?: string | null
+          id?: string
+          improvement_areas?: string[] | null
+          interview_id?: string
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          model?: string | null
+          overall_score?: number | null
+          prompt_version?: number | null
+          provider?: string | null
+          rubric_version?: number | null
+          scoring_version?: number | null
+          session_id?: string
+          session_question_id?: string
+          started_at?: string | null
+          status?: string
+          strengths?: string[] | null
+          student_feedback?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluations_user_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_answer_evaluations_answer_chain_fkey"
+            columns: [
+              "answer_id",
+              "session_question_id",
+              "session_id",
+              "interview_id",
+              "user_id",
+            ]
+            isOneToOne: false
+            referencedRelation: "interview_session_answers"
+            referencedColumns: [
+              "id",
+              "session_question_id",
+              "session_id",
+              "interview_id",
+              "user_id",
+            ]
+          },
+        ]
+      }
+      interview_session_answers: {
+        Row: {
+          code_response: Json | null
+          created_at: string
+          finalized_at: string | null
+          id: string
+          interview_id: string
+          response_type: string | null
+          session_id: string
+          session_question_id: string
+          skipped_at: string | null
+          status: string
+          text_response: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          code_response?: Json | null
+          created_at?: string
+          finalized_at?: string | null
+          id?: string
+          interview_id: string
+          response_type?: string | null
+          session_id: string
+          session_question_id: string
+          skipped_at?: string | null
+          status: string
+          text_response?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          code_response?: Json | null
+          created_at?: string
+          finalized_at?: string | null
+          id?: string
+          interview_id?: string
+          response_type?: string | null
+          session_id?: string
+          session_question_id?: string
+          skipped_at?: string | null
+          status?: string
+          text_response?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answers_question_fkey"
+            columns: ["session_question_id", "session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_session_questions"
+            referencedColumns: ["id", "session_id"]
+          },
+          {
+            foreignKeyName: "answers_session_fkey"
+            columns: ["session_id", "interview_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id", "interview_id", "user_id"]
+          },
+          {
+            foreignKeyName: "answers_user_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interview_session_questions: {
         Row: {
           created_at: string
@@ -203,6 +396,72 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_session_results: {
+        Row: {
+          created_at: string
+          generated_at: string | null
+          id: string
+          improvement_summary: string | null
+          interview_id: string
+          overall_score: number | null
+          publication_version: number
+          score_breakdown: Json | null
+          scoring_version: number
+          session_id: string
+          status: string
+          strengths: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          improvement_summary?: string | null
+          interview_id: string
+          overall_score?: number | null
+          publication_version?: number
+          score_breakdown?: Json | null
+          scoring_version: number
+          session_id: string
+          status: string
+          strengths?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          improvement_summary?: string | null
+          interview_id?: string
+          overall_score?: number | null
+          publication_version?: number
+          score_breakdown?: Json | null
+          scoring_version?: number
+          session_id?: string
+          status?: string
+          strengths?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_session_fkey"
+            columns: ["session_id", "interview_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id", "interview_id", "user_id"]
+          },
+          {
+            foreignKeyName: "results_user_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1006,6 +1265,92 @@ export type Database = {
           p_request_hash: string
         }
         Returns: Json
+      }
+      student_get_answer_evaluation: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_session_question_id: string
+        }
+        Returns: {
+          id: string
+          answer_id: string
+          status: string
+          evaluation_version: number
+          rubric_version: number
+          prompt_version: number
+          scoring_version: number
+          failure_code: string
+          attempt_count: number
+          started_at: string
+          completed_at: string
+          failed_at: string
+          overall_score: number
+          dimension_scores: Json
+          strengths: string[]
+          improvement_areas: string[]
+          student_feedback: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      student_get_latest_session_result: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+        }
+        Returns: {
+          id: string
+          status: string
+          overall_score: number
+          score_breakdown: Json
+          strengths: string[]
+          improvement_summary: string
+          scoring_version: number
+          publication_version: number
+          generated_at: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      student_get_session_answer: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_session_question_id: string
+        }
+        Returns: {
+          id: string
+          session_question_id: string
+          response_type: string
+          text_response: string
+          code_response: Json
+          status: string
+          version: number
+          finalized_at: string
+          skipped_at: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      student_list_session_answers: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+        }
+        Returns: {
+          id: string
+          session_question_id: string
+          response_type: string
+          text_response: string
+          code_response: Json
+          status: string
+          version: number
+          finalized_at: string
+          skipped_at: string
+          created_at: string
+          updated_at: string
+        }[]
       }
       student_pause_interview_session: {
         Args: {
