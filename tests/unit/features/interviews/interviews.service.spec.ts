@@ -75,6 +75,11 @@ describe("InterviewsService", () => {
       pauseSession: jest.fn(),
       resumeSession: jest.fn(),
       completeSession: jest.fn(),
+      listSessionAnswers: jest.fn(),
+      getSessionAnswer: jest.fn(),
+      saveDraftAnswer: jest.fn(),
+      updateDraftAnswer: jest.fn(),
+      finalizeAnswer: jest.fn(),
     } as unknown as jest.Mocked<IInterviewsRepository>;
     service = new InterviewsService(mockRepository);
   });
@@ -253,6 +258,116 @@ describe("InterviewsService", () => {
         expect.any(String),
       );
       expect(res).toEqual({ replayed: false, snapshot });
+    });
+  });
+
+  describe("Answer mutations", () => {
+    const mockAnswer = {
+      id: "a1",
+      interview_id: "i1",
+      session_id: "s1",
+      session_question_id: "q1",
+      response_type: "text" as const,
+      text_response: "Hello",
+      code_response: null,
+      status: "draft" as const,
+      version: 1,
+      idempotency_key: "key1",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    it("should generate fingerprint and call saveDraftAnswer", async () => {
+      mockRepository.saveDraftAnswer.mockResolvedValue({ replayed: false, snapshot: mockAnswer });
+      const data = { responseType: "text" as const, textResponse: "Hello" };
+
+      const res = await service.saveDraftAnswer("i1", "s1", "q1", data, "key1");
+
+      expect(mockRepository.saveDraftAnswer).toHaveBeenCalledWith(
+        "i1",
+        "s1",
+        "q1",
+        data,
+        "key1",
+        expect.any(String),
+      );
+      expect(res).toEqual({ replayed: false, snapshot: mockAnswer });
+    });
+
+    it("should generate fingerprint and call updateDraftAnswer", async () => {
+      mockRepository.updateDraftAnswer.mockResolvedValue({ replayed: false, snapshot: mockAnswer });
+      const data = { responseType: "text" as const, textResponse: "Hello 2", expectedVersion: 1 };
+
+      const res = await service.updateDraftAnswer("i1", "s1", "q1", data, "key1");
+
+      expect(mockRepository.updateDraftAnswer).toHaveBeenCalledWith(
+        "i1",
+        "s1",
+        "q1",
+        data,
+        "key1",
+        expect.any(String),
+      );
+      expect(res).toEqual({ replayed: false, snapshot: mockAnswer });
+    });
+
+    it("should generate fingerprint and call finalizeAnswer", async () => {
+      mockRepository.finalizeAnswer.mockResolvedValue({ replayed: false, snapshot: mockAnswer });
+      const data = { expectedVersion: 2 };
+
+      const res = await service.finalizeAnswer("i1", "s1", "q1", data, "key1");
+
+      expect(mockRepository.finalizeAnswer).toHaveBeenCalledWith(
+        "i1",
+        "s1",
+        "q1",
+        data,
+        "key1",
+        expect.any(String),
+      );
+      expect(res).toEqual({ replayed: false, snapshot: mockAnswer });
+    });
+
+    it("should map STALE_UPDATE_CONFLICT to AppError", async () => {
+      const { PersistenceError, PersistenceErrorCode } = await import(
+        "../../../../src/persistence/persistence-error.js"
+      );
+      const { AppError } = await import("../../../../src/errors/app-error.js");
+
+      mockRepository.finalizeAnswer.mockRejectedValue(
+        new PersistenceError(PersistenceErrorCode.STALE_UPDATE_CONFLICT, "Stale update"),
+      );
+
+      await expect(
+        service.finalizeAnswer("i1", "s1", "q1", { expectedVersion: 1 }, "key1"),
+      ).rejects.toMatchObject({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.STALE_UPDATE_CONFLICT,
+      });
+    });
+
+    it("should map ANSWER_IMMUTABLE to AppError", async () => {
+      const { PersistenceError, PersistenceErrorCode } = await import(
+        "../../../../src/persistence/persistence-error.js"
+      );
+      const { AppError } = await import("../../../../src/errors/app-error.js");
+
+      mockRepository.saveDraftAnswer.mockRejectedValue(
+        new PersistenceError(PersistenceErrorCode.ANSWER_IMMUTABLE, "Answer is immutable"),
+      );
+
+      await expect(
+        service.saveDraftAnswer(
+          "i1",
+          "s1",
+          "q1",
+          { responseType: "text", textResponse: "H" },
+          "key1",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.ANSWER_IMMUTABLE,
+      });
     });
   });
 });

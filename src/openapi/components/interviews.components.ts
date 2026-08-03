@@ -248,4 +248,117 @@ export const interviewSchemas: ComponentsObject["schemas"] = {
     },
     required: ["success", "data", "meta"],
   },
+
+  // ---------------------------------------------------------------
+  // P6.3 — Answer Schemas
+  // ---------------------------------------------------------------
+  CodeResponse: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      source: { type: "string", minLength: 1, maxLength: 50000 },
+      language: {
+        type: "string",
+        enum: ["python", "javascript", "typescript", "java", "cpp", "go", "rust"],
+      },
+      explanation: { type: "string", minLength: 1, maxLength: 10000 },
+    },
+    required: ["source", "language", "explanation"],
+  },
+  AnswerDetail: {
+    type: "object",
+    properties: {
+      id: { type: "string", format: "uuid" },
+      sessionQuestionId: { type: "string", format: "uuid" },
+      responseType: { type: "string", enum: ["text", "code"], nullable: true },
+      textResponse: { type: "string", nullable: true },
+      codeResponse: { $ref: "#/components/schemas/CodeResponse", nullable: true },
+      status: { type: "string", enum: ["draft", "finalized", "skipped"] },
+      version: { type: "integer", minimum: 1 },
+      finalizedAt: { type: "string", format: "date-time", nullable: true },
+      skippedAt: { type: "string", format: "date-time", nullable: true },
+      createdAt: { type: "string", format: "date-time" },
+      updatedAt: { type: "string", format: "date-time" },
+    },
+    required: [
+      "id",
+      "sessionQuestionId",
+      "responseType",
+      "textResponse",
+      "codeResponse",
+      "status",
+      "version",
+      "finalizedAt",
+      "skippedAt",
+      "createdAt",
+      "updatedAt",
+    ],
+  },
+  AnswerResponse: {
+    type: "object",
+    properties: {
+      success: { type: "boolean", example: true },
+      data: { $ref: "#/components/schemas/AnswerDetail" },
+      meta: { $ref: "#/components/schemas/ApiMeta" },
+    },
+    required: ["success", "data", "meta"],
+  },
+  SaveDraftTextAnswerBody: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      responseType: { type: "string", enum: ["text"] },
+      textResponse: { type: "string", minLength: 1, maxLength: 10000 },
+    },
+    required: ["responseType", "textResponse"],
+  },
+  SaveDraftCodeAnswerBody: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      responseType: { type: "string", enum: ["code"] },
+      codeResponse: { $ref: "#/components/schemas/CodeResponse" },
+    },
+    required: ["responseType", "codeResponse"],
+  },
+  SaveDraftAnswerBody: {
+    oneOf: [
+      { $ref: "#/components/schemas/SaveDraftTextAnswerBody" },
+      { $ref: "#/components/schemas/SaveDraftCodeAnswerBody" },
+    ],
+  },
+  UpdateDraftTextAnswerBody: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      responseType: { type: "string", enum: ["text"] },
+      textResponse: { type: "string", minLength: 1, maxLength: 10000 },
+      expectedVersion: { type: "integer", minimum: 1 },
+    },
+    required: ["responseType", "textResponse", "expectedVersion"],
+  },
+  UpdateDraftCodeAnswerBody: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      responseType: { type: "string", enum: ["code"] },
+      codeResponse: { $ref: "#/components/schemas/CodeResponse" },
+      expectedVersion: { type: "integer", minimum: 1 },
+    },
+    required: ["responseType", "codeResponse", "expectedVersion"],
+  },
+  UpdateDraftAnswerBody: {
+    oneOf: [
+      { $ref: "#/components/schemas/UpdateDraftTextAnswerBody" },
+      { $ref: "#/components/schemas/UpdateDraftCodeAnswerBody" },
+    ],
+  },
+  FinalizeAnswerBody: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      expectedVersion: { type: "integer", minimum: 1 },
+    },
+    required: ["expectedVersion"],
+  },
 };

@@ -191,3 +191,91 @@ export function parseStrictEmptyBody(body: unknown): void {
     throw new ValidationError("Invalid request body", result.error.issues);
   }
 }
+
+// ============================================================
+// P6.3 — Answer Mutation Schemas
+// ============================================================
+
+const CodeResponseSchema = z
+  .object({
+    source: z.string().min(1).max(50000),
+    language: z.enum(["python", "javascript", "typescript", "java", "cpp", "go", "rust"]),
+    explanation: z.string().min(1).max(10000),
+  })
+  .strict();
+
+const SaveTextAnswerSchema = z
+  .object({
+    responseType: z.literal("text"),
+    textResponse: z.string().min(1).max(10000),
+  })
+  .strict();
+
+const SaveCodeAnswerSchema = z
+  .object({
+    responseType: z.literal("code"),
+    codeResponse: CodeResponseSchema,
+  })
+  .strict();
+
+export const SaveDraftAnswerSchema = z.discriminatedUnion("responseType", [
+  SaveTextAnswerSchema,
+  SaveCodeAnswerSchema,
+]);
+
+export type SaveDraftAnswerBody = z.infer<typeof SaveDraftAnswerSchema>;
+
+export function parseSaveDraftAnswerBody(body: unknown): SaveDraftAnswerBody {
+  const result = SaveDraftAnswerSchema.safeParse(body);
+  if (!result.success) {
+    throw new ValidationError("Invalid save draft answer payload", result.error.issues);
+  }
+  return result.data;
+}
+
+const UpdateTextAnswerSchema = z
+  .object({
+    responseType: z.literal("text"),
+    textResponse: z.string().min(1).max(10000),
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+const UpdateCodeAnswerSchema = z
+  .object({
+    responseType: z.literal("code"),
+    codeResponse: CodeResponseSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const UpdateDraftAnswerSchema = z.discriminatedUnion("responseType", [
+  UpdateTextAnswerSchema,
+  UpdateCodeAnswerSchema,
+]);
+
+export type UpdateDraftAnswerBody = z.infer<typeof UpdateDraftAnswerSchema>;
+
+export function parseUpdateDraftAnswerBody(body: unknown): UpdateDraftAnswerBody {
+  const result = UpdateDraftAnswerSchema.safeParse(body);
+  if (!result.success) {
+    throw new ValidationError("Invalid update draft answer payload", result.error.issues);
+  }
+  return result.data;
+}
+
+export const FinalizeAnswerSchema = z
+  .object({
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export type FinalizeAnswerBody = z.infer<typeof FinalizeAnswerSchema>;
+
+export function parseFinalizeAnswerBody(body: unknown): FinalizeAnswerBody {
+  const result = FinalizeAnswerSchema.safeParse(body);
+  if (!result.success) {
+    throw new ValidationError("Invalid finalize answer payload", result.error.issues);
+  }
+  return result.data;
+}

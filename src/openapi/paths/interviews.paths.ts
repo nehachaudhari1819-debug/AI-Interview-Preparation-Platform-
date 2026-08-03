@@ -597,4 +597,280 @@ export const interviewsPaths: PathsObject = {
       },
     },
   },
+
+  // ---------------------------------------------------------------
+  // P6.3 — Answer Mutations & Reads
+  // ---------------------------------------------------------------
+  "/api/v1/interviews/{interviewId}/sessions/{sessionId}/answers": {
+    get: {
+      tags: ["Interviews"],
+      summary: "List session answers",
+      operationId: "listSessionAnswers",
+      description: "Lists all answers for a specific interview session.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "interviewId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "sessionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        "200": {
+          description: "Successful response",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  success: { type: "boolean", example: true },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/AnswerDetail" },
+                  },
+                  meta: { $ref: "#/components/schemas/ApiMeta" },
+                },
+                required: ["success", "data", "meta"],
+              },
+            },
+          },
+        },
+        "401": { $ref: "#/components/responses/Unauthorized" },
+        "403": { $ref: "#/components/responses/Forbidden" },
+        "404": { $ref: "#/components/responses/NotFound" },
+      },
+    },
+  },
+  "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}/answer": {
+    get: {
+      tags: ["Interviews"],
+      summary: "Get session question answer",
+      operationId: "getSessionAnswer",
+      description: "Retrieves a specific answer for a session question.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "interviewId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "sessionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "sessionQuestionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      responses: {
+        "200": {
+          description: "Successful response",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AnswerResponse" },
+            },
+          },
+        },
+        "401": { $ref: "#/components/responses/Unauthorized" },
+        "403": { $ref: "#/components/responses/Forbidden" },
+        "404": { $ref: "#/components/responses/NotFound" },
+      },
+    },
+    put: {
+      tags: ["Interviews"],
+      summary: "Save draft answer",
+      operationId: "saveDraftAnswer",
+      description:
+        "Creates a new draft answer for a session question. Requires Idempotency-Key. Returns 201 on first creation or replays on retry.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "Idempotency-Key",
+          in: "header",
+          required: true,
+          schema: { type: "string" },
+        },
+        {
+          name: "interviewId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "sessionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "sessionQuestionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/SaveDraftAnswerBody" },
+          },
+        },
+      },
+      responses: {
+        "201": {
+          description: "Draft answer created",
+          headers: {
+            "X-Idempotency-Replay": { schema: { type: "string" } },
+          },
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AnswerResponse" },
+            },
+          },
+        },
+        "400": { $ref: "#/components/responses/BadRequest" },
+        "401": { $ref: "#/components/responses/Unauthorized" },
+        "403": { $ref: "#/components/responses/Forbidden" },
+        "404": { $ref: "#/components/responses/NotFound" },
+        "409": { $ref: "#/components/responses/Conflict" },
+      },
+    },
+    patch: {
+      tags: ["Interviews"],
+      summary: "Update draft answer",
+      operationId: "updateDraftAnswer",
+      description:
+        "Updates an existing draft answer. Requires expectedVersion for optimistic concurrency control.",
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: "Idempotency-Key",
+          in: "header",
+          required: true,
+          schema: { type: "string" },
+        },
+        {
+          name: "interviewId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "sessionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+        {
+          name: "sessionQuestionId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/UpdateDraftAnswerBody" },
+          },
+        },
+      },
+      responses: {
+        "200": {
+          description: "Draft answer updated",
+          headers: {
+            "X-Idempotency-Replay": { schema: { type: "string" } },
+          },
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AnswerResponse" },
+            },
+          },
+        },
+        "400": { $ref: "#/components/responses/BadRequest" },
+        "401": { $ref: "#/components/responses/Unauthorized" },
+        "403": { $ref: "#/components/responses/Forbidden" },
+        "404": { $ref: "#/components/responses/NotFound" },
+        "409": { $ref: "#/components/responses/Conflict" },
+      },
+    },
+  },
+  "/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}/answer/finalize":
+    {
+      post: {
+        tags: ["Interviews"],
+        summary: "Finalize answer",
+        operationId: "finalizeAnswer",
+        description:
+          "Finalizes a draft answer, making it immutable and ready for evaluation. Requires expectedVersion.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "Idempotency-Key",
+            in: "header",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            name: "interviewId",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+          {
+            name: "sessionId",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+          {
+            name: "sessionQuestionId",
+            in: "path",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/FinalizeAnswerBody" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Answer finalized",
+            headers: {
+              "X-Idempotency-Replay": { schema: { type: "string" } },
+            },
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AnswerResponse" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "401": { $ref: "#/components/responses/Unauthorized" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "409": { $ref: "#/components/responses/Conflict" },
+        },
+      },
+    },
 };

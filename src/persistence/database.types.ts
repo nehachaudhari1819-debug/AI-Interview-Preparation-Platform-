@@ -1266,6 +1266,17 @@ export type Database = {
         }
         Returns: Json
       }
+      student_finalize_answer: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_session_question_id: string
+          p_expected_version: number
+          p_idempotency_key: string
+          p_request_hash: string
+        }
+        Returns: Json
+      }
       student_get_answer_evaluation: {
         Args: {
           p_interview_id: string
@@ -1370,10 +1381,36 @@ export type Database = {
         }
         Returns: Json
       }
+      student_save_draft_answer: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_session_question_id: string
+          p_response_type: string
+          p_text_response: string
+          p_code_response: Json
+          p_idempotency_key: string
+          p_request_hash: string
+        }
+        Returns: Json
+      }
       student_start_interview_session: {
         Args: {
           p_interview_id: string
           p_session_id: string
+          p_idempotency_key: string
+          p_request_hash: string
+        }
+        Returns: Json
+      }
+      student_update_draft_answer: {
+        Args: {
+          p_interview_id: string
+          p_session_id: string
+          p_session_question_id: string
+          p_expected_version: number
+          p_text_response: string
+          p_code_response: Json
           p_idempotency_key: string
           p_request_hash: string
         }

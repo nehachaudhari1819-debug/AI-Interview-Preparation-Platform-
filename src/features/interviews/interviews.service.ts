@@ -3,12 +3,16 @@ import type {
   DbInterview,
   DbSession,
   DbSessionQuestion,
+  DbAnswer,
 } from "../../persistence/interviews/supabase-interviews.repository.js";
 import type {
   CreateInterviewBody,
   UpdateInterviewBody,
   GetInterviewsQuery,
   GetSessionsQuery,
+  SaveDraftAnswerBody,
+  UpdateDraftAnswerBody,
+  FinalizeAnswerBody,
 } from "./interviews.schemas.js";
 import { NotFoundError } from "../../errors/not-found.error.js";
 import { AppError } from "../../errors/app-error.js";
@@ -97,6 +101,38 @@ export interface IInterviewsService {
     sessionId: string,
     idempotencyKey: string,
   ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+
+  // P6.3 — Answer mutations & reads
+  listSessionAnswers(interviewId: string, sessionId: string): Promise<DbAnswer[]>;
+  getSessionAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+  ): Promise<DbAnswer>;
+
+  saveDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: SaveDraftAnswerBody,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }>;
+
+  updateDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: UpdateDraftAnswerBody,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }>;
+
+  finalizeAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: FinalizeAnswerBody,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }>;
 }
 
 export class InterviewsService implements IInterviewsService {
@@ -453,6 +489,188 @@ export class InterviewsService implements IInterviewsService {
       );
     } catch (error) {
       this.handleLifecycleError(error);
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // P6.3 — Answer mutations & reads
+  // ---------------------------------------------------------------
+
+  public async listSessionAnswers(interviewId: string, sessionId: string): Promise<DbAnswer[]> {
+    try {
+      return await this.repository.listSessionAnswers(interviewId, sessionId);
+    } catch (error) {
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_NOT_FOUND)) {
+        throw new NotFoundError(error.message);
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.UNAUTHORIZED_ACCESS)) {
+        throw new ForbiddenError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  public async getSessionAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+  ): Promise<DbAnswer> {
+    try {
+      return await this.repository.getSessionAnswer(interviewId, sessionId, sessionQuestionId);
+    } catch (error) {
+      if (PersistenceError.is(error, PersistenceErrorCode.RECORD_NOT_FOUND)) {
+        throw new NotFoundError(error.message);
+      }
+      if (PersistenceError.is(error, PersistenceErrorCode.UNAUTHORIZED_ACCESS)) {
+        throw new ForbiddenError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  private handleAnswerMutationError(error: unknown): never {
+    if (PersistenceError.is(error, PersistenceErrorCode.RECORD_NOT_FOUND)) {
+      throw new NotFoundError(error.message);
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.UNAUTHORIZED_ACCESS)) {
+      throw new ForbiddenError(error.message);
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.RECORD_UPDATE_CONFLICT)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.RESOURCE_CONFLICT,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.IDEMPOTENCY_CONFLICT)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.IDEMPOTENCY_CONFLICT,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.IDEMPOTENCY_IN_PROGRESS)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.IDEMPOTENCY_IN_PROGRESS,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.SESSION_TERMINAL)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.SESSION_TERMINAL,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.STALE_UPDATE_CONFLICT)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.STALE_UPDATE_CONFLICT,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.ANSWER_IMMUTABLE)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.ANSWER_IMMUTABLE,
+        message: error.message,
+      });
+    }
+    if (PersistenceError.is(error, PersistenceErrorCode.ANSWER_SKIPPED)) {
+      throw new AppError({
+        statusCode: HTTP_STATUS.CONFLICT,
+        code: ERROR_CODES.ANSWER_SKIPPED,
+        message: error.message,
+      });
+    }
+    throw error;
+  }
+
+  public async saveDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: SaveDraftAnswerBody,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }> {
+    try {
+      const requestHash = generateRequestFingerprint({
+        apiVersion: "v1",
+        method: "PUT",
+        routePattern:
+          "/api/v1/interviews/:interviewId/sessions/:sessionId/questions/:sessionQuestionId/answer",
+        operation: "ANSWER_SAVE_DRAFT",
+        body: { interviewId, sessionId, sessionQuestionId, ...data },
+      });
+      return await this.repository.saveDraftAnswer(
+        interviewId,
+        sessionId,
+        sessionQuestionId,
+        data,
+        idempotencyKey,
+        requestHash,
+      );
+    } catch (error) {
+      this.handleAnswerMutationError(error);
+    }
+  }
+
+  public async updateDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: UpdateDraftAnswerBody,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }> {
+    try {
+      const requestHash = generateRequestFingerprint({
+        apiVersion: "v1",
+        method: "PATCH",
+        routePattern:
+          "/api/v1/interviews/:interviewId/sessions/:sessionId/questions/:sessionQuestionId/answer",
+        operation: "ANSWER_UPDATE_DRAFT",
+        body: { interviewId, sessionId, sessionQuestionId, ...data },
+      });
+      return await this.repository.updateDraftAnswer(
+        interviewId,
+        sessionId,
+        sessionQuestionId,
+        data,
+        idempotencyKey,
+        requestHash,
+      );
+    } catch (error) {
+      this.handleAnswerMutationError(error);
+    }
+  }
+
+  public async finalizeAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: FinalizeAnswerBody,
+    idempotencyKey: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }> {
+    try {
+      const requestHash = generateRequestFingerprint({
+        apiVersion: "v1",
+        method: "POST",
+        routePattern:
+          "/api/v1/interviews/:interviewId/sessions/:sessionId/questions/:sessionQuestionId/answer/finalize",
+        operation: "ANSWER_FINALIZE",
+        body: { interviewId, sessionId, sessionQuestionId, ...data },
+      });
+      return await this.repository.finalizeAnswer(
+        interviewId,
+        sessionId,
+        sessionQuestionId,
+        data,
+        idempotencyKey,
+        requestHash,
+      );
+    } catch (error) {
+      this.handleAnswerMutationError(error);
     }
   }
 }

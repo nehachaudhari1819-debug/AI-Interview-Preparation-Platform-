@@ -768,4 +768,126 @@ describe("SupabaseInterviewsRepository (Real DB Integration)", () => {
       ).rejects.toThrowError(PersistenceError);
     });
   });
+
+  describe("Answer Mutations", () => {
+    let createdId: string;
+    let sessionId: string;
+    let questionId: string;
+
+    beforeEach(async () => {
+      createdId = await repo.createInterview({
+        title: "Answer Mutations Test",
+        targetRole: "Engineer",
+        interviewTypeId: validInterviewTypeId,
+        difficultyId: validDifficultyId,
+        questionCount: 1,
+        timeLimitMinutes: 30,
+        skillIds: [validSkillId],
+        topicIds: [],
+      });
+
+      const { data, error } = await testAdminClient
+        .from("interview_sessions")
+        .insert({
+          interview_id: createdId,
+          user_id: testUserId,
+          status: "in_progress",
+          config_snapshot: {},
+        })
+        .select("id")
+        .single();
+      if (error || !data) throw error || new Error("Failed to create session");
+      sessionId = data.id;
+
+      const { data: qData, error: qError } = await testAdminClient
+        .from("interview_session_questions")
+        .insert({
+          session_id: sessionId,
+          display_order: 1,
+          question_text_snapshot: "Test Q",
+          taxonomy_snapshot: {},
+        })
+        .select("id")
+        .single();
+      if (qError || !qData) throw qError;
+      questionId = qData.id;
+    });
+
+    afterEach(async () => {
+      const testIks = ["ik-save-1", "ik-update-1", "ik-update-2", "ik-finalize-1", "ik-save-2"];
+      await testAdminClient.from("idempotency_records").delete().in("idempotency_key", testIks);
+      
+      if (questionId) await testAdminClient.from("interview_session_answers").delete().eq("session_question_id", questionId);
+      if (questionId) await testAdminClient.from("interview_session_questions").delete().eq("id", questionId);
+      if (sessionId) await testAdminClient.from("interview_sessions").delete().eq("id", sessionId);
+      if (createdId) await testAdminClient.from("interviews").delete().eq("id", createdId);
+    });
+
+    it("should save, update, and finalize a draft answer", async () => {
+      // 1. Save draft
+      const saveRes = await repo.saveDraftAnswer(
+        createdId,
+        sessionId,
+        questionId,
+        { responseType: "text", textResponse: "Draft 1" },
+        "ik-save-1",
+        "rh-save-1",
+      );
+      expect(saveRes.replayed).toBe(false);
+      expect(saveRes.snapshot.status).toBe("draft");
+      expect(saveRes.snapshot.text_response).toBe("Draft 1");
+      expect(saveRes.snapshot.version).toBe(1);
+
+      // 2. Update draft
+      const updateRes = await repo.updateDraftAnswer(
+        createdId,
+        sessionId,
+        questionId,
+        { responseType: "text", textResponse: "Draft 2", expectedVersion: 1 },
+        "ik-update-1",
+        "rh-update-1",
+      );
+      expect(updateRes.replayed).toBe(false);
+      expect(updateRes.snapshot.status).toBe("draft");
+      expect(updateRes.snapshot.text_response).toBe("Draft 2");
+      expect(updateRes.snapshot.version).toBe(2);
+
+      // 3. Stale update check
+      await expect(
+        repo.updateDraftAnswer(
+          createdId,
+          sessionId,
+          questionId,
+          { responseType: "text", textResponse: "Draft 3", expectedVersion: 1 },
+          "ik-update-2",
+          "rh-update-2",
+        ),
+      ).rejects.toMatchObject({ code: PersistenceErrorCode.STALE_UPDATE_CONFLICT });
+
+      // 4. Finalize
+      const finRes = await repo.finalizeAnswer(
+        createdId,
+        sessionId,
+        questionId,
+        { expectedVersion: 2 },
+        "ik-finalize-1",
+        "rh-finalize-1",
+      );
+      expect(finRes.replayed).toBe(false);
+      expect(finRes.snapshot.status).toBe("finalized");
+      expect(finRes.snapshot.version).toBe(2);
+
+      // 5. Immutable check
+      await expect(
+        repo.saveDraftAnswer(
+          createdId,
+          sessionId,
+          questionId,
+          { responseType: "text", textResponse: "Draft 3" },
+          "ik-save-2",
+          "rh-save-2",
+        ),
+      ).rejects.toMatchObject({ code: PersistenceErrorCode.ANSWER_IMMUTABLE });
+    });
+  });
 });

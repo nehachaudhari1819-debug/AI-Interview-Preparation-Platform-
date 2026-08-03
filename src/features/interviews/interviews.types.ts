@@ -39,3 +39,23 @@ export interface SessionQuestion {
   taxonomySnapshot: Record<string, unknown> | null; // Nullable if undisclosed
   createdAt: string;
 }
+
+export interface CodeResponse {
+  source: string;
+  language: string;
+  explanation: string;
+}
+
+export interface AnswerDetail {
+  id: string;
+  sessionQuestionId: string;
+  responseType: "text" | "code" | null;
+  textResponse: string | null;
+  codeResponse: CodeResponse | null;
+  status: "draft" | "finalized" | "skipped";
+  version: number;
+  finalizedAt: string | null;
+  skippedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

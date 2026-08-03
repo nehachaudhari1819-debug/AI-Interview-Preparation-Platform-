@@ -3,11 +3,15 @@ import type {
   UpdateInterviewBody,
   GetInterviewsQuery,
   GetSessionsQuery,
+  SaveDraftAnswerBody,
+  UpdateDraftAnswerBody,
+  FinalizeAnswerBody,
 } from "./interviews.schemas.js";
 import type {
   DbInterview,
   DbSession,
   DbSessionQuestion,
+  DbAnswer,
 } from "../../persistence/interviews/supabase-interviews.repository.js";
 
 export interface IInterviewsRepository {
@@ -29,6 +33,13 @@ export interface IInterviewsRepository {
     sessionId: string,
     sessionQuestionId: string,
   ): Promise<DbSessionQuestion | null>;
+
+  listSessionAnswers(interviewId: string, sessionId: string): Promise<DbAnswer[]>;
+  getSessionAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+  ): Promise<DbAnswer>;
 
   createSession(
     interviewId: string,
@@ -60,4 +71,32 @@ export interface IInterviewsRepository {
     idempotencyKey: string,
     requestHash: string,
   ): Promise<{ replayed: boolean; snapshot: DbSession }>;
+
+  // P6.3 — Answer mutations
+  saveDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: SaveDraftAnswerBody,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }>;
+
+  updateDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: UpdateDraftAnswerBody,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }>;
+
+  finalizeAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: FinalizeAnswerBody,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }>;
 }

@@ -1,8 +1,14 @@
-import type { InterviewDetail, InterviewSession, SessionQuestion } from "./interviews.types.js";
+import type {
+  InterviewDetail,
+  InterviewSession,
+  SessionQuestion,
+  AnswerDetail,
+} from "./interviews.types.js";
 import type {
   DbInterview,
   DbSession,
   DbSessionQuestion,
+  DbAnswer,
 } from "../../persistence/interviews/supabase-interviews.repository.js";
 import { InternalServerError } from "../../errors/internal-server.error.js";
 
@@ -95,5 +101,27 @@ export function mapSessionQuestionToResponse(row: DbSessionQuestion): SessionQue
     questionTextSnapshot: row.question_text_snapshot,
     taxonomySnapshot: safeTaxonomy,
     createdAt: row.created_at,
+  };
+}
+
+export function mapAnswerToResponse(row: DbAnswer): AnswerDetail {
+  return {
+    id: row.id,
+    sessionQuestionId: row.sessionQuestionId,
+    responseType: row.responseType,
+    textResponse: row.textResponse,
+    codeResponse: row.codeResponse
+      ? {
+          source: row.codeResponse.source,
+          language: row.codeResponse.language,
+          explanation: row.codeResponse.explanation,
+        }
+      : null,
+    status: row.status,
+    version: row.version,
+    finalizedAt: row.finalizedAt,
+    skippedAt: row.skippedAt,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }

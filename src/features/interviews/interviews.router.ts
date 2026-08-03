@@ -72,5 +72,24 @@ export function createInterviewsRouter(options: {
   router.post("/:interviewId/sessions/:sessionId/resume", controller.resumeSession);
   router.post("/:interviewId/sessions/:sessionId/complete", controller.completeSession);
 
+  // P6.3 — Answer mutations & reads
+  router.get("/:interviewId/sessions/:sessionId/answers", controller.listSessionAnswers);
+  router.get(
+    "/:interviewId/sessions/:sessionId/questions/:sessionQuestionId/answer",
+    controller.getSessionAnswer,
+  );
+  router.put(
+    "/:interviewId/sessions/:sessionId/questions/:sessionQuestionId/answer",
+    controller.saveDraftAnswer,
+  );
+  router.patch(
+    "/:interviewId/sessions/:sessionId/questions/:sessionQuestionId/answer",
+    controller.updateDraftAnswer,
+  );
+  router.post(
+    "/:interviewId/sessions/:sessionId/questions/:sessionQuestionId/answer/finalize",
+    controller.finalizeAnswer,
+  );
+
   return router;
 }

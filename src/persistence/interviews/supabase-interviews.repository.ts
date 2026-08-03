@@ -1,13 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../database.types.js";
+import type { Database as GeneratedDatabase, Json } from "../database.types.js";
+import type { CodeResponse } from "../../features/interviews/interviews.types.js";
 import type {
   CreateInterviewBody,
   UpdateInterviewBody,
   GetInterviewsQuery,
   GetSessionsQuery,
+  SaveDraftAnswerBody,
+  UpdateDraftAnswerBody,
+  FinalizeAnswerBody,
 } from "../../features/interviews/interviews.schemas.js";
 import type { IInterviewsRepository } from "../../features/interviews/interviews.repository.js";
 import { PersistenceError, PersistenceErrorCode } from "../persistence-error.js";
+import { z } from "zod";
 
 // Helper to extract Postgres errors from PostgREST/RPC failures
 function normalizeRpcError(error: unknown): never {
@@ -32,6 +37,23 @@ function normalizeRpcError(error: unknown): never {
     throw new PersistenceError(
       PersistenceErrorCode.INSUFFICIENT_ELIGIBLE_QUESTIONS,
       "Insufficient eligible questions",
+    );
+  } else if (code === "P0011") {
+    throw new PersistenceError(PersistenceErrorCode.SESSION_TERMINAL, "Session is not in progress");
+  } else if (code === "P0012") {
+    throw new PersistenceError(
+      PersistenceErrorCode.STALE_UPDATE_CONFLICT,
+      "Answer has been updated by another request",
+    );
+  } else if (code === "P0013") {
+    throw new PersistenceError(
+      PersistenceErrorCode.ANSWER_IMMUTABLE,
+      "Finalized answers cannot be modified",
+    );
+  } else if (code === "P0014") {
+    throw new PersistenceError(
+      PersistenceErrorCode.ANSWER_SKIPPED,
+      "Skipped answers cannot be modified",
     );
   }
   throw new PersistenceError(
@@ -79,8 +101,54 @@ export interface DbSessionQuestion {
   created_at: string;
 }
 
+export interface DbAnswer {
+  id: string;
+  sessionQuestionId: string;
+  responseType: "text" | "code" | null;
+  textResponse: string | null;
+  codeResponse: {
+    source: string;
+    language: string;
+    explanation: string;
+  } | null;
+  status: "draft" | "finalized" | "skipped";
+  version: number;
+  finalizedAt: string | null;
+  skippedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const mapCodeResponseToJson = (value: CodeResponse): Json => ({
+  source: value.source,
+  language: value.language,
+  explanation: value.explanation,
+});
+
+const RpcAnswerRowSchema = z
+  .object({
+    id: z.uuid(),
+    session_question_id: z.uuid(),
+    response_type: z.enum(["text", "code"]).nullable(),
+    text_response: z.string().nullable(),
+    code_response: z
+      .object({
+        source: z.string(),
+        language: z.string(),
+        explanation: z.string(),
+      })
+      .nullable(),
+    status: z.enum(["draft", "finalized", "skipped"]),
+    version: z.number().int().positive(),
+    finalized_at: z.string().nullable(),
+    skipped_at: z.string().nullable(),
+    created_at: z.string(),
+    updated_at: z.string(),
+  })
+  .strict();
+
 export class SupabaseInterviewsRepository implements IInterviewsRepository {
-  constructor(private readonly supabase: SupabaseClient<Database>) {}
+  constructor(private readonly supabase: SupabaseClient<GeneratedDatabase>) {}
 
   public async createInterview(data: CreateInterviewBody): Promise<string> {
     const { data: id, error } = await this.supabase.rpc("student_create_interview_config", {
@@ -89,20 +157,13 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
       p_interview_type_id: data.interviewTypeId,
       p_difficulty_id: data.difficultyId,
       p_question_count: data.questionCount,
-      p_time_limit_minutes: (data.timeLimitMinutes ?? null) as unknown as number, // ensure null instead of undefined
+      p_time_limit_minutes: (data.timeLimitMinutes ?? null) as unknown as number,
       p_skill_ids: data.skillIds,
       p_topic_ids: data.topicIds || [],
     });
 
     if (error) {
       normalizeRpcError(error);
-    }
-
-    if (!id) {
-      throw new PersistenceError(
-        PersistenceErrorCode.OPERATION_FAILED,
-        "Failed to create interview: Missing ID",
-      );
     }
 
     return id;
@@ -117,13 +178,6 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
 
     if (error) {
       normalizeRpcError(error);
-    }
-
-    if (!updatedId) {
-      throw new PersistenceError(
-        PersistenceErrorCode.OPERATION_FAILED,
-        "Failed to update interview: Missing ID",
-      );
     }
 
     return updatedId;
@@ -315,6 +369,69 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
     return data;
   }
 
+  public async listSessionAnswers(interviewId: string, sessionId: string): Promise<DbAnswer[]> {
+    const { data, error } = await this.supabase.rpc("student_list_session_answers", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+    });
+
+    if (error) {
+      normalizeRpcError(error);
+    }
+
+    const rows = z.array(RpcAnswerRowSchema).parse(data);
+
+    return rows.map((row) => ({
+      id: row.id,
+      sessionQuestionId: row.session_question_id,
+      responseType: row.response_type,
+      textResponse: row.text_response,
+      codeResponse: row.code_response,
+      status: row.status,
+      version: row.version,
+      finalizedAt: row.finalized_at,
+      skippedAt: row.skipped_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  }
+
+  public async getSessionAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+  ): Promise<DbAnswer> {
+    const { data, error } = await this.supabase.rpc("student_get_session_answer", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_session_question_id: sessionQuestionId,
+    });
+
+    if (error) {
+      normalizeRpcError(error);
+    }
+
+    if (data.length === 0) {
+      throw new PersistenceError(PersistenceErrorCode.RECORD_NOT_FOUND, "Answer not found");
+    }
+
+    const row = RpcAnswerRowSchema.parse(data[0]);
+
+    return {
+      id: row.id,
+      sessionQuestionId: row.session_question_id,
+      responseType: row.response_type,
+      textResponse: row.text_response,
+      codeResponse: row.code_response,
+      status: row.status,
+      version: row.version,
+      finalizedAt: row.finalized_at,
+      skippedAt: row.skipped_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
   public async getSessionQuestionById(
     interviewId: string,
     sessionId: string,
@@ -422,18 +539,83 @@ export class SupabaseInterviewsRepository implements IInterviewsRepository {
     if (error) normalizeRpcError(error);
     return parseLifecycleResult(data);
   }
-}
 
-import { z } from "zod";
+  public async saveDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: SaveDraftAnswerBody,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }> {
+    const { data: result, error } = await this.supabase.rpc("student_save_draft_answer", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_session_question_id: sessionQuestionId,
+      p_response_type: data.responseType,
+      p_text_response: (data.responseType === "text"
+        ? data.textResponse
+        : null) as unknown as string,
+      p_code_response:
+        data.responseType === "code" ? mapCodeResponseToJson(data.codeResponse) : null,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseAnswerResult(result, 201);
+  }
+
+  public async updateDraftAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: UpdateDraftAnswerBody,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }> {
+    const { data: result, error } = await this.supabase.rpc("student_update_draft_answer", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_session_question_id: sessionQuestionId,
+      p_expected_version: data.expectedVersion,
+      p_text_response: (data.responseType === "text"
+        ? data.textResponse
+        : null) as unknown as string,
+      p_code_response:
+        data.responseType === "code" ? mapCodeResponseToJson(data.codeResponse) : null,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseAnswerResult(result, 200);
+  }
+
+  public async finalizeAnswer(
+    interviewId: string,
+    sessionId: string,
+    sessionQuestionId: string,
+    data: FinalizeAnswerBody,
+    idempotencyKey: string,
+    requestHash: string,
+  ): Promise<{ replayed: boolean; snapshot: DbAnswer }> {
+    const { data: result, error } = await this.supabase.rpc("student_finalize_answer", {
+      p_interview_id: interviewId,
+      p_session_id: sessionId,
+      p_session_question_id: sessionQuestionId,
+      p_expected_version: data.expectedVersion,
+      p_idempotency_key: idempotencyKey,
+      p_request_hash: requestHash,
+    });
+    if (error) normalizeRpcError(error);
+    return parseAnswerResult(result, 200);
+  }
+}
 
 const SessionSnapshotSchema = z
   .object({
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    id: z.string().uuid(),
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    interview_id: z.string().uuid(),
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    user_id: z.string().uuid(),
+    id: z.uuid(),
+    interview_id: z.uuid(),
+    user_id: z.uuid(),
     status: z.enum(["ready", "in_progress", "paused", "completed"]),
     config_snapshot: z.record(z.string(), z.unknown()),
     config_snapshot_version: z.number().int().positive(),
@@ -489,6 +671,63 @@ function parseCreateSessionResult(data: unknown): { replayed: boolean; snapshot:
     );
   }
 
+  return {
+    replayed: result.data.replayed,
+    snapshot: result.data.snapshot,
+  };
+}
+
+const AnswerSnapshotSchema = z
+  .object({
+    id: z.uuid(),
+    sessionQuestionId: z.uuid(),
+    responseType: z.enum(["text", "code"]).nullable(),
+    textResponse: z.string().nullable(),
+    codeResponse: z
+      .object({
+        source: z.string(),
+        language: z.string(),
+        explanation: z.string(),
+      })
+      .nullable(),
+    status: z.enum(["draft", "finalized", "skipped"]),
+    version: z.number().int().positive(),
+    finalizedAt: z.iso.datetime({ offset: true }).nullable(),
+    skippedAt: z.iso.datetime({ offset: true }).nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+const AnswerResultSchema201 = z
+  .object({
+    replayed: z.boolean(),
+    response_status: z.literal(201),
+    snapshot: AnswerSnapshotSchema,
+  })
+  .strict();
+
+const AnswerResultSchema200 = z
+  .object({
+    replayed: z.boolean(),
+    response_status: z.literal(200),
+    snapshot: AnswerSnapshotSchema,
+  })
+  .strict();
+
+function parseAnswerResult(
+  data: unknown,
+  expectedStatus: 200 | 201,
+): { replayed: boolean; snapshot: DbAnswer } {
+  const schema = expectedStatus === 201 ? AnswerResultSchema201 : AnswerResultSchema200;
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    throw new PersistenceError(
+      PersistenceErrorCode.OPERATION_FAILED,
+      "Invalid answer response envelope",
+      result.error,
+    );
+  }
   return {
     replayed: result.data.replayed,
     snapshot: result.data.snapshot,

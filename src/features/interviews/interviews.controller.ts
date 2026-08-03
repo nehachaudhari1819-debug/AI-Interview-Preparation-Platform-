@@ -10,12 +10,16 @@ import {
   parseGetSessionsQuery,
   parseId,
   parseStrictEmptyBody,
+  parseSaveDraftAnswerBody,
+  parseUpdateDraftAnswerBody,
+  parseFinalizeAnswerBody,
 } from "./interviews.schemas.js";
 import { ValidationError } from "../../errors/validation.error.js";
 import {
   mapInterviewToResponse,
   mapSessionToResponse,
   mapSessionQuestionToResponse,
+  mapAnswerToResponse,
 } from "./interviews-response.mapper.js";
 import { parseIdempotencyKey } from "../../domain/idempotency/idempotency-key.js";
 
@@ -312,6 +316,139 @@ export function createInterviewsController() {
         response: res,
         statusCode: HTTP_STATUS.OK,
         data: safeData,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    // ---------------------------------------------------------------
+    // P6.3 — Answer Mutations & Reads
+    // ---------------------------------------------------------------
+
+    listSessionAnswers: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+
+      const answers = await service.listSessionAnswers(interviewId, sessionId);
+      const safeData = answers.map(mapAnswerToResponse);
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: safeData,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    getSessionAnswer: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const sessionQuestionId = parseId(req.params.sessionQuestionId);
+
+      const answer = await service.getSessionAnswer(interviewId, sessionId, sessionQuestionId);
+      const safeData = mapAnswerToResponse(answer);
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: safeData,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    saveDraftAnswer: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const sessionQuestionId = parseId(req.params.sessionQuestionId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+      const body = parseSaveDraftAnswerBody(req.body);
+
+      const { replayed, snapshot } = await service.saveDraftAnswer(
+        interviewId,
+        sessionId,
+        sessionQuestionId,
+        body,
+        idempotencyKey,
+      );
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.CREATED,
+        data: snapshot,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    updateDraftAnswer: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const sessionQuestionId = parseId(req.params.sessionQuestionId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+      const body = parseUpdateDraftAnswerBody(req.body);
+
+      const { replayed, snapshot } = await service.updateDraftAnswer(
+        interviewId,
+        sessionId,
+        sessionQuestionId,
+        body,
+        idempotencyKey,
+      );
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: snapshot,
+        requestId: req.context.requestId,
+      });
+    }),
+
+    finalizeAnswer: asyncHandler(async (req: Request, res: Response) => {
+      const service = getService(res);
+      const interviewId = parseId(req.params.interviewId);
+      const sessionId = parseId(req.params.sessionId);
+      const sessionQuestionId = parseId(req.params.sessionQuestionId);
+      const parsedIdempotencyKey = parseIdempotencyKey(req.get("Idempotency-Key"));
+      if (!parsedIdempotencyKey.ok) {
+        throw new ValidationError(`Invalid Idempotency-Key: ${parsedIdempotencyKey.reason}`);
+      }
+      const idempotencyKey = parsedIdempotencyKey.key;
+      const body = parseFinalizeAnswerBody(req.body);
+
+      const { replayed, snapshot } = await service.finalizeAnswer(
+        interviewId,
+        sessionId,
+        sessionQuestionId,
+        body,
+        idempotencyKey,
+      );
+
+      if (replayed) {
+        res.setHeader("X-Idempotency-Replay", "true");
+      }
+
+      return sendSuccess({
+        response: res,
+        statusCode: HTTP_STATUS.OK,
+        data: snapshot,
         requestId: req.context.requestId,
       });
     }),

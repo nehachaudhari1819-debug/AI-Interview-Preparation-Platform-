@@ -115,4 +115,27 @@ describe("OpenAPI Contract Integration", () => {
 
     observability.unregisterProcessHandlers();
   });
+
+  it("should match OpenAPI contract for Interview Answer mutations", () => {
+    // Just verify the document structure for the P6.3 endpoints
+    const draftPath = openApiDocument.paths?.["/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}/answer"];
+    expect(draftPath).toBeDefined();
+    expect(draftPath?.put).toBeDefined();
+    expect(draftPath?.patch).toBeDefined();
+    
+    // Check PUT idempotency header
+    const putParameters = draftPath?.put?.parameters as any[];
+    const idempHeader = putParameters.find(p => p.name === "Idempotency-Key");
+    expect(idempHeader).toBeDefined();
+    expect(idempHeader.in).toBe("header");
+
+    // Check POST finalize
+    const finalizePath = openApiDocument.paths?.["/api/v1/interviews/{interviewId}/sessions/{sessionId}/questions/{sessionQuestionId}/answer/finalize"];
+    expect(finalizePath).toBeDefined();
+    expect(finalizePath?.post).toBeDefined();
+    
+    // Verify 409 schemas exist
+    const finalizeResponses = finalizePath?.post?.responses;
+    expect(finalizeResponses?.["409"]).toBeDefined();
+  });
 });
